@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestão de Obra — Preview</title>
+<style>
+  :root {
+    /* Paleta da sócia */
+    --ink: #26333A;
+    --slate: #4A5A63;
+    --paper: #F2F4F5;
+    --teal: #00A3B4;
+    --red: #E2574C;
+
+    /* Derivadas */
+    --white: #FFFFFF;
+    --line: #C9D2D7;
+    --line-soft: #E1E6E9;
+    --teal-ink: #007784;   /* teal escurecido: texto e botão com contraste no sol */
+    --teal-tint: #E0F4F6;
+    --red-ink: #B5352B;
+    --red-tint: #FCE9E7;
+    --amber: #E3A21A;
+    --amber-ink: #8A5B00;
+    --amber-tint: #FCF1DB;
+    --green: #2E9C6A;
+    --green-ink: #1C6E4A;
+    --green-tint: #E3F3EB;
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Roboto Mono", monospace;
+    --tap: 48px;
+    --tabbar-h: 68px;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.4 var(--sans);
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+
+  /* Rótulo técnico: o "papel de projeto" da Prancheta */
+  .label {
+    font: 600 12.5px/1.3 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+  /* ---------- Estrutura ---------- */
+  .app { min-height: 100vh; }
+  .sidebar { display: none; }
+  main {
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);
+    max-width: 1180px;
+  }
+
+  /* ---------- Cabeçalho da obra ---------- */
+  .obra-head {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 16px 16px;
+  }
+  .statusline { display: flex; justify-content: space-between; margin-bottom: 14px; }
+  .online::before {
+    content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); margin-right: 6px; vertical-align: 1px;
+  }
+  .obra-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .obra-name { font-size: 22px; font-weight: 600; line-height: 1.2; margin: 0; flex: 1; }
+  .obra-sub { margin-top: 8px; }
+
+  .btn {
+    min-height: var(--tap);
+    padding: 0 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--ink);
+    background: var(--white);
+    font-weight: 600;
+    font-size: 16px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-mono { font: 700 13px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+  .btn-primary { background: var(--teal-ink); border-color: var(--teal-ink); color: var(--white); }
+  .btn-outline-teal { border-color: var(--teal-ink); color: var(--teal-ink); }
+  .btn-danger { border-color: var(--red-ink); color: var(--red-ink); }
+  .btn-block { width: 100%; }
+
+  /* ---------- Telas ---------- */
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .section { padding: 0 16px; margin-top: 20px; }
+  .section-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); margin-bottom: 0;
+  }
+  .link { background: none; border: 0; padding: 12px 0 12px 12px; color: var(--teal-ink); }
+
+  .panel { background: var(--white); border: 1px solid var(--line); border-radius: 4px; }
+
+  /* Entrega: a pergunta da segunda-feira */
+  .entrega {
+    display: grid; grid-template-columns: 1fr 1fr auto;
+    border-left: 5px solid var(--red);
+  }
+  .entrega > div { padding: 14px 16px; }
+  .entrega > div + div { border-left: 1px solid var(--line-soft); }
+  .entrega .big { font-size: 34px; font-weight: 600; margin-top: 4px; }
+  .entrega .atraso { background: var(--red-tint); text-align: center; min-width: 110px; }
+  .entrega .atraso .big { color: var(--red-ink); font-size: 44px; line-height: 1; }
+
+  /* Faixa de números, igual à referência */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    background: var(--white); border: 1px solid var(--line); border-radius: 4px; margin-top: 12px;
+  }
+  .stat { padding: 14px 14px 16px; }
+  .stat + .stat { border-left: 1px solid var(--line); }
+  .stat .n { font-size: 48px; font-weight: 500; line-height: 1; }
+  .stat .label { margin-top: 10px; display: block; }
+  .c-red { color: var(--red-ink); }
+  .c-amber { color: var(--amber-ink); }
+  .c-green { color: var(--green-ink); }
+  .c-teal { color: var(--teal-ink); }
+
+  /* Lista de serviços */
+  .grupo {
+    padding: 16px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .grupo::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .item {
+    width: 100%; text-align: left;
+    display: grid; grid-template-columns: 18px 1fr auto; gap: 12px; align-items: start;
+    padding: 14px 0; border: 0; border-bottom: 1px solid var(--line-soft); background: none;
+    min-height: var(--tap);
+  }
+  .sq { width: 18px; height: 18px; border: 2px solid var(--slate); border-radius: 2px; margin-top: 3px; }
+  .sq.red { background: var(--red); border-color: var(--red); }
+  .sq.amber { background: var(--amber); border-color: var(--amber); }
+  .sq.green { background: var(--white); border-color: var(--green); }
+  .item-title { font-size: 18px; font-weight: 600; line-height: 1.25; }
+  .item-meta { margin-top: 6px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag {
+    font: 700 11.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    padding: 6px 8px; border-radius: 3px; border: 1.5px solid currentColor; white-space: nowrap;
+  }
+  .tag.solid-red { background: var(--red); border-color: var(--red); color: var(--white); }
+  .tag.red { color: var(--red-ink); background: var(--red-tint); }
+  .tag.amber { color: var(--amber-ink); background: var(--amber-tint); }
+  .tag.green { color: var(--green-ink); background: var(--green-tint); }
+  .tag.teal { color: var(--teal-ink); background: var(--teal-tint); }
+  .tag.slate { color: var(--slate); background: var(--paper); }
+  .folga { text-align: right; min-width: 58px; }
+  .folga .n { font-size: 34px; font-weight: 600; line-height: 1; }
+  .folga .label { font-size: 11px; display: block; margin-top: 4px; }
+  .bar { height: 5px; background: var(--line-soft); margin-top: 10px; border-radius: 3px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--teal); }
+  .bar.done > i { background: var(--green); }
+
+  .diario-box {
+    margin-top: 16px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border: 1.5px solid var(--amber); background: var(--amber-tint); border-radius: 4px;
+  }
+  .diario-box strong { display: block; font-size: 17px; margin-top: 4px; }
+
+  .legenda { display: grid; gap: 10px; padding: 14px 16px; }
+  .legenda div { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+
+  /* ---------- Diário ---------- */
+  .page-title { padding: 18px 16px 0; }
+  .page-title h1 { margin: 6px 0 0; font-size: 26px; line-height: 1.2; }
+  .page-title .tags { margin-top: 10px; }
+  .page-title p { margin: 8px 0 0; color: var(--slate); font-size: 15px; }
+
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .seg button {
+    min-height: var(--tap); border: 1.5px solid var(--line); background: var(--white);
+    border-radius: 4px; font-size: 15px; font-weight: 600;
+  }
+  .seg button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--white); }
+  .clima-row + .clima-row { margin-top: 14px; }
+
+  .equipe-total { display: flex; align-items: baseline; gap: 10px; padding: 12px 0 4px; }
+  .equipe-total .n { font-size: 48px; font-weight: 500; line-height: 1; }
+  .check {
+    display: flex; align-items: center; gap: 14px; min-height: 52px;
+    border-bottom: 1px solid var(--line-soft); cursor: pointer;
+  }
+  .check input { width: 24px; height: 24px; accent-color: var(--teal-ink); margin: 0; }
+  .check span { flex: 1; font-size: 17px; font-weight: 500; }
+  .equipe-grid { display: grid; grid-template-columns: 1fr; column-gap: 24px; }
+
+  .serv-card { padding: 16px; margin-top: 12px; }
+  .serv-card.blocked { background: var(--paper); border-style: dashed; }
+  .serv-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .meta-dia { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; }
+  .meta-dia .n { font-size: 44px; font-weight: 600; line-height: 1; }
+  .meta-dia .u { font-size: 20px; font-weight: 600; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .field label { display: block; margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%; min-height: var(--tap); padding: 10px 12px;
+    border: 1.5px solid var(--slate); border-radius: 4px; background: var(--white); font-size: 18px;
+  }
+  .field input.big { font-size: 24px; font-weight: 600; }
+  .field.full { grid-column: 1 / -1; }
+  .field textarea { min-height: 96px; resize: vertical; font-size: 17px; }
+  .with-unit { position: relative; }
+  .with-unit span {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font: 600 15px var(--mono); color: var(--slate);
+  }
+
+  .fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .foto {
+    aspect-ratio: 1; border-radius: 4px; border: 1px solid var(--line);
+    background: repeating-linear-gradient(135deg, #DCE3E6 0 10px, #E8EDEF 10px 20px);
+    display: flex; align-items: flex-end; padding: 6px;
+  }
+  .foto span { background: rgba(255,255,255,.92); padding: 4px 6px; font-size: 12px; font-weight: 600; border-radius: 2px; }
+  .foto-add {
+    aspect-ratio: 1; border: 2px dashed var(--teal-ink); border-radius: 4px; background: var(--white);
+    color: var(--teal-ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    font-weight: 700; font-size: 14px;
+  }
+
+  .actionbar {
+    position: sticky; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    background: var(--white); border-top: 1px solid var(--line);
+    padding: 12px 16px; display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 24px;
+  }
+  .actionbar .btn { min-height: 54px; font-size: 17px; }
+
+  /* ---------- Cronograma: Gantt ---------- */
+  .gantt-tools { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .seg-2 { grid-template-columns: repeat(2, auto); margin-top: 0; }
+  .seg-2 button { padding: 0 16px; }
+  .gantt-legenda { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; font-size: 14px; color: var(--slate); }
+  .gantt-legenda span { display: inline-flex; align-items: center; gap: 7px; }
+  .lg { display: inline-block; width: 22px; height: 12px; border-radius: 2px; }
+  .lg-done { background: var(--green); }
+  .lg-exec { background: var(--teal); }
+  .lg-prev { border: 2px solid var(--ink); background: var(--white); }
+  .lg-late { background: repeating-linear-gradient(135deg, var(--red) 0 3px, var(--red-tint) 3px 6px); border: 1.5px solid var(--red); }
+  .lg-hoje { width: 3px; height: 16px; background: var(--teal-ink); }
+  .lg-entrega { width: 0; height: 16px; border-left: 3px dashed var(--red); border-radius: 0; }
+
+  .gantt {
+    --dw: 20px; --lw: 140px; --row: 74px;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    background: var(--white); border: 1px solid var(--line); border-radius: 4px;
+  }
+  .g-inner { position: relative; width: calc(var(--lw) + var(--dw) * 70); }
+  .g-row { display: flex; height: var(--row); border-bottom: 1px solid var(--line-soft); }
+  .g-label {
+    position: sticky; left: 0; z-index: 4; flex: none; width: var(--lw);
+    background: var(--white); border-right: 1.5px solid var(--ink);
+    padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  }
+  .g-nome { font-size: 15px; font-weight: 600; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .g-label .label { font-size: 11px; }
+  .g-tl { position: relative; flex: none; width: calc(var(--dw) * 70); }
+  .g-grupo { height: 34px; background: var(--paper); }
+  .g-grupo .g-label { background: var(--paper); }
+  .g-row.sel .g-label { background: var(--teal-tint); }
+
+  .g-head { height: 58px; border-bottom: 1.5px solid var(--ink); }
+  .g-head .g-label { justify-content: flex-end; }
+  .g-sems, .g-dias { position: relative; height: 50%; }
+  .g-sem, .g-dia { position: absolute; top: 0; bottom: 0; left: calc(var(--dw) * var(--s)); }
+  .g-sem { width: calc(var(--dw) * 7); border-left: 1px solid var(--line); padding: 7px 6px 0; font: 700 12px var(--mono); }
+  .g-dia { width: var(--dw); text-align: center; font: 600 11px/29px var(--mono); color: var(--slate); }
+  .g-dia.fds { color: #8A979E; }
+  .compacto .g-dias { visibility: hidden; }
+
+  .g-layer { position: absolute; top: 58px; bottom: 0; left: var(--lw); right: 0; pointer-events: none; z-index: 1; }
+  .g-fds { position: absolute; top: 0; bottom: 0; left: calc(var(--dw) * var(--s)); width: calc(var(--dw) * 2); background: rgba(74, 90, 99, .07); }
+  .g-linha { position: absolute; top: 0; bottom: 0; left: calc(var(--dw) * var(--s) + var(--dw) / 2); z-index: 3; }
+  .g-linha.hoje { border-left: 3px solid var(--teal-ink); }
+  .g-linha.entrega { border-left: 3px dashed var(--red); }
+  .g-linha span {
+    position: absolute; top: 4px; left: 4px; white-space: nowrap;
+    font: 700 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 6px; border-radius: 2px; color: var(--white);
+  }
+  .g-linha.hoje span { background: var(--teal-ink); }
+  .g-linha.entrega span { background: var(--red-ink); }
+
+  .g-bar {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+    left: calc(var(--dw) * var(--s)); width: calc(var(--dw) * var(--n));
+    height: 24px; padding: 0; border: 2px solid var(--ink); border-radius: 3px; background: var(--white); overflow: hidden;
+  }
+  .g-bar::before { content: ""; position: absolute; inset: -12px 0; } /* área de toque de 48px */
+  .g-bar.done { background: var(--green); border-color: var(--green); }
+  .g-bar.done .g-exec { display: none; }
+  .g-exec { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+  .g-late {
+    position: absolute; top: 0; bottom: 0; left: calc(var(--dw) * var(--s) - 2px); width: calc(var(--dw) * var(--n));
+    background: repeating-linear-gradient(135deg, var(--red) 0 4px, var(--red-tint) 4px 8px);
+  }
+  .g-fim { position: absolute; top: 50%; transform: translateY(-50%); left: calc(var(--dw) * var(--s) + 6px); white-space: nowrap; z-index: 2; }
+
+  .gantt-info { margin-top: 12px; padding: 14px 16px; display: grid; gap: 8px; }
+  .gantt-info strong { font-size: 18px; }
+  .gi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .gi-grid b { display: block; font-size: 26px; font-weight: 600; margin-top: 2px; }
+  @media (min-width: 700px) { .gi-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 900px) { .gantt { --lw: 240px; --row: 64px; } .g-label .label { font-size: 12px; } }
+
+  /* ---------- Orçamento ---------- */
+  .ver-nota { margin: 12px 0 0; font-size: 15px; color: var(--slate); }
+  .stat .n.money { font-size: 30px; font-weight: 600; }
+  .stat .sub { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; }
+  .orc-geral { margin-top: 12px; padding: 14px 16px; }
+  .orc-geral-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .orc-geral-top b { font-size: 34px; }
+  .bar.big { height: 12px; margin-top: 10px; border-radius: 3px; }
+  .etapa { border-bottom: 1px solid var(--line-soft); }
+  .etapa > button {
+    width: 100%; border: 0; background: none; text-align: left; padding: 14px 0; min-height: 64px;
+    display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center;
+  }
+  .etapa-n { font: 700 18px var(--mono); color: var(--slate); grid-row: span 2; align-self: start; padding-top: 2px; }
+  .etapa-nome { font-size: 17px; font-weight: 600; line-height: 1.25; }
+  .etapa-pct { font-size: 26px; font-weight: 600; text-align: right; grid-row: span 2; }
+  .etapa-vals { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .etapa .bar { grid-column: 2 / -1; margin-top: 2px; }
+  .etapa .margem { color: var(--teal-ink); }
+  .etapa-itens { display: none; padding: 0 0 12px 46px; }
+  .etapa.open .etapa-itens { display: block; }
+  .etapa.open .etapa-n::after { content: " ▾"; }
+  .it { padding: 10px 0; border-top: 1px dashed var(--line); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+  .it-nome { font-size: 15px; font-weight: 600; }
+  .it-obs { grid-column: 1 / -1; font-size: 14px; color: var(--slate); }
+  .socio-only { }
+  body.ver-cliente .socio-only { display: none !important; }
+
+  .sheet-import { max-width: 640px; max-height: 92vh; overflow-y: auto; }
+  .imp-titulo { margin: 6px 0 10px; font-size: 19px; }
+  .imp-ok { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 16px; }
+  .imp-lista { margin-top: 12px; border-top: 1.5px solid var(--ink); }
+  .imp-lista div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 15px; }
+  .imp-lista div span:first-child b { font-family: var(--mono); color: var(--slate); margin-right: 8px; }
+  .imp-lista .tot { border-bottom: 0; font-weight: 700; font-size: 17px; }
+  .imp-aviso { margin-top: 12px; font-size: 15px; display: flex; gap: 10px; align-items: center; }
+  .imp-acoes { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 16px; }
+
+  /* ---------- Vazio ---------- */
+  .empty { text-align: center; padding: 48px 24px; max-width: 460px; margin: 24px auto 0; }
+  .empty-icon {
+    width: 96px; height: 96px; margin: 0 auto 20px; border: 1.5px solid var(--line);
+    border-radius: 4px; background: var(--white); display: flex; align-items: center; justify-content: center;
+    color: var(--teal-ink);
+  }
+  .empty h2 { font-size: 24px; margin: 0 0 10px; }
+  .empty p { color: var(--slate); margin: 0 0 24px; font-size: 17px; }
+  .empty .btn { min-height: 54px; padding: 0 24px; font-size: 17px; }
+  .empty .nota { margin-top: 28px; }
+
+  /* ---------- Mais ---------- */
+  .mais-list button {
+    width: 100%; min-height: 60px; display: flex; align-items: center; gap: 14px;
+    border: 0; border-bottom: 1px solid var(--line-soft); background: none; text-align: left;
+    font-size: 18px; font-weight: 600; padding: 0 4px;
+  }
+  .mais-list button::after { content: "›"; margin-left: auto; font-size: 26px; color: var(--slate); }
+  .mais-list svg { color: var(--slate); }
+
+  /* ---------- Barra inferior (celular) ---------- */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--white); border-top: 1px solid var(--line);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    height: var(--tabbar-h); border: 0; background: none; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    color: var(--slate);
+    font: 700 11px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase;
+  }
+  .tab[aria-current="page"] { color: var(--teal-ink); }
+  .tab[aria-current="page"]::before {
+    content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; background: var(--teal);
+  }
+
+  /* ---------- Folha de troca de obra ---------- */
+  .sheet-bg {
+    position: fixed; inset: 0; background: rgba(38,51,58,.45); z-index: 40;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .sheet-bg.open { display: flex; }
+  .sheet {
+    background: var(--white); width: 100%; max-width: 520px; border-radius: 8px 8px 0 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .sheet button.op {
+    width: 100%; min-height: 64px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    border: 0; border-bottom: 1px solid var(--line-soft); background: none; text-align: left; padding: 8px 4px;
+  }
+  .sheet button.op strong { display: block; font-size: 17px; }
+  .sheet button.op[aria-current="true"] strong { color: var(--teal-ink); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 24px); transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--white); padding: 14px 18px; border-radius: 4px; z-index: 50;
+    font-size: 16px; font-weight: 600; opacity: 0; pointer-events: none; transition: .2s; max-width: calc(100% - 32px);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Tela larga: menu lateral fixo ---------- */
+  @media (min-width: 900px) {
+    .tabbar { display: none; }
+    .sidebar {
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
+      background: var(--white); border-right: 1px solid var(--line); padding: 20px 14px;
+      overflow-y: auto;
+    }
+    main { margin-left: 260px; padding: 0 0 40px; }
+    .brand { padding: 4px 10px 18px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+    .brand strong { display: block; font-size: 19px; margin-top: 4px; }
+    .side-nav { display: grid; gap: 2px; }
+    .side-nav .sep { margin: 14px 10px 6px; }
+    .side-link {
+      min-height: var(--tap); display: flex; align-items: center; gap: 12px; padding: 0 12px;
+      border: 0; border-radius: 4px; background: none; text-align: left; font-size: 16px; font-weight: 600; color: var(--ink);
+      border-left: 3px solid transparent;
+    }
+    .side-link svg { color: var(--slate); flex: none; }
+    .side-link:hover { background: var(--paper); }
+    .side-link[aria-current="page"] { background: var(--teal-tint); color: var(--teal-ink); border-left-color: var(--teal); }
+    .side-link[aria-current="page"] svg { color: var(--teal-ink); }
+    .side-link .count {
+      margin-left: auto; font: 700 12px var(--mono); background: var(--amber-tint); color: var(--amber-ink);
+      padding: 4px 7px; border-radius: 3px;
+    }
+    .side-user { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid var(--line); }
+    .side-user strong { display: block; font-size: 16px; }
+
+    .obra-head { padding: 16px 32px 20px; }
+    .obra-name { font-size: 28px; }
+    .section, .page-title { padding-left: 32px; padding-right: 32px; }
+    .actionbar { bottom: 0; padding: 14px 32px; grid-template-columns: 220px 300px; justify-content: end; }
+    .toast { bottom: 32px; }
+    .equipe-grid { grid-template-columns: 1fr 1fr; }
+    .fotos { grid-template-columns: repeat(5, 1fr); }
+    .sheet-bg { align-items: center; }
+    .sheet { border-radius: 8px; }
+  }
+  @media (min-width: 1200px) {
+    .painel-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; }
+    .painel-grid .section { padding-right: 0; }
+    .painel-side { padding-right: 32px; margin-top: 20px; position: sticky; top: 20px; }
+    .painel-side .diario-box { margin-top: 0; }
+    .hide-wide { display: none; }
+  }
+  @media (max-width: 1199px) { .painel-side { display: none; } }
+  @media (max-width: 420px) {
+    .entrega { grid-template-columns: 1fr 1fr; }
+    .entrega .atraso { grid-column: 1 / -1; border-left: 0 !important; border-top: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .stat .n { font-size: 42px; }
+    .seg button { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-diario" viewBox="0 0 24 24"><path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6zM6 3v18M9.5 8h5M9.5 12h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-crono" viewBox="0 0 24 24"><path d="M4 5h9M8 10h9M12 15h8M6 20h6M3 3v19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-medicao" viewBox="0 0 24 24"><path d="m3 16 13-13 5 5L8 21zM7 12l2 2M10 9l2 2M13 6l2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></symbol>
+    <symbol id="i-orcamento" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-cotacao" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 10h16M10 10v9" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-fin" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-foto" viewBox="0 0 24 24"><path d="M3 7h4l2-3h6l2 3h4v13H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12M10 21v-6h4v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-equipe" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.7 3 2.4 3.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1-4.2 4-6.5 8-6.5s7 2.3 8 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 7h4l2-3h6l2 3h4v13H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v6M9 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- Menu lateral (tela larga) -->
+  <aside class="sidebar" aria-label="Menu">
+    <div class="brand">
+      <span class="label">Acompanhamento</span>
+      <strong>Gestão de Obra</strong>
+    </div>
+    <nav class="side-nav">
+      <button class="side-link" data-go="inicio"><svg width="22" height="22"><use href="#i-home"/></svg>Início</button>
+      <button class="side-link" data-go="diario"><svg width="22" height="22"><use href="#i-diario"/></svg>Diário<span class="count">1</span></button>
+      <button class="side-link" data-go="cronograma"><svg width="22" height="22"><use href="#i-crono"/></svg>Cronograma</button>
+      <button class="side-link" data-go="medicoes"><svg width="22" height="22"><use href="#i-medicao"/></svg>Medições</button>
+      <button class="side-link" data-go="orcamento"><svg width="22" height="22"><use href="#i-orcamento"/></svg>Orçamento</button>
+      <span class="label sep">Mais</span>
+      <button class="side-link" data-soon="Cotações"><svg width="22" height="22"><use href="#i-cotacao"/></svg>Cotações</button>
+      <button class="side-link" data-soon="Financeiro"><svg width="22" height="22"><use href="#i-fin"/></svg>Financeiro</button>
+      <button class="side-link" data-soon="Fotos"><svg width="22" height="22"><use href="#i-foto"/></svg>Fotos</button>
+      <button class="side-link" data-soon="Obras"><svg width="22" height="22"><use href="#i-obra"/></svg>Obras</button>
+      <button class="side-link" data-soon="Equipe"><svg width="22" height="22"><use href="#i-equipe"/></svg>Equipe</button>
+      <button class="side-link" data-soon="Usuários"><svg width="22" height="22"><use href="#i-user"/></svg>Usuários</button>
+    </nav>
+    <div class="side-user">
+      <strong>Ana Exemplo</strong>
+      <span class="label">Sócio</span>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Cabeçalho da obra -->
+    <header class="obra-head">
+      <div class="statusline">
+        <span class="label">Ter · 03 Nov · 07:42</span>
+        <span class="label online">Online</span>
+      </div>
+      <span class="label">Obra selecionada</span>
+      <div class="obra-row">
+        <h2 class="obra-name" id="obraNome">Reforma Apto 302 — Ed. Aurora</h2>
+        <button class="btn btn-mono" id="btnTrocar" aria-haspopup="dialog">Trocar ▾</button>
+      </div>
+      <div class="label obra-sub">Etapa: Hidráulica · <span class="c-teal">40% concluída</span> · Cliente: Cláudia</div>
+    </header>
+
+    <!-- ============ INÍCIO: PAINEL DO DIA ============ -->
+    <section class="screen" id="s-inicio" aria-label="Painel do dia">
+      <div class="painel-grid">
+        <div>
+          <div class="section">
+            <div class="panel entrega" role="group" aria-label="Entrega ao cliente">
+              <div>
+                <span class="label">Previsão hoje</span>
+                <div class="big num c-red">04/12</div>
+              </div>
+              <div>
+                <span class="label">Contratada</span>
+                <div class="big num">27/11</div>
+              </div>
+              <div class="atraso">
+                <div class="big num">+5</div>
+                <span class="label c-red">dias de atraso</span>
+              </div>
+            </div>
+
+            <div class="stats">
+              <div class="stat"><div class="n num">4</div><span class="label">Pessoas no canteiro</span></div>
+              <div class="stat"><div class="n num c-red">3</div><span class="label">Serviços atrasados</span></div>
+              <div class="stat"><div class="n num c-amber">1</div><span class="label">Diário p/ aprovar</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <span class="label" style="color:var(--ink)">Serviços · mais atrasado primeiro</span>
+              <span class="label">7 em aberto</span>
+            </div>
+
+            <div class="grupo"><span class="label">Hidráulica</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq red"></span>
+              <span>
+                <span class="item-title">Hidráulica embutida banheiros</span>
+                <span class="label item-meta" style="display:block">Carlos · 70% · limite p/ programar 20/10</span>
+                <span class="bar"><i style="width:70%"></i></span>
+                <span class="tags"><span class="tag solid-red">3 dias de atraso</span><span class="tag amber">Aguardando aprovação</span></span>
+              </span>
+              <span class="folga"><span class="n num c-red">−5</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="grupo"><span class="label">Alvenaria</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq red"></span>
+              <span>
+                <span class="item-title">Reboco de paredes</span>
+                <span class="label item-meta" style="display:block">Marcos · 0% · limite p/ programar <span class="c-red">30/10</span></span>
+                <span class="tags"><span class="tag red">Limite passou · não começou</span><span class="tag slate">Espera: Hidráulica</span></span>
+              </span>
+              <span class="folga"><span class="n num c-red">−5</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="grupo"><span class="label">Revestimento</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq amber"></span>
+              <span>
+                <span class="item-title">Revestimento parede banheiros</span>
+                <span class="label item-meta" style="display:block">Antônio · 0% · limite p/ programar 09/11</span>
+                <span class="tags"><span class="tag amber">Vai empurrar a entrega</span><span class="tag slate">Espera: Reboco</span></span>
+              </span>
+              <span class="folga"><span class="n num c-amber">−5</span><span class="label">folga</span></span>
+            </button>
+            <button class="item" data-go="cronograma">
+              <span class="sq amber"></span>
+              <span>
+                <span class="item-title">Porcelanato piso</span>
+                <span class="label item-meta" style="display:block">Antônio · 0% · limite p/ programar 06/11</span>
+                <span class="tags"><span class="tag amber">Vai empurrar a entrega</span><span class="tag slate">Espera: Contrapiso</span></span>
+              </span>
+              <span class="folga"><span class="n num c-amber">−4</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="grupo"><span class="label">Pintura</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq amber"></span>
+              <span>
+                <span class="item-title">Pintura geral</span>
+                <span class="label item-meta" style="display:block">Luiz · 0% · limite p/ programar 18/11</span>
+                <span class="tags"><span class="tag amber">Vai empurrar a entrega</span><span class="tag slate">Espera: 3 serviços</span></span>
+              </span>
+              <span class="folga"><span class="n num c-amber">−5</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="grupo"><span class="label">Pisos</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq red"></span>
+              <span>
+                <span class="item-title">Contrapiso</span>
+                <span class="label item-meta" style="display:block">Marcos · 0% · limite p/ programar <span class="c-red">02/11</span></span>
+                <span class="tags"><span class="tag red">Limite passou · não começou</span><span class="tag slate">Espera: Hidráulica</span></span>
+              </span>
+              <span class="folga"><span class="n num c-red">−4</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="grupo"><span class="label">Gesso</span></div>
+            <button class="item" data-go="cronograma">
+              <span class="sq green"></span>
+              <span>
+                <span class="item-title">Forro de gesso</span>
+                <span class="label item-meta" style="display:block">Rafael · 28% · último lançamento 29/10</span>
+                <span class="bar"><i style="width:28%"></i></span>
+                <span class="tags"><span class="tag green">No prazo</span></span>
+              </span>
+              <span class="folga"><span class="n num c-green">+6</span><span class="label">folga</span></span>
+            </button>
+
+            <div class="diario-box hide-wide">
+              <div>
+                <span class="label c-amber">Diário de hoje · 03/11</span>
+                <strong>Enviado por Rita · aguardando sua aprovação</strong>
+              </div>
+              <button class="btn btn-mono btn-outline-teal" data-go="diario">Abrir</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="painel-side" aria-label="Resumo lateral">
+          <div class="diario-box">
+            <div>
+              <span class="label c-amber">Diário de hoje · 03/11</span>
+              <strong>Enviado por Rita · aguardando sua aprovação</strong>
+            </div>
+            <button class="btn btn-mono btn-outline-teal" data-go="diario">Abrir</button>
+          </div>
+          <div class="panel legenda" style="margin-top:16px">
+            <span class="label">Como ler a lista</span>
+            <div><span class="sq red"></span>Atrasado: já passou do limite</div>
+            <div><span class="sq amber"></span>Atenção: vai empurrar a entrega</div>
+            <div><span class="sq green"></span>No prazo: tem folga</div>
+            <span class="label" style="margin-top:4px">Folga = dias úteis até o limite. Negativa empurra a entrega.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ DIÁRIO DO DIA ============ -->
+    <section class="screen" id="s-diario" aria-label="Diário do dia">
+      <div class="page-title">
+        <span class="label">Diário de obra</span>
+        <h1>Terça, 03/11/2026</h1>
+        <div class="tags"><span class="tag amber" id="diarioStatus">Enviado · aguardando aprovação</span></div>
+        <p>Lançado por Rita Auxiliar às 17h12</p>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="label" style="color:var(--ink)">Clima</span></div>
+        <div class="clima-row" style="margin-top:12px">
+          <span class="label">Manhã</span>
+          <div class="seg" data-seg>
+            <button aria-pressed="true">Sol</button><button aria-pressed="false">Nublado</button><button aria-pressed="false">Chuva</button><button aria-pressed="false">Chuva forte</button>
+          </div>
+        </div>
+        <div class="clima-row">
+          <span class="label">Tarde</span>
+          <div class="seg" data-seg>
+            <button aria-pressed="false">Sol</button><button aria-pressed="true">Nublado</button><button aria-pressed="false">Chuva</button><button aria-pressed="false">Chuva forte</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="label" style="color:var(--ink)">Equipe do dia</span></div>
+        <div class="equipe-total"><span class="n num" id="equipeTotal">4</span><span class="label">pessoas na obra</span></div>
+        <div class="equipe-grid" id="equipe">
+          <label class="check"><input type="checkbox" checked><span>Carlos</span><small class="label">Encanador</small></label>
+          <label class="check"><input type="checkbox" checked><span>Edson</span><small class="label">Servente</small></label>
+          <label class="check"><input type="checkbox" checked><span>Marcos</span><small class="label">Pedreiro</small></label>
+          <label class="check"><input type="checkbox" checked><span>José</span><small class="label">Servente</small></label>
+          <label class="check"><input type="checkbox"><span>Paulo</span><small class="label">Eletricista</small></label>
+          <label class="check"><input type="checkbox"><span>Antônio</span><small class="label">Azulejista</small></label>
+          <label class="check"><input type="checkbox"><span>Rafael</span><small class="label">Gesseiro</small></label>
+          <label class="check"><input type="checkbox"><span>Luiz</span><small class="label">Pintor</small></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <span class="label" style="color:var(--ink)">Serviços do dia</span>
+          <span class="label">2 liberados</span>
+        </div>
+
+        <div class="panel serv-card">
+          <div class="serv-top">
+            <div>
+              <span class="label">Hidráulica</span>
+              <div class="item-title" style="margin-top:4px">Hidráulica embutida banheiros</div>
+            </div>
+            <span class="tag solid-red">Atrasado</span>
+          </div>
+          <div class="meta-dia"><span class="label">Meta de hoje</span></div>
+          <div class="meta-dia" style="margin-top:2px"><span class="n num c-red">0,3</span><span class="u">vb</span><span class="label" style="margin-left:auto">já feito 0,7 de 1</span></div>
+          <div class="bar"><i style="width:70%"></i></div>
+          <div class="fields">
+            <div class="field">
+              <label class="label" for="h1">Executado hoje</label>
+              <div class="with-unit"><input class="big num" id="h1" inputmode="decimal" value="0,1"><span>vb</span></div>
+            </div>
+            <div class="field">
+              <label class="label" for="h2">Pessoas no serviço</label>
+              <input class="big num" id="h2" inputmode="numeric" value="2">
+            </div>
+            <div class="field full">
+              <label class="label" for="h3">O que foi feito</label>
+              <input id="h3" value="Ramal de água fria do banheiro social ligado">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel serv-card">
+          <div class="serv-top">
+            <div>
+              <span class="label">Gesso</span>
+              <div class="item-title" style="margin-top:4px">Forro de gesso</div>
+            </div>
+            <span class="tag green">No prazo</span>
+          </div>
+          <div class="meta-dia"><span class="label">Meta de hoje</span></div>
+          <div class="meta-dia" style="margin-top:2px"><span class="n num">5</span><span class="u">m²</span><span class="label" style="margin-left:auto">já feito 18 de 65</span></div>
+          <div class="bar"><i style="width:28%"></i></div>
+          <div class="fields">
+            <div class="field">
+              <label class="label" for="f1">Executado hoje</label>
+              <div class="with-unit"><input class="big num" id="f1" inputmode="decimal" placeholder="0"><span>m²</span></div>
+            </div>
+            <div class="field">
+              <label class="label" for="f2">Pessoas no serviço</label>
+              <input class="big num" id="f2" inputmode="numeric" placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <div id="outros" hidden>
+          <div class="panel serv-card blocked">
+            <div class="serv-top">
+              <div><span class="label">Alvenaria</span><div class="item-title" style="margin-top:4px">Reboco de paredes</div></div>
+              <span class="tag slate">Espera: Hidráulica</span>
+            </div>
+            <p style="margin:10px 0 0;color:var(--slate);font-size:15px">Ainda depende de outro serviço. Lance aqui só se a equipe adiantou.</p>
+          </div>
+          <div class="panel serv-card blocked">
+            <div class="serv-top">
+              <div><span class="label">Pisos</span><div class="item-title" style="margin-top:4px">Contrapiso</div></div>
+              <span class="tag slate">Espera: Hidráulica</span>
+            </div>
+            <p style="margin:10px 0 0;color:var(--slate);font-size:15px">Ainda depende de outro serviço. Lance aqui só se a equipe adiantou.</p>
+          </div>
+        </div>
+        <button class="btn btn-block" id="btnOutros" style="margin-top:12px">Mostrar outros serviços (5)</button>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="label" style="color:var(--ink)">Ocorrências</span></div>
+        <div class="field" style="margin-top:12px">
+          <textarea aria-label="Ocorrências">Faltou registro de gaveta do banheiro da suíte. Compra pedida, chega amanhã às 8h.</textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="label" style="color:var(--ink)">Fotos</span><span class="label">2</span></div>
+        <div class="fotos">
+          <div class="foto"><span>Ramal banheiro social</span></div>
+          <div class="foto"><span>Registro faltando</span></div>
+          <button class="foto-add" data-soon="Câmera"><svg width="28" height="28"><use href="#i-camera"/></svg>Tirar foto</button>
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <button class="btn btn-danger" id="btnDevolver">Devolver</button>
+        <button class="btn btn-primary" id="btnAprovar">Aprovar diário</button>
+      </div>
+    </section>
+
+    <!-- ============ CRONOGRAMA ============ -->
+    <section class="screen" id="s-cronograma" aria-label="Cronograma">
+      <div class="page-title">
+        <span class="label">Cronograma · cadeia de serviços</span>
+        <h1>Previsão 04/12 · contratada 27/11</h1>
+        <p>Cada serviço só começa quando o anterior termina. Atrasou um, as barras seguintes andam junto.</p>
+      </div>
+      <div class="section">
+        <div class="gantt-tools">
+          <div class="seg seg-2" id="zoom" aria-label="Escala">
+            <button aria-pressed="false" data-dia="11">Compacto</button><button aria-pressed="true" data-dia="20">Detalhado</button>
+          </div>
+          <button class="btn btn-primary" data-soon="Novo serviço">+ Novo serviço</button>
+        </div>
+        <div class="gantt-legenda">
+          <span><i class="lg lg-done"></i>Concluído</span>
+          <span><i class="lg lg-exec"></i>Executado</span>
+          <span><i class="lg lg-prev"></i>Previsto</span>
+          <span><i class="lg lg-late"></i>Passa do limite</span>
+          <span><i class="lg lg-hoje"></i>Hoje</span>
+          <span><i class="lg lg-entrega"></i>Entrega contratada</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="gantt" id="gantt" tabindex="0" aria-label="Gráfico de Gantt, role para os lados"></div>
+        <div class="panel gantt-info" id="ganttInfo">
+          <span class="label">Toque numa barra</span>
+          <strong>para ver datas, limite e de quem o serviço depende.</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ORÇAMENTO ============ -->
+    <section class="screen" id="s-orcamento" aria-label="Orçamento">
+      <div class="page-title">
+        <span class="label">Orçamento do cliente · importado em 29/09/2026</span>
+        <h1>Orçamento · Apto 302 — Ed. Aurora</h1>
+      </div>
+      <div class="section">
+        <div class="gantt-tools">
+          <div class="seg seg-2" id="verComo" aria-label="Ver como">
+            <button aria-pressed="true" data-ver="socio">Ver como Sócio</button><button aria-pressed="false" data-ver="cliente">Ver como Cliente</button>
+          </div>
+          <button class="btn btn-outline-teal" id="btnImportar">Importar planilha</button>
+        </div>
+        <p class="ver-nota" id="verNota"></p>
+        <div class="stats" id="orcStats"></div>
+        <div class="panel orc-geral">
+          <div class="orc-geral-top"><span class="label">Avanço da obra pelo valor</span><b class="num" id="orcPct"></b></div>
+          <div class="bar big"><i id="orcBar"></i></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-head">
+          <span class="label" style="color:var(--ink)">Etapas · ordem da planilha</span>
+          <span class="label">Toque para ver os itens</span>
+        </div>
+        <div id="orcEtapas"></div>
+      </div>
+    </section>
+
+    <!-- ============ MEDIÇÕES (estado vazio) ============ -->
+    <section class="screen" id="s-medicoes" aria-label="Medições">
+      <div class="page-title">
+        <span class="label">Medições</span>
+        <h1>Cobranças ao cliente</h1>
+      </div>
+      <div class="empty">
+        <div class="empty-icon"><svg width="48" height="48"><use href="#i-medicao"/></svg></div>
+        <h2>Nenhuma medição ainda</h2>
+        <p>Assim que você aprovar os diários, o sistema soma o que foi executado e monta a primeira medição para o cliente. Você só confere e fecha.</p>
+        <button class="btn btn-primary" data-soon="Gerar medição">Gerar a primeira medição</button>
+        <div class="label nota">Exemplo de estado vazio · com os dados do PRD, esta obra já teria 3 medições</div>
+      </div>
+    </section>
+
+    <!-- ============ MAIS (celular) ============ -->
+    <section class="screen" id="s-mais" aria-label="Mais">
+      <div class="page-title"><span class="label">Mais</span><h1>Outras áreas</h1></div>
+      <div class="section mais-list">
+        <button data-go="orcamento"><svg width="24" height="24"><use href="#i-orcamento"/></svg>Orçamento</button>
+        <button data-soon="Cotações"><svg width="24" height="24"><use href="#i-cotacao"/></svg>Cotações</button>
+        <button data-soon="Financeiro"><svg width="24" height="24"><use href="#i-fin"/></svg>Financeiro</button>
+        <button data-soon="Fotos"><svg width="24" height="24"><use href="#i-foto"/></svg>Fotos</button>
+        <button data-soon="Obras"><svg width="24" height="24"><use href="#i-obra"/></svg>Obras</button>
+        <button data-soon="Equipe"><svg width="24" height="24"><use href="#i-equipe"/></svg>Equipe</button>
+        <button data-soon="Usuários"><svg width="24" height="24"><use href="#i-user"/></svg>Usuários</button>
+        <button data-soon="Meu perfil"><svg width="24" height="24"><use href="#i-user"/></svg>Meu perfil</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Barra inferior (celular) -->
+  <nav class="tabbar" aria-label="Navegação">
+    <button class="tab" data-go="inicio"><svg width="24" height="24"><use href="#i-home"/></svg>Início</button>
+    <button class="tab" data-go="diario"><svg width="24" height="24"><use href="#i-diario"/></svg>Diário</button>
+    <button class="tab" data-go="cronograma"><svg width="24" height="24"><use href="#i-crono"/></svg>Cronog.</button>
+    <button class="tab" data-go="medicoes"><svg width="24" height="24"><use href="#i-medicao"/></svg>Medições</button>
+    <button class="tab" data-go="mais"><svg width="24" height="24"><use href="#i-mais"/></svg>Mais</button>
+  </nav>
+</div>
+
+<!-- Trocar de obra -->
+<div class="sheet-bg" id="sheet" role="dialog" aria-modal="true" aria-label="Trocar de obra">
+  <div class="sheet">
+    <div class="section-head" style="margin-bottom:4px"><span class="label" style="color:var(--ink)">Trocar de obra</span><button class="link label" id="fecharSheet">Fechar</button></div>
+    <button class="op" aria-current="true"><span><strong>Reforma Apto 302 — Ed. Aurora</strong><span class="label">Entrega 27/11 · 34%</span></span><span class="tag red">+5 dias</span></button>
+    <button class="op" data-soon="Outra obra"><span><strong>Reforma Casa Jardim das Flores</strong><span class="label">Entrega 26/02/2027 · 12%</span></span><span class="tag green">No prazo</span></button>
+    <button class="op" data-soon="Outra obra"><span><strong>Reforma Loja Centro</strong><span class="label">Entrega 18/12 · 41%</span></span><span class="tag slate">Pausada</span></button>
+  </div>
+</div>
+
+<!-- Conferência da importação -->
+<div class="sheet-bg" id="sheetImport" role="dialog" aria-modal="true" aria-label="Conferir importação">
+  <div class="sheet sheet-import">
+    <div class="section-head" style="margin-bottom:10px"><span class="label" style="color:var(--ink)">Conferir antes de importar</span><button class="link label" data-fechar>Fechar</button></div>
+    <span class="label">Estudo_Viabilidade_Apto52_Vita_Belle_gestao.xlsx · aba ORÇAMENTO</span>
+    <h3 class="imp-titulo">ORÇAMENTO - APTO 52, BLOCO 2 - VITA BELLE</h3>
+    <div class="imp-ok"><span class="tag green">Confere com a planilha ✓</span><span><b>14</b> etapas · <b>28</b> itens · total <b>R$ 48.795,98</b></span></div>
+    <div class="imp-lista" id="impLista"></div>
+    <div class="imp-aviso"><span class="tag amber">Atenção</span> 7 itens em m²/ml vão pedir quantidade no Cronograma (a aba ORÇAMENTO não traz quantidade).</div>
+    <div class="imp-acoes">
+      <button class="btn" data-fechar>Cancelar</button>
+      <button class="btn btn-primary" id="btnConfirmarImport">Confirmar importação</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // Cronograma em Gantt: dados de exemplo do PRD (hoje = 03/11/2026).
+  // ini/fim = início e término (reais se já aconteceram, previstos pela cascata se não); lim = data-limite de término.
+  const crono = [
+    { frente: "Demolição", itens: [
+      { nome: "Demolição de revestimentos", resp: "José", ini: "29/09", fim: "05/10", pct: 100 },
+      { nome: "Retirada de entulho", resp: "Edson", ini: "06/10", fim: "07/10", pct: 100, dep: "Demolição de revestimentos" } ]},
+    { frente: "Hidráulica", itens: [
+      { nome: "Hidráulica embutida banheiros", resp: "Carlos", ini: "08/10", fim: "05/11", lim: "29/10", prog: "20/10", pct: 70, dep: "Retirada de entulho" } ]},
+    { frente: "Elétrica", itens: [
+      { nome: "Infra elétrica (eletrodutos)", resp: "Paulo", ini: "08/10", fim: "15/10", pct: 100, dep: "Retirada de entulho" } ]},
+    { frente: "Alvenaria", itens: [
+      { nome: "Reboco de paredes", resp: "Marcos", ini: "06/11", fim: "13/11", lim: "06/11", prog: "30/10", pct: 0, dep: "Hidráulica, Elétrica" } ]},
+    { frente: "Pisos", itens: [
+      { nome: "Contrapiso", resp: "Marcos", ini: "06/11", fim: "11/11", lim: "05/11", prog: "02/11", pct: 0, dep: "Hidráulica" } ]},
+    { frente: "Revestimento", itens: [
+      { nome: "Porcelanato piso", resp: "Antônio", ini: "12/11", fim: "23/11", lim: "17/11", prog: "06/11", pct: 0, dep: "Contrapiso" },
+      { nome: "Revestimento parede banheiros", resp: "Antônio", ini: "16/11", fim: "24/11", lim: "17/11", prog: "09/11", pct: 0, dep: "Reboco de paredes" } ]},
+    { frente: "Gesso", itens: [
+      { nome: "Forro de gesso", resp: "Rafael", ini: "26/10", fim: "09/11", lim: "17/11", prog: "10/11", pct: 28, dep: "Elétrica" } ]},
+    { frente: "Pintura", itens: [
+      { nome: "Pintura geral", resp: "Luiz", ini: "25/11", fim: "04/12", lim: "27/11", prog: "18/11", pct: 0, dep: "Porcelanato, Revest. parede, Forro" } ]}
+  ];
+
+  const INICIO = new Date(2026, 8, 28);   // segunda, 28/09/2026
+  const DIAS = 70;                         // até domingo, 06/12/2026
+  const dt = s => { const [d, m] = s.split("/").map(Number); return new Date(2026, m - 1, d); };
+  const idx = s => Math.round((dt(s) - INICIO) / 864e5);
+  const ddmm = d => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+  const HOJE = "03/11", ENTREGA = "27/11";
+
+  function renderGantt() {
+    const semanas = [], dias = [], fds = [];
+    for (let i = 0; i < DIAS; i++) {
+      const d = new Date(INICIO); d.setDate(d.getDate() + i);
+      if (i % 7 === 0) semanas.push(`<div class="g-sem" style="--s:${i}">${ddmm(d)}</div>`);
+      dias.push(`<div class="g-dia${d.getDay() % 6 === 0 ? " fds" : ""}" style="--s:${i}">${d.getDate()}</div>`);
+      if (d.getDay() === 6) fds.push(`<div class="g-fds" style="--s:${i}"></div>`);
+    }
+    let n = 0;
+    const linhas = crono.map(g => `
+      <div class="g-row g-grupo"><div class="g-label"><span class="label">${g.frente}</span></div><div class="g-tl"></div></div>
+      ${g.itens.map(s => {
+        const a = idx(s.ini), b = idx(s.fim), done = s.pct === 100;
+        const late = s.lim && b > idx(s.lim) ? `<i class="g-late" style="--s:${idx(s.lim) + 1 - a};--n:${b - idx(s.lim)}"></i>` : "";
+        const cor = done ? "" : late ? "c-red" : "c-green";
+        return `
+        <div class="g-row" data-i="${n++}">
+          <div class="g-label">
+            <span class="g-nome">${s.nome}</span>
+            <span class="label">${s.resp} · <b class="${done ? "c-green" : ""}">${s.pct}%</b></span>
+          </div>
+          <div class="g-tl">
+            <button class="g-bar${done ? " done" : ""}" style="--s:${a};--n:${b - a + 1}" aria-label="${s.nome}, ${s.ini} a ${s.fim}">
+              <i class="g-exec" style="width:${s.pct}%"></i>${late}
+            </button>
+            <span class="g-fim label ${cor}" style="--s:${b + 1}">${done ? "✓ " : ""}${s.fim}</span>
+          </div>
+        </div>`;
+      }).join("")}`).join("");
+
+    document.getElementById("gantt").innerHTML = `
+      <div class="g-inner">
+        <div class="g-row g-head">
+          <div class="g-label"><span class="label">Serviço</span></div>
+          <div class="g-tl"><div class="g-sems">${semanas.join("")}</div><div class="g-dias">${dias.join("")}</div></div>
+        </div>
+        <div class="g-layer">${fds.join("")}
+          <div class="g-linha hoje" style="--s:${idx(HOJE)}"><span>Hoje ${HOJE}</span></div>
+          <div class="g-linha entrega" style="--s:${idx(ENTREGA)}"><span>Entrega ${ENTREGA}</span></div>
+        </div>
+        ${linhas}
+      </div>`;
+  }
+  renderGantt();
+
+  const itensPlanos = crono.flatMap(g => g.itens.map(s => ({ ...s, frente: g.frente })));
+  const gantt = document.getElementById("gantt");
+  gantt.addEventListener("click", e => {
+    const row = e.target.closest(".g-row[data-i]"); if (!row) return;
+    const s = itensPlanos[row.dataset.i];
+    gantt.querySelectorAll(".g-row.sel").forEach(r => r.classList.remove("sel"));
+    row.classList.add("sel");
+    const atraso = s.lim && idx(s.fim) > idx(s.lim);
+    document.getElementById("ganttInfo").innerHTML = `
+      <span class="label">${s.frente} · ${s.resp}</span>
+      <strong>${s.nome}</strong>
+      <div class="gi-grid">
+        <div><span class="label">${s.pct === 100 ? "Início" : "Início prev."}</span><b class="num">${s.ini}</b></div>
+        <div><span class="label">${s.pct === 100 ? "Término" : "Término prev."}</span><b class="num ${atraso ? "c-red" : ""}">${s.fim}</b></div>
+        <div><span class="label">Programar até</span><b class="num">${s.prog || "—"}</b></div>
+        <div><span class="label">Limite de término</span><b class="num">${s.lim || "—"}</b></div>
+      </div>
+      <span class="label">Depende de: ${s.dep || "ninguém (primeiro da cadeia)"}</span>`;
+  });
+
+  function rolarParaHoje() {
+    const dw = parseFloat(getComputedStyle(gantt).getPropertyValue("--dw"));
+    const lw = gantt.querySelector(".g-label").offsetWidth;
+    gantt.scrollLeft = Math.max(0, idx(HOJE) * dw - (gantt.clientWidth - lw) / 3);
+  }
+  document.getElementById("zoom").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll("#zoom button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    gantt.style.setProperty("--dw", b.dataset.dia + "px");
+    gantt.classList.toggle("compacto", b.dataset.dia < 16);
+    rolarParaHoje();
+  });
+
+  // Navegação
+  function go(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === "s-" + id));
+    document.querySelectorAll("[data-go]").forEach(b => {
+      if (b.classList.contains("tab") || b.classList.contains("side-link")) {
+        const alvo = b.classList.contains("tab") && id === "orcamento" ? "mais" : id;
+        b.toggleAttribute("aria-current", b.dataset.go === alvo);
+        if (b.dataset.go === alvo) b.setAttribute("aria-current", "page");
+      }
+    });
+    window.scrollTo({ top: 0 });
+    history.replaceState(null, "", "#" + id);
+    if (id === "cronograma") rolarParaHoje();
+  }
+  document.addEventListener("click", e => {
+    const g = e.target.closest("[data-go]");
+    if (g) { go(g.dataset.go); return; }
+    const s = e.target.closest("[data-soon]");
+    if (s) toast(s.dataset.soon === "Outra obra"
+      ? "No preview só a Obra Apto 302 tem dados."
+      : `"${s.dataset.soon}" fica fora deste preview.`);
+  });
+  // Orçamento: mesmo formato da planilha modelo (etapa inteira, item com ponto, TOTAL ENG. ao cliente, TOTAL MO = custo)
+  const orc = [
+    { n: 1, nome: "Demolição", itens: [
+      { n: "1.1", nome: "Demolição de revestimentos", un: "m²", valor: 2975, mo: 1983.33, pc: 100, ps: 100, obs: "Considerada remoção com martelete" },
+      { n: "1.2", nome: "Retirada de entulho", un: "vb", valor: 1800, mo: 1200, pc: 100, ps: 100, obs: "Ensacamento e descida em todas as etapas" } ]},
+    { n: 2, nome: "Hidráulica", itens: [
+      { n: "2.1", nome: "Hidráulica embutida banheiros", un: "vb", valor: 9500, mo: 6333.33, pc: 60, ps: 70 } ]},
+    { n: 3, nome: "Elétrica", itens: [
+      { n: "3.1", nome: "Infra elétrica (eletrodutos)", un: "m", valor: 3360, mo: 2240, pc: 100, ps: 100 } ]},
+    { n: 4, nome: "Alvenaria", itens: [
+      { n: "4.1", nome: "Reboco de paredes", un: "m²", valor: 2520, mo: 1680, pc: 0, ps: 0 } ]},
+    { n: 5, nome: "Pisos", itens: [
+      { n: "5.1", nome: "Contrapiso", un: "m²", valor: 2660, mo: 1773.33, pc: 0, ps: 0 } ]},
+    { n: 6, nome: "Revestimento", itens: [
+      { n: "6.1", nome: "Porcelanato piso", un: "m²", valor: 4550, mo: 3033.33, pc: 0, ps: 0 },
+      { n: "6.2", nome: "Revestimento parede banheiros", un: "m²", valor: 3150, mo: 2100, pc: 0, ps: 0 } ]},
+    { n: 7, nome: "Gesso", itens: [
+      { n: "7.1", nome: "Forro de gesso", un: "m²", valor: 3575, mo: 2383.33, pc: 18 / 65 * 100, ps: 18 / 65 * 100, obs: "Valor já incluso o material" } ]},
+    { n: 8, nome: "Pintura", itens: [
+      { n: "8.1", nome: "Pintura geral", un: "m²", valor: 5280, mo: 3520, pc: 0, ps: 0 } ]},
+    { n: 9, nome: "Gestão de obra", gestao: 10, itens: [
+      { n: "9.1", nome: "Gestão de obra — 10% sobre o total da obra", un: "%", valor: 3937, mo: 0, obs: "Acompanha o executado dos outros itens" } ]}
+  ];
+  orc.forEach(e => e.itens.forEach(i => { if (!e.gestao) i.mo = i.valor / 1.5; }));   // TOTAL ENG. = TOTAL MO × 1,5, como na planilha
+  const brl = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const pctTxt = v => (Math.round(v * 10) / 10).toLocaleString("pt-BR") + "%";
+  let verComo = "socio";
+
+  function renderOrcamento() {
+    const k = verComo === "socio" ? "ps" : "pc";
+    let execBase = 0, valorBase = 0;
+    orc.filter(e => !e.gestao).forEach(e => e.itens.forEach(i => { execBase += i.valor * i[k] / 100; valorBase += i.valor; }));
+    const g = orc.find(e => e.gestao).itens[0];
+    g[k] = execBase / valorBase * 100;
+    let total = 0, exec = 0, mo = 0;
+    const html = orc.map(e => {
+      let ev = 0, ee = 0, em = 0;
+      e.itens.forEach(i => { ev += i.valor; ee += i.valor * i[k] / 100; em += i.mo; });
+      total += ev; exec += ee; mo += em;
+      const p = ee / ev * 100;
+      return `
+        <div class="etapa">
+          <button aria-expanded="false">
+            <span class="etapa-n">${e.n}</span>
+            <span class="etapa-nome">${e.nome}${e.gestao ? ` <span class="tag slate">${e.gestao}%</span>` : ""}</span>
+            <span class="etapa-pct num ${p >= 100 ? "c-green" : ""}">${pctTxt(p)}</span>
+            <span class="etapa-vals">
+              <span class="label">Orçado ${brl(ev)}</span>
+              <span class="label">Executado ${brl(ee)}</span>
+              <span class="label margem socio-only">Margem ${brl(ev - em)}</span>
+            </span>
+            <span class="bar ${p >= 100 ? "done" : ""}"><i style="width:${Math.min(p, 100)}%"></i></span>
+          </button>
+          <div class="etapa-itens">
+            ${e.itens.map(i => `
+              <div class="it">
+                <span class="it-nome"><span class="label">${i.n}</span> ${i.nome}</span>
+                <b class="num">${pctTxt(i[k])}</b>
+                <span class="label">${i.un} · ${brl(i.valor)}<span class="socio-only"> · custo MO ${brl(i.mo)}</span></span>
+                <span class="label">${brl(i.valor * i[k] / 100)}</span>
+                ${i.obs ? `<span class="it-obs">${i.obs}</span>` : ""}
+              </div>`).join("")}
+          </div>
+        </div>`;
+    }).join("");
+    document.getElementById("orcEtapas").innerHTML = html;
+    document.getElementById("orcStats").innerHTML = `
+      <div class="stat"><div class="n num money">${brl(total)}</div><span class="label">Valor do contrato</span></div>
+      <div class="stat"><div class="n num money c-teal">${brl(exec)}</div><span class="label">Executado</span></div>
+      <div class="stat">${verComo === "socio"
+        ? `<div class="n num money">${brl(total - mo)}</div><span class="label">Margem prevista</span><span class="sub c-teal">custo MO ${brl(mo)}</span>`
+        : `<div class="n num money">${brl(total - exec)}</div><span class="label">Saldo a executar</span>`}</div>`;
+    const p = exec / total * 100;
+    document.getElementById("orcPct").textContent = pctTxt(p);
+    document.getElementById("orcBar").style.width = p + "%";
+    document.getElementById("verNota").textContent = verComo === "socio"
+      ? "Você vê o custo de mão de obra e a margem. Conta também o diário que está aguardando aprovação."
+      : "Assim o cliente vê: só o valor do orçamento e o que foi executado em diários aprovados. Nada de custo ou margem.";
+    document.body.classList.toggle("ver-cliente", verComo === "cliente");
+  }
+  renderOrcamento();
+
+  document.getElementById("orcEtapas").addEventListener("click", e => {
+    const b = e.target.closest(".etapa > button"); if (!b) return;
+    const open = b.parentElement.classList.toggle("open");
+    b.setAttribute("aria-expanded", open);
+  });
+  document.getElementById("verComo").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll("#verComo button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    verComo = b.dataset.ver;
+    renderOrcamento();
+  });
+
+  // Conferência da importação: totais por etapa lidos da planilha modelo (TOTAL ENG.)
+  const impEtapas = [
+    [1, "Serviços preliminares e aprovação", 3830], [2, "Demolições, retiradas e descarte", 5031.43],
+    [3, "Infiltração", 375], [4, "Contrapiso", 825], [5, "Impermeabilização dos banheiros", 750],
+    [6, "Elétrica — infraestrutura e pontos", 7125], [7, "Gesso", 2400], [8, "Pisos e revestimentos", 7500],
+    [9, "Filetes, rodapés e guarnição", 1823.55], [10, "Louças e metais (após marmoraria)", 1650],
+    [11, "Pintura + masseamento — 1ª mobilização", 8775], [12, "Limpeza", 3750],
+    [13, "2ª mobilização — pós-marcenaria", 525], [14, "Gestão de obra (10%)", 4436]
+  ];
+  document.getElementById("impLista").innerHTML = impEtapas.map(([n, nome, v]) =>
+    `<div><span><b>${n}</b>${nome}</span><span class="num">${brl(v)}</span></div>`).join("") +
+    `<div class="tot"><span>Total</span><span class="num">${brl(48795.98)}</span></div>`;
+  const sheetImport = document.getElementById("sheetImport");
+  document.getElementById("btnImportar").onclick = () => sheetImport.classList.add("open");
+  sheetImport.addEventListener("click", e => { if (e.target === sheetImport || e.target.closest("[data-fechar]")) sheetImport.classList.remove("open"); });
+  document.getElementById("btnConfirmarImport").onclick = () => {
+    sheetImport.classList.remove("open");
+    toast("No app: cria 14 etapas e 28 serviços no Cronograma.");
+  };
+
+  const telas = ["inicio","diario","cronograma","medicoes","orcamento","mais"];
+  const daHash = () => { const h = location.hash.slice(1); return telas.includes(h) ? h : "inicio"; };
+  go(daHash());
+  window.addEventListener("hashchange", () => go(daHash()));
+
+  // Toast
+  let t;
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg; el.classList.add("show");
+    clearTimeout(t); t = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  // Trocar obra
+  const sheet = document.getElementById("sheet");
+  document.getElementById("btnTrocar").onclick = () => sheet.classList.add("open");
+  document.getElementById("fecharSheet").onclick = () => sheet.classList.remove("open");
+  sheet.addEventListener("click", e => { if (e.target === sheet || e.target.closest('[aria-current="true"]')) sheet.classList.remove("open"); });
+
+  // Clima
+  document.querySelectorAll("[data-seg]").forEach(seg => seg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  }));
+
+  // Equipe
+  const equipe = document.getElementById("equipe");
+  equipe.addEventListener("change", () => {
+    document.getElementById("equipeTotal").textContent = equipe.querySelectorAll("input:checked").length;
+  });
+
+  // Outros serviços
+  document.getElementById("btnOutros").onclick = function () {
+    const o = document.getElementById("outros");
+    o.hidden = !o.hidden;
+    this.textContent = o.hidden ? "Mostrar outros serviços (5)" : "Esconder outros serviços";
+  };
+
+  // Aprovar / devolver
+  const status = document.getElementById("diarioStatus");
+  document.getElementById("btnAprovar").onclick = () => {
+    status.className = "tag green"; status.textContent = "Aprovado · cliente já vê";
+    toast("Diário aprovado. O cliente já pode ver.");
+  };
+  document.getElementById("btnDevolver").onclick = () => {
+    status.className = "tag red"; status.textContent = "Devolvido para a Rita";
+    toast("Diário devolvido. No app, aqui você escreve o motivo.");
+  };
+</script>
+</body>
+</html>
