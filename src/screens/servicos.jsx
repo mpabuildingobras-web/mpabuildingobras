@@ -16,7 +16,7 @@ async function carregar() {
 
 // Quem faz cada serviço desta obra, em que dias, e o alerta quando o prestador está
 // em dois lugares ao mesmo tempo. Lê as outras obras só para achar o conflito. Só sócios.
-export function Servicos() {
+export function Servicos({ goto }) {
   const { obraId, obra } = useObra()
   const estado = useCarregar(carregar)
   const [inicio, setInicio] = useState(segundaDaSemana(HOJE))
@@ -42,7 +42,7 @@ export function Servicos() {
       <Titulo rotulo={`Serviços de ${obra?.codigo ?? ''}`} titulo="Quem faz o quê e quando" />
       <Carregando estado={estado}>
         {daObra.length === 0 ? (
-          <Vazio icone="ferramenta" titulo="Esta obra ainda não tem serviços" texto="Importe a planilha de orçamento para criar as etapas e os serviços." />
+          <Vazio icone="ferramenta" titulo="Esta obra ainda não tem serviços" texto="Cadastre os serviços no Cronograma e escolha aqui quem faz cada um." botao="Ir para o Cronograma" onBotao={() => goto('cronograma')} />
         ) : (
           <>
             {conflitosDaObra.length > 0 && (

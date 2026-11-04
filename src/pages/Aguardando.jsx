@@ -2,7 +2,7 @@
 export default function Aguardando({ onSair }) {
   return (
     <div className="acesso">
-      <div className="acesso-marca"><span className="acesso-logo">GESTÃO <b>DE OBRA</b></span></div>
+      <div className="acesso-marca"><img className="acesso-logo-img" src="/logo-mpa.webp" alt="MPA Building, Gestão de Obras" /></div>
       <div className="acesso-cartao estreito">
         <div className="acesso-cartao-topo">Portal do cliente</div>
         <div className="acesso-coluna">

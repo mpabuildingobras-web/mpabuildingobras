@@ -10,11 +10,11 @@ async function carregar() {
   return { data: { ...cr.data, contratados: fu.data }, erro: cr.erro ?? fu.erro }
 }
 
-export function Cronograma() {
+export function Cronograma({ goto }) {
   const estado = useCarregar(carregar)
   return (
     <Carregando estado={estado}>
-      {estado.data && <Gantt dados={estado.data} />}
+      {estado.data && <Gantt dados={estado.data} goto={goto} />}
     </Carregando>
   )
 }
@@ -23,7 +23,7 @@ export function Cronograma() {
 const num = (iso) => { const [a, m, d] = iso.split('-').map(Number); return Date.UTC(a, m - 1, d) / 864e5 }
 const iso = (n) => new Date(n * 864e5).toISOString().slice(0, 10)
 
-function Gantt({ dados }) {
+function Gantt({ dados, goto }) {
   const { obra, servicos, execucoes, contratados } = dados
   const [dw, setDw] = useState(20)
   const [sel, setSel] = useState(null)
@@ -46,7 +46,8 @@ function Gantt({ dados }) {
 
   if (!temServicos) {
     return <Vazio icone="crono" titulo="Esta obra ainda não tem cronograma"
-      texto="Importe a planilha de orçamento para criar as etapas e os serviços de uma vez." />
+      texto="Cadastre as frentes e os serviços desta obra, com a duração e de quem cada um depende."
+      botao="Cadastrar o primeiro serviço" onBotao={() => goto('editarServico')} />
   }
 
   const nome = (id) => contratados.find((f) => f.id === id)?.nome ?? '—'
@@ -81,6 +82,7 @@ function Gantt({ dados }) {
             <button aria-pressed={dw === 11} onClick={() => setDw(11)}>Compacto</button>
             <button aria-pressed={dw === 20} onClick={() => setDw(20)}>Detalhado</button>
           </div>
+          <button className="btn btn-primary" onClick={() => goto('editarServico')}>+ Novo serviço</button>
         </div>
         <div className="gantt-legenda">
           <span><i className="lg lg-done"></i>Concluído</span>
@@ -148,6 +150,7 @@ function Gantt({ dados }) {
                 <div><span className="label">Limite de término</span><b className="num">{ddmm(s.limiteTermino)}</b></div>
               </div>
               <span className="label">Depende de: {s.deps.length ? s.deps.map((d) => c.linhas.find((x) => x.id === d)?.nome).join(', ') : 'ninguém (primeiro da cadeia)'}</span>
+              <button className="btn" onClick={() => goto('editarServico', { id: s.id })}>Editar serviço</button>
             </>
           ) : (
             <>

@@ -9,7 +9,7 @@ export default function Entrada({ onEntrar }) {
   return (
     <div className="acesso">
       <div className="acesso-marca">
-        <span className="acesso-logo">GESTÃO <b>DE OBRA</b></span>
+        <img className="acesso-logo-img" src="/logo-mpa.webp" alt="MPA Building, Gestão de Obras" />
       </div>
       {!porta && <Escolha onEscolher={setPorta} />}
       {porta === 'construtor' && <LoginEquipe onEntrar={onEntrar} voltar={() => setPorta(null)} />}

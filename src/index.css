@@ -7,10 +7,10 @@
   --slate: #5F5F5F;
   --paper: #F7F7F7;
   --white: #FFFFFF;
-  --marca: #C8232C;
-  --red: #D8343C;
-  --red-ink: #B0202A;
-  --red-tint: #FCEDEE;
+  --marca: #DC0000; /* vermelho exato do logo */
+  --red: #DC0000;
+  --red-ink: #B80000;
+  --red-tint: #FDEDED;
 
   /* Neutros derivados do preto */
   --line: #DEDEDE;
@@ -190,8 +190,6 @@ button { cursor: pointer; }
   background: var(--paper);
 }
 .acesso-marca { margin-bottom: 32px; text-align: center; }
-.acesso-logo { font-size: 30px; font-weight: 800; letter-spacing: .02em; }
-.acesso-logo b { color: var(--marca); font-weight: 800; }
 .acesso-escolha { width: 100%; max-width: 360px; text-align: center; margin: auto 0; }
 .acesso-escolha p { margin: 0 0 24px; font-size: 17px; font-weight: 600; line-height: 1.35; }
 .acesso-btn {

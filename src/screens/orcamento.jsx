@@ -44,7 +44,7 @@ function Conteudo({ dados, socio, importar }) {
   const [aberta, setAberta] = useState(null)
   return (
     <>
-      <Titulo rotulo={`Importado em ${dataBR(orcamento.importado_em)}`} titulo={orcamento.titulo}>
+      <Titulo rotulo={orcamento.importado_em ? `Importado em ${dataBR(orcamento.importado_em)}` : 'Cadastrado no Cronograma'} titulo={orcamento.titulo}>
         <p>{socio
           ? 'Você vê o custo de mão de obra e a margem. Conta também o diário que está aguardando aprovação.'
           : 'O valor do orçamento e o que já foi executado, conferido nos diários aprovados.'}</p>

@@ -60,6 +60,7 @@ export const SUBTELAS = {
   diarioDia: ['diario', 'meusDiarios', 'hoje'],
   medicao: ['medicoes', 'pagamentos'],
   fichaObra: ['obras'],
+  editarServico: ['cronograma'],
 }
 
 // Menu de um usuário: o do perfil, menos o que o sócio bloqueou.
@@ -88,6 +89,14 @@ export function podeAbrir(perfil, tela, bloqueadas = []) {
   if (tela === 'mais') return m.mais.length > 0
   if (SUBTELAS[tela]) return SUBTELAS[tela].some((pai) => podeAbrir(perfil, pai, bloqueadas))
   return m.barra.includes(tela) || m.mais.includes(tela)
+}
+
+// Telas que funcionam sem nenhuma obra cadastrada. As outras pedem para cadastrar a primeira.
+const TELAS_SEM_OBRA = ['obras', 'contratados', 'usuarios', 'perfil', 'mais', 'gestao', 'faturamento']
+
+export function telaPrecisaDeObra(tela, params = {}) {
+  if (tela === 'fichaObra') return !params.nova
+  return !TELAS_SEM_OBRA.includes(tela)
 }
 
 // Item do menu que acende quando a tela atual é uma subtela.

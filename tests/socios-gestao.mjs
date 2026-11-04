@@ -2,7 +2,7 @@
 import { conflitosDoServico, detectarConflitos, diasCorridos, segundaDaSemana } from '../src/lib/conflitos.js'
 import {
   buscarBaseGestao, buscarDiario, comentarCotacao, criarTarefa, definirObraAtual, definirPerfil, definirPrestadorDoServico,
-  enviarDiario, listarContratados, listarCotacoes, listarObras, listarTarefas, listarTarefasDeTodasAsObras, listarUsuarios, salvarEquipeDoDiario, salvarObra, salvarUsuario,
+  enviarDiario, listarContratados, listarCotacoes, listarObras, listarTarefas, listarTarefasDeTodasAsObras, listarUsuarios, salvarDiario, salvarObra, salvarUsuario,
 } from '../src/lib/dados.js'
 import { calcularGestao, montarAlocacoes } from '../src/lib/gestao.js'
 import { menuDoUsuario, podeAbrir, telaInicial, telasConfiguraveis } from '../src/lib/menus.js'
@@ -98,11 +98,11 @@ conferir('cliente não lê diário ainda não aprovado', (await buscarDiario('d1
 
 // Diário: quem pode mexer. d09 está aprovado; d12, enviado.
 conferir('cliente não envia diário', (await enviarDiario('d12')).erro !== null, true)
-conferir('cliente não altera equipe do diário', (await salvarEquipeDoDiario('d12', [], {})).erro !== null, true)
+conferir('cliente não altera equipe do diário', (await salvarDiario({ id: 'd12', data: HOJE })).erro !== null, true)
 definirPerfil('auxiliar')
-conferir('auxiliar não altera diário aprovado', (await salvarEquipeDoDiario('d09', [], {})).erro !== null, true)
+conferir('auxiliar não altera diário aprovado', (await salvarDiario({ id: 'd09', data: '2026-10-28' })).erro !== null, true)
 conferir('auxiliar não reenvia diário aprovado', (await enviarDiario('d09')).erro !== null, true)
-conferir('auxiliar altera diário ainda não aprovado', (await salvarEquipeDoDiario('d12', ['f2'], { f2: 'Teste' })).erro, null)
+conferir('auxiliar altera diário ainda não aprovado', (await salvarDiario({ id: 'd12', data: HOJE, equipe: ['f2'], atividades: { f2: 'Teste' } })).erro, null)
 definirPerfil('cliente')
 
 // ---------- Compras: o cliente comenta para aprovar ----------

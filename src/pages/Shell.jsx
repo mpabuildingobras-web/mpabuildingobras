@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Icon } from '../components'
+import { Icon, Vazio } from '../components'
+import { ErroDeTela } from '../components/ErroDeTela'
 import { SeletorObra } from '../components/SeletorObra'
 import { useObra } from '../lib/ObraContext'
-import { PERFIS, SUBTELAS, TELAS, itensDaBarra, menuDoUsuario, podeAbrir, telaDoMenu, telaInicial } from '../lib/menus'
+import { PERFIS, SUBTELAS, TELAS, itensDaBarra, menuDoUsuario, podeAbrir, telaDoMenu, telaInicial, telaPrecisaDeObra } from '../lib/menus'
 import { HOJE } from '../lib/mockData'
 import { Avanco } from '../screens/avanco'
 import { Perfil } from '../screens/cadastros'
@@ -10,6 +11,7 @@ import { Contratados } from '../screens/contratados'
 import { Cotacoes } from '../screens/cotacoes'
 import { Cronograma } from '../screens/cronograma'
 import { DiarioDia, DiarioLista } from '../screens/diario'
+import { EditarServico } from '../screens/editarServico'
 import { Faturamento } from '../screens/faturamento'
 import { Financeiro } from '../screens/financeiro'
 import { Fotos } from '../screens/fotos'
@@ -27,7 +29,7 @@ import { Usuarios } from '../screens/usuarios'
 export default function Shell({ usuario, onSair }) {
   const perfil = usuario.role
   const bloqueadas = usuario.telas_bloqueadas ?? []
-  const { obraId } = useObra()
+  const { obra, obraId } = useObra()
   const [route, setRoute] = useState({ screen: telaInicial(perfil, bloqueadas), params: {}, obraId })
   // obraDestino: quando a tela abre já trocando de obra (ex.: da lista de obras para a ficha dela).
   const goto = (screen, params = {}, obraDestino = null) => {
@@ -52,6 +54,7 @@ export default function Shell({ usuario, onSair }) {
     case 'meusDiarios': body = <DiarioLista {...p} />; break
     case 'diarioDia': body = <DiarioDia {...p} />; break
     case 'cronograma': body = <Cronograma {...p} />; break
+    case 'editarServico': body = <EditarServico {...p} />; break
     case 'gestao': body = <Gestao {...p} />; break
     case 'tarefas': body = <Tarefas {...p} />; break
     case 'servicos': body = <Servicos {...p} />; break
@@ -73,12 +76,19 @@ export default function Shell({ usuario, onSair }) {
     default: body = null
   }
 
+  // Primeiro uso, ou pessoa sem obra liberada: nenhuma tela de obra abre sem obra.
+  if (!obra && telaPrecisaDeObra(telaAtual, route.params)) {
+    body = perfil === 'socio'
+      ? <Vazio icone="obra" titulo="Cadastre a sua primeira obra" texto="Tudo no app acontece dentro de uma obra: cronograma, diário, orçamento e custos."
+        botao="Cadastrar a primeira obra" onBotao={() => goto('fichaObra', { nova: true })} />
+      : <Vazio icone="obra" titulo="Nenhuma obra liberada para você" texto="Fale com a engenharia para vincular a sua obra à sua conta." />
+  }
+
   return (
     <div className="shell">
       <aside className="sidebar" aria-label="Menu">
         <div className="marca">
-          <span className="label">Acompanhamento</span>
-          <strong>Gestão de Obra</strong>
+          <img className="marca-logo" src="/logo-mpa.webp" alt="MPA Building, Gestão de Obras" />
         </div>
         <nav className="side-nav">
           {menu.barra.map((t) => (
@@ -98,11 +108,15 @@ export default function Shell({ usuario, onSair }) {
 
       <main>
         <header className="topo">
+          <img className="topo-icone so-celular" src="/icone-mpa.png" alt="MPA Building" />
           <SeletorObra />
           <button className="btn-texto so-celular" onClick={onSair}>Sair</button>
         </header>
         {/* Trocar de obra remonta o conteúdo: nada da obra anterior sobra na tela. */}
-        <div key={`${obraId}-${telaAtual}-${JSON.stringify(route.params)}`}>{body}</div>
+        <div key={`${obraId}-${telaAtual}-${JSON.stringify(route.params)}`}>
+          {SUBTELAS[telaAtual] && <button className="btn-voltar" onClick={() => goto(doMenu)}>‹ Voltar para {TELAS[doMenu].titulo}</button>}
+          <ErroDeTela>{body}</ErroDeTela>
+        </div>
       </main>
 
       <nav className="tabbar" aria-label="Navegação">

@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Carregando, Icon, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
 import {
   aprovarDiario, buscarDiario, buscarDiarioDoDia, carregarCronograma, devolverDiario,
-  enviarDiario, listarContratados, listarDiarios, salvarEquipeDoDiario,
+  enviarDiario, listarContratados, listarDiarios, salvarDiario,
 } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { corDoStatusDiario, dataBR, qtd } from '../lib/formato'
+import { faltaDoServico } from '../lib/lancamentos'
 import { HOJE } from '../lib/mockData'
 
 const CLIMAS = ['Sol', 'Nublado', 'Chuva', 'Chuva forte']
@@ -88,6 +89,13 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const [clima, setClima] = useState([d.clima_manha, d.clima_tarde])
   const [equipe, setEquipe] = useState(d.equipe.map((p) => p.id))
   const [atividades, setAtividades] = useState(Object.fromEntries(d.equipe.map((p) => [p.id, p.atividade])))
+  const [ocorrencias, setOcorrencias] = useState(d.ocorrencias ?? '')
+  const [lancamentos, setLancamentos] = useState(Object.fromEntries(d.execucoes.map((e) => [e.servico_id, {
+    servico_id: e.servico_id, quantidade: String(e.quantidade).replace('.', ','), qtd_pessoas: String(e.qtd_pessoas), descricao: e.descricao ?? '',
+  }])))
+  const [erros, setErros] = useState({})
+  const [devolvendo, setDevolvendo] = useState(false)
+  const [motivo, setMotivo] = useState('')
   const [mostrarOutros, setMostrarOutros] = useState(false)
 
   if (perfil === 'cliente' && !diario) {
@@ -103,10 +111,32 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const liberados = somenteLeitura ? aberto.filter((l) => lancado(l.id)) : aberto.filter(liberado)
   const outros = aberto.filter((l) => !liberado(l))
 
-  const acao = (fn, ok) => rodar(async () => {
-    const { erro } = await fn()
-    if (erro) return avisar(erro)
+  const mudarLancamento = (sid, campo, valor) => setLancamentos({
+    ...lancamentos, [sid]: { servico_id: sid, quantidade: '', qtd_pessoas: '', descricao: '', ...lancamentos[sid], [campo]: valor },
+  })
+
+  // Grava tudo o que está na tela e, se houver, faz o próximo passo (enviar, aprovar).
+  const salvar = (ok, depois) => rodar(async () => {
+    const r = await salvarDiario({
+      id: diario?.id, data: d.data, clima_manha: clima[0], clima_tarde: clima[1], ocorrencias, equipe, atividades,
+      lancamentos: Object.values(lancamentos),
+    })
+    if (r.erros) { setErros(r.erros); avisar('Confira os campos destacados.'); return }
+    if (r.erro) { avisar(r.erro); return }
+    setErros({})
+    if (depois) {
+      const passo = await depois(r.data.id)
+      if (passo.erro) { avisar(passo.erro); return }
+    }
     avisar(ok)
+    recarregar()
+  })
+
+  const devolver = () => rodar(async () => {
+    const r = await devolverDiario(d.id, motivo)
+    if (r.erro) { avisar(r.erro); return }
+    setDevolvendo(false)
+    avisar('Diário devolvido.')
     recarregar()
   })
 
@@ -171,7 +201,10 @@ function Formulario({ perfil, dados, data, recarregar }) {
           <span className="label">{liberados.length} {somenteLeitura ? 'lançados' : 'liberados'}</span>
         </div>
         {liberados.length === 0 && <p>{somenteLeitura ? 'Nenhum serviço lançado neste dia.' : 'Nenhum serviço liberado para hoje.'}</p>}
-        {liberados.map((l) => <CartaoServico key={l.id} l={l} lancado={lancado(l.id)} somenteLeitura={somenteLeitura}
+        {liberados.map((l) => <CartaoServico key={l.id} l={l} somenteLeitura={somenteLeitura}
+          lancamento={lancamentos[l.id]} erro={erros[l.id]} descricao={lancado(l.id)?.descricao}
+          falta={faltaDoServico(l, execucoes, diario?.id ?? null)}
+          aoMudar={(campo, valor) => mudarLancamento(l.id, campo, valor)}
           nomePrestador={contratados.find((c) => c.id === l.responsavel_id)?.nome ?? lancado(l.id)?.prestador} />)}
         {mostrarOutros && outros.map((l) => (
           <div key={l.id} className="panel serv-card blocked">
@@ -191,7 +224,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
       <div className="section">
         <div className="section-head"><span className="label" style={{ color: 'var(--ink)' }}>Ocorrências</span></div>
         <div className="field" style={{ marginTop: 12 }}>
-          <textarea aria-label="Ocorrências" defaultValue={d.ocorrencias ?? ''} readOnly={somenteLeitura} placeholder="Ex.: faltou material, chuva parou o serviço…" />
+          <textarea aria-label="Ocorrências" value={ocorrencias} onChange={(e) => setOcorrencias(e.target.value)} readOnly={somenteLeitura} placeholder="Ex.: faltou material, chuva parou o serviço…" />
         </div>
       </div>
 
@@ -207,20 +240,36 @@ function Formulario({ perfil, dados, data, recarregar }) {
         </div>
       </div>
 
+      {!somenteLeitura && devolvendo && (
+        <div className="section">
+          <div className="panel form-painel">
+            <div className="field full">
+              <label className="label" htmlFor="motivo">Por que este diário volta para ajuste?</label>
+              <textarea id="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Ex.: faltou a foto do teste de estanqueidade" />
+            </div>
+          </div>
+        </div>
+      )}
       {!somenteLeitura && (
         <div className="actionbar">
           {perfil === 'socio' && d.status === 'Enviado' ? (
-            <>
-              <button className="btn btn-danger" disabled={salvando} onClick={() => acao(() => devolverDiario(d.id, 'Revisar as quantidades e fotos.'), 'Diário devolvido para a auxiliar.')}>Devolver</button>
-              <button className="btn btn-primary" disabled={salvando} onClick={() => acao(() => aprovarDiario(d.id), 'Diário aprovado. O cliente já pode ver.')}>Aprovar diário</button>
-            </>
+            devolvendo ? (
+              <>
+                <button className="btn" disabled={salvando} onClick={() => setDevolvendo(false)}>Cancelar</button>
+                <button className="btn btn-danger" disabled={salvando || !motivo.trim()} onClick={devolver}>Confirmar devolução</button>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-danger" disabled={salvando} onClick={() => setDevolvendo(true)}>Devolver</button>
+                <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário aprovado. O cliente já pode ver.', aprovarDiario)}>{salvando ? 'Salvando…' : 'Aprovar diário'}</button>
+              </>
+            )
+          ) : d.status === 'Aprovado' ? (
+            <button className="btn btn-primary" style={{ gridColumn: '1 / -1' }} disabled={salvando} onClick={() => salvar('Alterações salvas.')}>{salvando ? 'Salvando…' : 'Salvar alterações'}</button>
           ) : (
             <>
-              <button className="btn" disabled={!diario || salvando} onClick={() => acao(() => salvarEquipeDoDiario(d.id, equipe, atividades), 'Equipe e atividades salvas.')}>Salvar rascunho</button>
-              <button className="btn btn-primary" disabled={!diario || d.status === 'Aprovado' || salvando}
-                onClick={() => acao(async () => { await salvarEquipeDoDiario(d.id, equipe, atividades); return enviarDiario(d.id) }, 'Diário enviado para aprovação.')}>
-                {d.status === 'Aprovado' ? 'Já aprovado' : 'Enviar para aprovação'}
-              </button>
+              <button className="btn" disabled={salvando} onClick={() => salvar('Rascunho salvo.')}>Salvar rascunho</button>
+              <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário enviado para aprovação.', enviarDiario)}>{salvando ? 'Salvando…' : 'Enviar para aprovação'}</button>
             </>
           )}
         </div>
@@ -231,9 +280,10 @@ function Formulario({ perfil, dados, data, recarregar }) {
 }
 
 // Cartão de um serviço no diário: meta do dia em destaque e o lançamento.
-function CartaoServico({ l, lancado, somenteLeitura, nomePrestador }) {
+function CartaoServico({ l, lancamento, erro, descricao, falta, aoMudar, somenteLeitura, nomePrestador }) {
   const porPercentual = l.forma === 'Percentual'
-  const [valor, setValor] = useState(lancado ? String(lancado.quantidade).replace('.', ',') : '')
+  const valor = lancamento?.quantidade ?? ''
+  const pessoas = lancamento?.qtd_pessoas ?? ''
   const corTag = l.cor === 'red' ? 'solid-red' : l.cor
   return (
     <div className="panel serv-card">
@@ -242,40 +292,53 @@ function CartaoServico({ l, lancado, somenteLeitura, nomePrestador }) {
           <span className="label">{l.frente}{nomePrestador ? `, ${nomePrestador}` : ''}</span>
           <div className="item-title" style={{ marginTop: 4 }}>{l.nome}</div>
         </div>
-        <span className={`tag ${corTag}`}>{l.cor === 'red' ? 'Atrasado' : l.cor === 'amber' ? 'Atenção' : 'No prazo'}</span>
+        {!somenteLeitura && <span className={`tag ${corTag}`}>{l.cor === 'red' ? 'Atrasado' : l.cor === 'amber' ? 'Atenção' : 'No prazo'}</span>}
       </div>
-      <div className="meta-dia"><span className="label">Meta de hoje</span></div>
-      <div className="meta-dia" style={{ marginTop: 2 }}>
-        <span className={`n num ${l.cor === 'red' ? 'c-red' : ''}`}>{l.metaDia}</span>
-        <span className="u">{porPercentual ? '%' : l.unidade}</span>
-        <span className="label" style={{ marginLeft: 'auto' }}>já feito {qtd(l.executado, l.unidade, l.forma)} de {qtd(l.prevista, l.unidade, l.forma)}</span>
-      </div>
-      <div className="bar"><i style={{ width: `${l.pct * 100}%` }}></i></div>
-      {porPercentual ? (
-        <div className="seg" style={{ marginTop: 14 }}>
-          {['+25%', '+50%', '+75%', 'Concluído'].map((b) => (
-            <button key={b} disabled={somenteLeitura} aria-pressed={valor === b} onClick={() => setValor(b)}>{b}</button>
-          ))}
-        </div>
+      {somenteLeitura ? (
+        <>
+          <p className="executado-dia">
+            <b className="num">{porPercentual ? `${valor}%` : `${valor} ${l.unidade}`}</b> executados neste dia
+            {pessoas ? `, com ${pessoas} ${pessoas === '1' ? 'pessoa' : 'pessoas'}` : ''}
+          </p>
+          <div className="bar"><i style={{ width: `${l.pct * 100}%` }}></i></div>
+          <span className="label" style={{ display: 'block', marginTop: 6 }}>Total até agora: {qtd(l.executado, l.unidade, l.forma)} de {qtd(l.prevista, l.unidade, l.forma)}</span>
+        </>
       ) : (
+        <>
+        <div className="meta-dia"><span className="label">Meta de hoje</span></div>
+        <div className="meta-dia" style={{ marginTop: 2 }}>
+          <span className={`n num ${l.cor === 'red' ? 'c-red' : ''}`}>{l.metaDia}</span>
+          <span className="u">{porPercentual ? '%' : l.unidade}</span>
+          <span className="label" style={{ marginLeft: 'auto' }}>já feito {qtd(l.executado, l.unidade, l.forma)} de {qtd(l.prevista, l.unidade, l.forma)}</span>
+        </div>
+        <div className="bar"><i style={{ width: `${l.pct * 100}%` }}></i></div>
+        {porPercentual && (
+          <div className="seg" style={{ marginTop: 14 }}>
+            {[25, 50, 75].map((n) => (
+              <button key={n} type="button" disabled={n > falta} aria-pressed={valor === String(n)} onClick={() => aoMudar('quantidade', valor === String(n) ? '' : String(n))}>+{n}%</button>
+            ))}
+            <button type="button" disabled={falta <= 0} aria-pressed={valor === String(falta).replace('.', ',')} onClick={() => aoMudar('quantidade', String(falta).replace('.', ','))}>Concluído</button>
+          </div>
+        )}
         <div className="fields">
           <div className="field">
             <label className="label" htmlFor={`q-${l.id}`}>Executado hoje</label>
             <div className="with-unit">
-              <input className="big num" id={`q-${l.id}`} inputMode="decimal" placeholder="0" value={valor}
-                readOnly={somenteLeitura} onChange={(e) => setValor(e.target.value)} />
-              <span>{l.unidade}</span>
+              <input className="big num" id={`q-${l.id}`} inputMode="decimal" placeholder="0" value={valor} aria-invalid={!!erro}
+                onChange={(e) => aoMudar('quantidade', e.target.value)} />
+              <span>{porPercentual ? '%' : l.unidade}</span>
             </div>
           </div>
           <div className="field">
             <label className="label" htmlFor={`p-${l.id}`}>Pessoas no serviço</label>
-            <input className="big num" id={`p-${l.id}`} inputMode="numeric" placeholder="0"
-              defaultValue={lancado?.qtd_pessoas ?? ''} readOnly={somenteLeitura} />
+            <input className="big num" id={`p-${l.id}`} inputMode="numeric" placeholder="0" value={pessoas}
+              onChange={(e) => aoMudar('qtd_pessoas', e.target.value)} />
           </div>
         </div>
+        </>
       )}
-      {porPercentual && lancado && <p className="label" style={{ marginTop: 10 }}>Lançado neste dia: +{lancado.quantidade}%, {lancado.qtd_pessoas} pessoas</p>}
-      {lancado?.descricao && <p style={{ margin: '10px 0 0', color: 'var(--slate)', fontSize: 15 }}>{lancado.descricao}</p>}
+      {erro && <p className="acesso-erro" style={{ marginTop: 8 }} role="alert">{erro}</p>}
+      {descricao && <p style={{ margin: '10px 0 0', color: 'var(--slate)', fontSize: 15 }}>{descricao}</p>}
     </div>
   )
 }

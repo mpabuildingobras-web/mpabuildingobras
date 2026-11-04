@@ -332,7 +332,6 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -.01em; }
 .g-dia { font-weight: 500; }
 .g-linha span { font: 600 11.5px/1 var(--sans); letter-spacing: 0; text-transform: none; }
 .etapa-n { font: 600 16px var(--sans); }
-.acesso-logo, .acesso-logo b { font-weight: 700; letter-spacing: -.01em; }
 .acesso-btn { font-weight: 600; font-size: 15px; letter-spacing: 0; text-transform: none; }
 .acesso-coluna h2 { font-size: 16px; font-weight: 600; letter-spacing: 0; text-transform: none; }
 .acesso-campo label { font-weight: 500; }
@@ -540,3 +539,21 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -.01em; }
 /* Gantt: duas linhas de nome e mais a linha do responsável cabem; barra que rola não aparece ao lado do nome. */
 .gantt { --row: 74px; }
 .g-label { box-shadow: -2px 0 0 var(--white); }
+
+/* Voltar das telas internas e ações pequenas dentro de um item */
+.btn-voltar { display: block; min-height: 44px; margin: 8px 8px 0; padding: 0 8px; border: 0; border-radius: 6px; background: none; font-size: 15px; font-weight: 500; color: var(--slate); }
+.btn-voltar:hover { background: var(--destaque); color: var(--ink); }
+@media (min-width: 900px) { .btn-voltar { margin-left: 24px; } }
+.item-acoes { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0 -12px; }
+.field input[aria-invalid="true"] { border-color: var(--red-ink); }
+.gantt-info .btn { justify-self: start; }
+.executado-dia { margin: 12px 0 0; font-size: 16px; }
+.executado-dia b { font-size: 24px; font-weight: 600; }
+
+/* Logo: entrada, menu lateral e, no celular, só o triângulo ao lado do nome da obra */
+.acesso-marca { width: 100%; max-width: 420px; }
+.acesso-logo-img { display: block; width: 100%; height: auto; }
+.marca-logo { display: block; width: 100%; height: auto; }
+.topo-icone { flex: none; width: 34px; height: 34px; }
+.topo { padding-left: 12px; }
+@media (min-width: 900px) { .topo { padding-left: 32px; } }

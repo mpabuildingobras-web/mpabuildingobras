@@ -87,7 +87,9 @@ export function useCarregar(carregar, dependencias = []) {
   const [estado, setEstado] = useState({ data: null, erro: null, carregando: true })
   const [versao, setVersao] = useState(0)
   useEffect(() => {
-    carregar().then(({ data, erro }) => setEstado({ data, erro, carregando: false }))
+    carregar()
+      .then(({ data, erro }) => setEstado({ data, erro, carregando: false }))
+      .catch(() => setEstado({ data: null, erro: 'Não foi possível carregar esta tela. Verifique a internet e tente de novo.', carregando: false }))
   }, [versao, ...dependencias])
   return { ...estado, recarregar: () => setVersao((v) => v + 1) }
 }

@@ -25,7 +25,8 @@ function Conteudo({ dados, goto }) {
   const { obra, servicos, execucoes, diarios, contratados } = dados
   if (servicos.length === 0) {
     return <Vazio icone="crono" titulo="Esta obra ainda não tem serviços"
-      texto="Importe a planilha de orçamento para criar as etapas e os serviços de uma vez." />
+      texto="Cadastre os serviços no Cronograma para acompanhar os prazos aqui."
+      botao="Cadastrar serviços" onBotao={() => goto('cronograma')} />
   }
   const c = calcularCascata({ servicos, execucoes, obra, hoje: HOJE, contam: statusQueContam('socio') })
   const abertos = ordenarPorAtraso(c.linhas)
