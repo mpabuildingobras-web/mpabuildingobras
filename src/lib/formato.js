@@ -6,6 +6,9 @@ export function dataBR(iso) {
   return `${d}/${m}/${a}`
 }
 
+// Número para mostrar num campo: 12.5 → "12,5". Vazio continua vazio.
+export const numeroBR = (v) => (v === undefined || v === null ? '' : String(v).replace('.', ','))
+
 // Só dia e mês, para listas e gráficos: '2026-11-03' → '03/11'.
 export const ddmm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '—')
 

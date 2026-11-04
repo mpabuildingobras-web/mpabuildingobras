@@ -55,6 +55,7 @@ export function Usuarios({ usuario: eu }) {
 function FormUsuario({ inicial, obras, eu, onSalvo, onCancelar }) {
   const [d, setD] = useState(inicial)
   const [erros, setErros] = useState({})
+  const [falha, setFalha] = useState('')
   const [salvando, rodar] = useOcupado()
   const muda = (c) => (e) => setD({ ...d, [c]: e.target.value })
   // Trocar de perfil zera os bloqueios: as telas de um perfil não valem para o outro.
@@ -64,6 +65,7 @@ function FormUsuario({ inicial, obras, eu, onSalvo, onCancelar }) {
     e.preventDefault()
     const r = await salvarUsuario(d)
     if (r.erros) return setErros(r.erros)
+    if (r.erro) return setFalha(r.erro)
     onSalvo()
   }
   // Ninguém tira de si mesmo o acesso a esta tela: ficaria sem como desfazer.
@@ -105,6 +107,7 @@ function FormUsuario({ inicial, obras, eu, onSalvo, onCancelar }) {
         </div>
       </fieldset>
 
+      {falha && <p className="acesso-erro full" role="alert">{falha}</p>}
       <button type="button" className="btn" onClick={onCancelar}>Cancelar</button>
       <button type="submit" className="btn btn-primary" disabled={salvando}>{salvando ? 'Salvando…' : inicial.id ? 'Salvar acesso' : 'Cadastrar usuário'}</button>
     </form>

@@ -1,15 +1,21 @@
 // Regras de quem lança: diário, serviço e custo. Sem React e sem banco.
-import { ordenarCadeia } from './cronograma.js'
+import { ordenarCadeia, statusQueContam } from './cronograma.js'
+import { numeroBR } from './formato.js'
 
 export const UNIDADES = ['m²', 'm', 'ml', 'm³', 'un', 'vb', 'kg']
+// Verba não tem quantidade: o avanço é lançado em percentual.
+export const medeEmPercentual = (unidade) => unidade === 'vb'
+
 export const CATEGORIAS_CUSTO = ['Mão de obra', 'Material', 'Equipamento', 'Terceirizado', 'Outros']
 
-// Número como a pessoa digita: "12", "12,5", "1.340,50". Vazio ou inválido vira null.
+// Número como a pessoa digita: "12", "12,5", "1.340", "1.340,50". Ponto seguido de três dígitos
+// é milhar: "1.340" é mil trezentos e quarenta, nunca 1,34. Vazio ou inválido vira null.
 export function lerNumero(valor) {
   if (typeof valor === 'number') return Number.isFinite(valor) ? valor : null
   const t = String(valor ?? '').trim()
   if (!t) return null
-  const n = Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t)
+  const soMilhar = /^\d{1,3}(\.\d{3})+$/.test(t)
+  const n = Number(t.includes(',') || soMilhar ? t.replace(/\./g, '').replace(',', '.') : t)
   return Number.isFinite(n) ? n : null
 }
 
@@ -19,7 +25,7 @@ const arred = (v) => Math.round(v * 1000) / 1000
 // Diário devolvido ou em rascunho não conta: ainda não vale como executado.
 export function faltaDoServico(servico, execucoes, diarioId) {
   const feito = execucoes
-    .filter((e) => e.servico_id === servico.id && e.diario_id !== diarioId && (e.status === 'Enviado' || e.status === 'Aprovado'))
+    .filter((e) => e.servico_id === servico.id && e.diario_id !== diarioId && statusQueContam('socio').includes(e.status))
     .reduce((s, e) => s + e.quantidade, 0)
   return arred(Math.max(0, servico.prevista - feito))
 }
@@ -38,7 +44,7 @@ export function conferirDiario({ data, lancamentos = [], diarioId = null }, serv
     if (quantidade === null || quantidade < 0) { erros[l.servico_id] = 'Digite só números, como 12 ou 12,5.'; continue }
     if (quantidade === 0) continue
     const falta = faltaDoServico(servico, execucoes, diarioId)
-    if (quantidade > falta) { erros[l.servico_id] = `Faltam só ${String(falta).replace('.', ',')} neste serviço.`; continue }
+    if (quantidade > falta) { erros[l.servico_id] = `Faltam só ${numeroBR(falta)} neste serviço.`; continue }
     const pessoas = lerNumero(l.qtd_pessoas)
     if (!pessoas || pessoas < 1 || !Number.isInteger(pessoas)) { erros[l.servico_id] = 'Diga quantas pessoas trabalharam neste serviço.'; continue }
     limpos.push({ servico_id: l.servico_id, quantidade, qtd_pessoas: pessoas, descricao: (l.descricao ?? '').trim() })
@@ -54,14 +60,17 @@ export function conferirServico(dados, servicosDaObra) {
   if (!UNIDADES.includes(dados.unidade)) erros.unidade = 'Escolha a unidade.'
   const duracao = lerNumero(dados.duracao)
   if (!duracao || duracao < 1 || !Number.isInteger(duracao)) erros.duracao = 'Digite a duração em dias úteis, como 5.'
-  const porPercentual = dados.unidade === 'vb'
+  const porPercentual = medeEmPercentual(dados.unidade)
   const prevista = porPercentual ? 100 : lerNumero(dados.prevista)
   if (!prevista || prevista <= 0) erros.prevista = 'Digite a quantidade prevista.'
   for (const campo of ['valor', 'custo_mo']) {
     const texto = String(dados[campo] ?? '').trim()
     if (texto && (lerNumero(texto) === null || lerNumero(texto) < 0)) erros[campo] = 'Digite um valor, como 1.340,50.'
   }
-  if (!erros.duracao && !erros.prevista) {
+  // Dependência é sempre dentro da mesma obra.
+  const idsDaObra = servicosDaObra.map((s) => s.id)
+  if ((dados.deps ?? []).some((d) => !idsDaObra.includes(d))) erros.deps = 'Só dá para depender de um serviço desta obra.'
+  if (!erros.duracao && !erros.prevista && !erros.deps) {
     const id = dados.id ?? '__novo__'
     const lista = [...servicosDaObra.filter((s) => s.id !== id), { ...dados, id, nome: dados.nome ?? 'Este serviço' }]
     try { ordenarCadeia(lista) } catch (e) { erros.deps = `Não dá para salvar. ${e.message}` }

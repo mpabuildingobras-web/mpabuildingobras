@@ -102,7 +102,7 @@ export function buscarDiario(id) {
   return resposta({
     ...d,
     // Nome de cada prestador e o que fez no dia: aparece para quem lê o diário, inclusive o cliente.
-    equipe: (d.equipe ?? []).map((cid) => ({ id: cid, nome: pessoa(cid)?.nome ?? cid, funcao: pessoa(cid)?.funcao ?? '', atividade: d.atividades?.[cid] ?? '' })),
+    equipe: (d.equipe ?? []).map((cid) => ({ id: cid, nome: pessoa(cid)?.nome ?? cid, funcao: ehCliente() ? '' : (pessoa(cid)?.funcao ?? ''), atividade: d.atividades?.[cid] ?? '' })),
     execucoes: mock.execucoes.filter((e) => e.diario_id === id).map((e) => {
       const s = mock.servicos.find((x) => x.id === e.servico_id)
       return { ...e, servico: s.nome, frente: s.frente, unidade: s.unidade, forma: s.forma, prestador: pessoa(s.responsavel_id)?.nome ?? '' }
@@ -130,9 +130,15 @@ const podeMexerNoDiario = (id) => {
   return daObra(mock.diarios).find((x) => x.id === id)?.status !== 'Aprovado'
 }
 export const enviarDiario = (id) => (podeMexerNoDiario(id) ? mudarStatus(id, 'Enviado', { comentario_devolucao: null }) : recusa('Sem permissão para enviar este diário.'))
-export const aprovarDiario = (id) => (ehSocio() ? mudarStatus(id, 'Aprovado') : recusa('Só sócio aprova.'))
+const estaEnviado = (id) => daObra(mock.diarios).find((x) => x.id === id)?.status === 'Enviado'
+export function aprovarDiario(id) {
+  if (!ehSocio()) return recusa('Só sócio aprova.')
+  if (!estaEnviado(id)) return recusa('Só dá para aprovar um diário enviado.')
+  return mudarStatus(id, 'Aprovado')
+}
 export function devolverDiario(id, comentario) {
   if (!ehSocio()) return recusa('Só sócio devolve.')
+  if (!estaEnviado(id)) return recusa('Só dá para devolver um diário enviado.')
   if (!comentario || !comentario.trim()) return recusa('Escreva o motivo da devolução.')
   return mudarStatus(id, 'Devolvido', { comentario_devolucao: comentario.trim() })
 }
@@ -143,14 +149,16 @@ export function salvarDiario({ id, data, clima_manha, clima_tarde, ocorrencias, 
   if (!ehSocio() && perfilAtual !== 'auxiliar') return recusa('Cliente só visualiza o diário.')
   if (!obraAtual) return recusa('Escolha uma obra antes de lançar o diário.')
   let d = daObra(mock.diarios).find((x) => (id ? x.id === id : x.data === data))
+  if (id && !d) return recusa('Este diário não é desta obra.')
   if (d && !podeMexerNoDiario(d.id)) return recusa('Sem permissão para alterar este diário.')
+  if (d && mock.execucoes.some((e) => e.diario_id === d.id && e.medicao_id)) return recusa('Este diário já entrou numa medição e não pode mudar.')
   const r = conferirDiario({ data, lancamentos, diarioId: d?.id ?? null }, daObra(mock.servicos).filter((s) => s.tipo === 'Normal'), mock.execucoesComStatus())
   if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
   if (!d) {
     d = { id: novoId('d'), obra_id: obraAtual, data, status: 'Rascunho' }
     mock.diarios.push(d)
   }
-  Object.assign(d, { clima_manha, clima_tarde, ocorrencias, equipe, atividades, qtd_pessoas: equipe.length })
+  Object.assign(d, { clima_manha, clima_tarde, ocorrencias, equipe, atividades, qtd_pessoas: equipe.length || d.qtd_pessoas || 0 })
   for (let i = mock.execucoes.length - 1; i >= 0; i--) {
     if (mock.execucoes[i].diario_id === d.id) mock.execucoes.splice(i, 1)
   }
@@ -170,9 +178,14 @@ export function salvarServico(dados) {
   if (!ehSocio()) return recusa('Só sócio cadastra serviços.')
   if (!obraAtual) return recusa('Escolha uma obra antes de cadastrar serviços.')
   const daObraAtual = daObra(mock.servicos)
+  if (dados.id && !daObraAtual.some((x) => x.id === dados.id)) return recusa('Este serviço não é desta obra.')
   const normais = daObraAtual.filter((s) => s.tipo === 'Normal')
   const r = conferirServico(dados, normais)
   if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
+  const existente = daObraAtual.find((x) => x.id === dados.id)
+  if (existente && existente.forma !== r.forma && mock.execucoes.some((e) => e.servico_id === existente.id)) {
+    return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: { unidade: 'Este serviço já tem lançamentos: não dá para trocar entre verba (vb) e quantidade.' } })
+  }
   const frente = dados.frente.trim()
   const campos = {
     nome: dados.nome.trim(), frente, unidade: dados.unidade, prevista: r.prevista, forma: r.forma, duracao: r.duracao,
@@ -195,10 +208,21 @@ export function salvarServico(dados) {
   return resposta(s)
 }
 
+// Valor e custo de cada serviço, mesmo de quem só tem um dos dois. Só sócio.
+export function listarValoresDosServicos() {
+  if (!ehSocio()) return resposta([])
+  return resposta(daObra(mock.servicos).map((s) => ({
+    servico_id: s.id,
+    valor: mock.servicosValores.find((v) => v.servico_id === s.id)?.valor_cliente,
+    custo_mo: mock.servicosCustos.find((v) => v.servico_id === s.id)?.custo_mo,
+  })))
+}
+
 export function excluirServico(id) {
   if (!ehSocio()) return recusa('Só sócio exclui serviços.')
   const s = daObra(mock.servicos).find((x) => x.id === id)
   if (!s) return recusa('Serviço não encontrado nesta obra.')
+  if (daObra(mock.medicoes).some((m) => m.itens.some(([numero]) => numero === s.numero_item))) return recusa('Este serviço já entrou numa medição e não pode ser excluído.')
   const impedimento = impedimentoParaExcluir(s, daObra(mock.servicos), mock.execucoesComStatus())
   if (impedimento) return recusa(impedimento)
   mock.servicos.splice(mock.servicos.indexOf(s), 1)
@@ -276,7 +300,7 @@ export function listarFotos() {
 export function buscarOrcamento() {
   if (perfilAtual === 'auxiliar') return resposta(null)
   const cab = daObra(mock.orcamentos)[0]
-  if (!cab) return resposta(null)
+  if (!cab || (ehCliente() && !cab.importado_em)) return resposta(null)
   const itens = mock.itensDoOrcamento(obraAtual).map((i) => (ehSocio() ? i : { ...i, custo_mo: undefined }))
   return resposta({ ...cab, itens })
 }
@@ -310,6 +334,7 @@ export function listarCustos() {
 export function salvarCusto(dados) {
   if (!ehSocio()) return recusa('Só sócio lança custo.')
   if (!obraAtual) return recusa('Escolha uma obra antes de lançar custo.')
+  if (dados.id && !daObra(mock.custos).some((k) => k.id === dados.id)) return recusa('Este custo não é desta obra.')
   const r = conferirCusto(dados)
   if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
   const campos = { data: dados.data, descricao: dados.descricao.trim(), categoria: dados.categoria, valor: r.valor, pago: !!dados.pago }

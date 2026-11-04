@@ -2,7 +2,7 @@
 import { calcularCascata } from '../src/lib/cronograma.js'
 import {
   aprovarDiario, buscarBaseFaturamento, buscarDiario, buscarDiarioDoDia, buscarOrcamento, carregarCronograma, criarObraParaTeste,
-  definirObraAtual, definirPerfil, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, salvarCusto, salvarDiario, salvarServico,
+  definirObraAtual, definirPerfil, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, listarValoresDosServicos, salvarCusto, salvarDiario, salvarServico,
 } from './apoio-lancamentos.js'
 import { calcularFaturamento } from '../src/lib/faturamento.js'
 import {
@@ -29,6 +29,9 @@ function conferir(descricao, real, esperado) {
 conferir('vírgula decimal', lerNumero('12,5'), 12.5)
 conferir('milhar com ponto e vírgula', lerNumero('1.340,50'), 1340.5)
 conferir('inteiro', lerNumero('20'), 20)
+conferir('milhar sem centavos não vira 1,34', lerNumero('1.340'), 1340)
+conferir('milhões com pontos', lerNumero('1.340.000'), 1340000)
+conferir('ponto decimal continua decimal', lerNumero('1.5'), 1.5)
 conferir('vazio vira nada', lerNumero(''), null)
 conferir('texto vira nada', lerNumero('abc'), null)
 
@@ -94,6 +97,9 @@ const excesso = await salvarDiario({ id: d12.id, data: HOJE, equipe: [], lancame
 conferir('passar do previsto não grava e diz onde', [excesso.data, excesso.erros.s9.startsWith('Faltam só')], [null, true])
 
 // Devolver pede motivo
+conferir('aprovado não pode ser devolvido', (await devolverDiario(d12.id, 'Motivo')).erro !== null, true)
+conferir('aprovado não pode ser aprovado de novo', (await aprovarDiario(d12.id)).erro !== null, true)
+await enviarDiario(d12.id)
 conferir('devolver sem motivo é recusado', (await devolverDiario(d12.id, '  ')).erro !== null, true)
 await devolverDiario(d12.id, 'Faltou foto.')
 conferir('devolvido guarda o motivo', (await buscarDiario(d12.id)).data.comentario_devolucao, 'Faltou foto.')
@@ -129,6 +135,33 @@ await salvarCusto({ ...custo, valor: custo.valor, pago: true })
 conferir('marcar como pago grava', (await listarCustos()).data[0].pago, true)
 await excluirCusto(custo.id)
 conferir('excluir custo devolve o líquido', await liquido(), 0)
+
+// ---------- O que não pode se perder ----------
+definirObraAtual('obra-ap302')
+await salvarDiario({ id: 'd02', data: '2026-10-05', equipe: [], lancamentos: [{ servico_id: 's1', quantidade: '45', qtd_pessoas: '3' }] })
+conferir('diário sem equipe marcada mantém a contagem de pessoas', (await buscarDiario('d02')).data.qtd_pessoas, 3)
+conferir('serviço com lançamento não troca entre verba e quantidade', Object.keys((await salvarServico({ id: 's3', nome: 'Hidráulica', frente: 'Hidráulica', unidade: 'm²', prevista: '10', duracao: '8', deps: ['s2'] })).erros ?? {}), ['unidade'])
+conferir('serviço medido não é excluído', (await excluirServico('s4')).erro.includes('medição'), true)
+definirObraAtual(nova.id)
+
+// Orçamento digitado à mão: o sócio vê, o cliente só depois de publicado
+definirPerfil('cliente')
+conferir('cliente não vê orçamento ainda não publicado', (await buscarOrcamento()).data, null)
+definirPerfil('socio')
+
+// ---------- Nada cruza de uma obra para outra ----------
+definirObraAtual('obra-cjf')
+const antes = (await buscarDiarioDoDia('2026-09-30')).data
+conferir('diário de outra obra é recusado, não vira um novo', (await salvarDiario({ id: 'd01', data: '2026-09-30', equipe: [], lancamentos: [] })).erro !== null, true)
+conferir('e nada foi criado na obra atual', [antes, (await buscarDiarioDoDia('2026-09-30')).data], [null, null])
+conferir('serviço de outra obra é recusado', (await salvarServico({ id: 's1', nome: 'X', frente: 'Y', unidade: 'vb', duracao: '1', deps: [] })).erro !== null, true)
+conferir('custo de outra obra é recusado', (await salvarCusto({ id: 'k1', data: HOJE, descricao: 'X', categoria: 'Outros', valor: '1' })).erro !== null, true)
+conferir('dependência em serviço de outra obra é recusada', (await salvarServico({ nome: 'X', frente: 'Y', unidade: 'vb', duracao: '1', deps: ['s1'] })).erros?.deps, 'Só dá para depender de um serviço desta obra.')
+definirObraAtual(nova.id)
+
+// Serviço só com custo, sem valor ao cliente: o custo não some
+const soCusto = (await salvarServico({ nome: 'Só custo', frente: 'Z', unidade: 'vb', duracao: '1', deps: [], custo_mo: '500' })).data
+conferir('custo sem valor continua disponível para editar', (await listarValoresDosServicos()).data.find((v) => v.servico_id === soCusto.id).custo_mo, 500)
 
 // ---------- Só quem pode ----------
 definirPerfil('auxiliar')

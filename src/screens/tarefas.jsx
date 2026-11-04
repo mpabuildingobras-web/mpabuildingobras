@@ -88,12 +88,14 @@ export function Tarefas() {
 function FormTarefa({ obras, obraAtual, socios, onSalvo }) {
   const [d, setD] = useState({ titulo: '', obra_id: obraAtual ?? '', responsavel: socios[0]?.nome ?? '', prazo: HOJE, prioridade: 'Média' })
   const [erros, setErros] = useState({})
+  const [falha, setFalha] = useState('')
   const [salvando, rodar] = useOcupado()
   const muda = (c) => (e) => setD({ ...d, [c]: e.target.value })
   const salvar = async (e) => {
     e.preventDefault()
     const r = await criarTarefa(d)
     if (r.erros) return setErros(r.erros)
+    if (r.erro) return setFalha(r.erro)
     onSalvo()
   }
   return (
@@ -108,6 +110,7 @@ function FormTarefa({ obras, obraAtual, socios, onSalvo }) {
         <input id="t-prazo" type="date" value={d.prazo} onChange={muda('prazo')} />{erros.prazo && <span className="acesso-erro">{erros.prazo}</span>}</div>
       <div className="field"><label className="label" htmlFor="t-prio">Prioridade</label>
         <select id="t-prio" value={d.prioridade} onChange={muda('prioridade')}>{PRIORIDADES.map((p) => <option key={p}>{p}</option>)}</select></div>
+      {falha && <p className="acesso-erro full" role="alert">{falha}</p>}
       <button type="submit" className="btn btn-primary full" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar tarefa'}</button>
     </form>
   )

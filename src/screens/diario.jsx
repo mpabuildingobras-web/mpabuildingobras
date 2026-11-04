@@ -5,7 +5,7 @@ import {
   enviarDiario, listarContratados, listarDiarios, salvarDiario,
 } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
-import { corDoStatusDiario, dataBR, qtd } from '../lib/formato'
+import { corDoStatusDiario, dataBR, numeroBR, qtd } from '../lib/formato'
 import { faltaDoServico } from '../lib/lancamentos'
 import { HOJE } from '../lib/mockData'
 
@@ -91,7 +91,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const [atividades, setAtividades] = useState(Object.fromEntries(d.equipe.map((p) => [p.id, p.atividade])))
   const [ocorrencias, setOcorrencias] = useState(d.ocorrencias ?? '')
   const [lancamentos, setLancamentos] = useState(Object.fromEntries(d.execucoes.map((e) => [e.servico_id, {
-    servico_id: e.servico_id, quantidade: String(e.quantidade).replace('.', ','), qtd_pessoas: String(e.qtd_pessoas), descricao: e.descricao ?? '',
+    servico_id: e.servico_id, quantidade: numeroBR(e.quantidade), qtd_pessoas: String(e.qtd_pessoas), descricao: e.descricao ?? '',
   }])))
   const [erros, setErros] = useState({})
   const [devolvendo, setDevolvendo] = useState(false)
@@ -268,7 +268,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
             <button className="btn btn-primary" style={{ gridColumn: '1 / -1' }} disabled={salvando} onClick={() => salvar('Alterações salvas.')}>{salvando ? 'Salvando…' : 'Salvar alterações'}</button>
           ) : (
             <>
-              <button className="btn" disabled={salvando} onClick={() => salvar('Rascunho salvo.')}>Salvar rascunho</button>
+              <button className="btn" disabled={salvando} onClick={() => salvar(d.status === 'Rascunho' ? 'Rascunho salvo.' : 'Alterações salvas.')}>{d.status === 'Rascunho' ? 'Salvar rascunho' : 'Salvar alterações'}</button>
               <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário enviado para aprovação.', enviarDiario)}>{salvando ? 'Salvando…' : 'Enviar para aprovação'}</button>
             </>
           )}
@@ -317,7 +317,7 @@ function CartaoServico({ l, lancamento, erro, descricao, falta, aoMudar, somente
             {[25, 50, 75].map((n) => (
               <button key={n} type="button" disabled={n > falta} aria-pressed={valor === String(n)} onClick={() => aoMudar('quantidade', valor === String(n) ? '' : String(n))}>+{n}%</button>
             ))}
-            <button type="button" disabled={falta <= 0} aria-pressed={valor === String(falta).replace('.', ',')} onClick={() => aoMudar('quantidade', String(falta).replace('.', ','))}>Concluído</button>
+            <button type="button" disabled={falta <= 0} aria-pressed={valor === numeroBR(falta)} onClick={() => aoMudar('quantidade', numeroBR(falta))}>Concluído</button>
           </div>
         )}
         <div className="fields">

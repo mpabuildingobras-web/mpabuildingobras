@@ -15,7 +15,7 @@ export function SeletorObra() {
       <div className="seletor">
         <div>
           <span className="label">Obra</span>
-          <strong>Nenhuma obra liberada para você ainda</strong>
+          <strong>Nenhuma obra para mostrar</strong>
         </div>
       </div>
     )

@@ -84,12 +84,14 @@ export function Financeiro() {
 function FormCusto({ onSalvo }) {
   const [d, setD] = useState({ data: HOJE, descricao: '', categoria: 'Mão de obra', valor: '', pago: false })
   const [erros, setErros] = useState({})
+  const [falha, setFalha] = useState('')
   const [salvando, rodar] = useOcupado()
   const muda = (c) => (e) => setD({ ...d, [c]: e.target.value })
   const salvar = async (e) => {
     e.preventDefault()
     const r = await salvarCusto(d)
     if (r.erros) { setErros(r.erros); return }
+    if (r.erro) { setFalha(r.erro); return }
     onSalvo()
   }
   const erro = (c) => erros[c] && <span className="acesso-erro">{erros[c]}</span>
@@ -104,6 +106,7 @@ function FormCusto({ onSalvo }) {
       <div className="field"><label className="label" htmlFor="k-data">Data</label>
         <input id="k-data" type="date" value={d.data} onChange={muda('data')} />{erro('data')}</div>
       <label className="check"><input type="checkbox" checked={d.pago} onChange={(e) => setD({ ...d, pago: e.target.checked })} /><span>Já foi pago</span></label>
+      {falha && <p className="acesso-erro full" role="alert">{falha}</p>}
       <button type="submit" className="btn btn-primary full" disabled={salvando}>{salvando ? 'Salvando…' : 'Lançar custo'}</button>
     </form>
   )

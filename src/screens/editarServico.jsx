@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Carregando, Titulo, useAviso, useCarregar, useOcupado } from '../components'
-import { buscarOrcamento, excluirServico, listarContratados, listarServicos, salvarServico } from '../lib/dados'
-import { UNIDADES } from '../lib/lancamentos'
+import { excluirServico, listarContratados, listarServicos, listarValoresDosServicos, salvarServico } from '../lib/dados'
+import { numeroBR } from '../lib/formato'
+import { UNIDADES, medeEmPercentual } from '../lib/lancamentos'
 
 async function carregar() {
-  const [s, c, o] = await Promise.all([listarServicos(), listarContratados(), buscarOrcamento()])
+  const [s, c, v] = await Promise.all([listarServicos(), listarContratados(), listarValoresDosServicos()])
   return {
-    data: { servicos: s.data.filter((x) => x.tipo === 'Normal'), contratados: c.data, itens: o.data?.itens ?? [] },
-    erro: s.erro ?? c.erro ?? o.erro,
+    data: { servicos: s.data.filter((x) => x.tipo === 'Normal'), contratados: c.data, valores: v.data },
+    erro: s.erro ?? c.erro ?? v.erro,
   }
 }
 
@@ -21,16 +22,14 @@ export function EditarServico({ params, goto }) {
   )
 }
 
-const dinheiro = (v) => (v === undefined || v === null ? '' : String(v).replace('.', ','))
-
 function Formulario({ dados, id, goto }) {
-  const { servicos, contratados, itens } = dados
+  const { servicos, contratados, valores } = dados
   const atual = servicos.find((s) => s.id === id)
-  const item = itens.find((i) => i.id === id)
+  const item = valores.find((v) => v.servico_id === id)
   const [d, setD] = useState(atual ? {
     ...atual,
-    duracao: String(atual.duracao), prevista: String(atual.prevista).replace('.', ','),
-    valor: dinheiro(item?.valor), custo_mo: dinheiro(item?.custo_mo), obs: atual.obs ?? '',
+    duracao: String(atual.duracao), prevista: numeroBR(atual.prevista),
+    valor: numeroBR(item?.valor), custo_mo: numeroBR(item?.custo_mo), obs: atual.obs ?? '',
     responsavel_id: atual.responsavel_id ?? '',
   } : { nome: '', frente: '', unidade: 'm²', prevista: '', duracao: '', deps: [], responsavel_id: '', valor: '', custo_mo: '', obs: '' })
   const [erros, setErros] = useState({})
@@ -39,7 +38,7 @@ function Formulario({ dados, id, goto }) {
   const muda = (c) => (e) => setD({ ...d, [c]: e.target.value })
   const outros = servicos.filter((s) => s.id !== id)
   const frentes = [...new Set(servicos.map((s) => s.frente))]
-  const porPercentual = d.unidade === 'vb'
+  const porPercentual = medeEmPercentual(d.unidade)
 
   const salvar = async (e) => {
     e.preventDefault()
@@ -73,7 +72,7 @@ function Formulario({ dados, id, goto }) {
                 {contratados.map((c) => <option key={c.id} value={c.id}>{c.nome} ({c.funcao})</option>)}
               </select></div>
             <div className="field"><label className="label" htmlFor="s-un">Unidade</label>
-              <select id="s-un" value={d.unidade} onChange={muda('unidade')}>{UNIDADES.map((u) => <option key={u}>{u}</option>)}</select>
+              <select id="s-un" value={d.unidade} onChange={muda('unidade')}>{UNIDADES.map((u) => <option key={u}>{u}</option>)}</select>{erro('unidade')}
               {porPercentual && <span className="form-nota">Em verba (vb), o avanço é lançado em percentual.</span>}</div>
             {!porPercentual && (
               <div className="field"><label className="label" htmlFor="s-prev">Quantidade prevista</label>
