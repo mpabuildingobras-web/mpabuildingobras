@@ -171,7 +171,7 @@ Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
   - `npm run check` em zero.
   - Telas olhadas no navegador.
   - Revisão de código em duas partes (padrão e pedido), com os achados corrigidos.
-- Página de testes: "Testes do Gestão de Obra" (link no fim desta seção). As marcas ficam no banco da página (`rodada/atual` e a coleção `itens`).
+- Página de testes: "Testes do Gestão de Obra", https://claude.ai/artifact/RCuRE6JgabL8nCNSDpsMTg. As marcas ficam no banco da página (`rodada/atual` e a coleção `itens`); leia com a ferramenta de dados da página, sem pedir que ela copie nada.
 - Fonte da página: `docs/testes/testes.html`.
 - **Ficou de fora, de propósito:**
   - `src/pages/Shell.jsx:81` (`perfil === 'socio'` decide quem cadastra a primeira obra), o caso mais leve de `if` em tela.
