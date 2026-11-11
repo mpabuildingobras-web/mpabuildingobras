@@ -1,6 +1,6 @@
 // Multi-obra na camada de dados: nada de uma obra pode aparecer na outra.
 import * as mock from '../src/lib/mockData.js'
-import { buscarObraAtual, definirObraAtual, listarDiarios, listarObras, listarServicos } from '../src/lib/dados.js'
+import { buscarObraAtual, definirObraAtual, listarDiarios, listarObras, listarServicos } from '../src/lib/dadosMock.js'
 import { SITUACOES } from '../src/lib/obras.js'
 import { dataBR } from '../src/lib/formato.js'
 
@@ -42,17 +42,17 @@ conferir('toda foto é de um serviço da mesma obra do diário',
   }), true)
 
 // Recorte pela obra atual.
-definirObraAtual('obra-ap302')
+definirObraAtual(mock.OBRA_AP302)
 const servA = (await listarServicos()).data
 const diaA = (await listarDiarios()).data
-definirObraAtual('obra-cjf')
+definirObraAtual(mock.OBRA_CJF)
 const servB = (await listarServicos()).data
 const diaB = (await listarDiarios()).data
 
-conferir('serviços da AP302 são só da AP302', servA.every((s) => s.obra_id === 'obra-ap302'), true)
-conferir('serviços da CJF são só da CJF', servB.every((s) => s.obra_id === 'obra-cjf'), true)
+conferir('serviços da AP302 são só da AP302', servA.every((s) => s.obra_id === mock.OBRA_AP302), true)
+conferir('serviços da CJF são só da CJF', servB.every((s) => s.obra_id === mock.OBRA_CJF), true)
 conferir('as duas obras têm listas diferentes', servA.length !== servB.length, true)
-conferir('diários da CJF não trazem os da AP302', diaB.every((d) => d.obra_id === 'obra-cjf') && diaB.length === 4, true)
+conferir('diários da CJF não trazem os da AP302', diaB.every((d) => d.obra_id === mock.OBRA_CJF) && diaB.length === 4, true)
 conferir('diários vêm do mais recente para o mais antigo', diaA[0].data, '2026-11-03')
 conferir('obra atual é a escolhida', (await buscarObraAtual()).data.codigo, 'CJF')
 

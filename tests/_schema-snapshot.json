@@ -1,0 +1,8 @@
+{
+  "obras": ["id", "codigo", "nome", "cliente_nome", "endereco", "data_inicio", "data_entrega", "situacao", "descricao", "informacoes", "foto", "documentos", "created_at", "updated_at"],
+  "obras_clientes": ["id", "obra_id", "telefone", "email", "documento", "created_at", "updated_at"],
+  "diarios": ["id", "obra_id", "data", "clima_manha", "clima_tarde", "qtd_pessoas", "ocorrencias", "status", "comentario_devolucao", "enviado_por", "enviado_em", "aprovado_em", "created_at", "updated_at"],
+  "diarios_equipe": ["id", "obra_id", "diario_id", "contratado_id", "atividade", "ordem", "created_at"],
+  "diarios_execucoes": ["id", "obra_id", "diario_id", "servico_id", "quantidade", "qtd_pessoas", "descricao", "created_at"],
+  "fotos": ["id", "obra_id", "diario_id", "servico_id", "url", "legenda", "created_at"]
+}

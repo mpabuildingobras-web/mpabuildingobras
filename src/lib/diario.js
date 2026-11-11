@@ -43,6 +43,14 @@ export function pessoasDoDia(equipe, antes) {
   return antes?.qtd_pessoas ?? 0
 }
 
+// Uma pessoa da equipe como aparece no diário. O cliente vê o nome e o que ela fez, nunca a função.
+export const pessoaNoDiario = (contratadoId, contratado, atividade, perfil) => ({
+  id: contratadoId,
+  nome: contratado?.nome ?? contratadoId,
+  funcao: perfil === 'cliente' ? '' : (contratado?.funcao ?? ''),
+  atividade: atividade ?? '',
+})
+
 // Antes de enviar para aprovação: pelo menos uma pessoa trabalhou na obra no dia.
 export function problemaParaEnviar(diario) {
   return diario.qtd_pessoas >= 1 ? null : 'Marque pelo menos uma pessoa na equipe do dia antes de enviar.'

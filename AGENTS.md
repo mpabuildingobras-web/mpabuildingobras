@@ -153,6 +153,38 @@ Em português simples, sem jargão. Se precisar de uma decisão minha, pergunte 
 
 Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
 
+**Back-end do Diário: LIGADO, falta a conferência da Manuela (10/11/2026)**
+
+- `src/lib/dados.js` agora lê e grava Obras e Diário no Supabase (`USAR_MOCK = false`). O resto continua no `dadosMock.js`.
+- Régua: `check-schema` e `check-grants` estão no `npm run check`, que fecha em zero.
+- Memória do banco: `banco-resumo.md`.
+- Conferido pelo agente:
+  - a leitura vem do banco: uma marca posta no banco apareceu na tela;
+  - a gravação pela tela no diário da CJF chegou na tabela certa, com a obra e o dia certos, e foi desfeita.
+- Falta:
+  - conferência com ela;
+  - revisão de código (`/code-review`) antes de subir para o GitHub;
+  - commit.
+- Para o app ver o `.env.local`, o servidor tem que ser religado depois que o arquivo foi criado. A porta 5174 (`gestao-de-obra-prints`) já está certa.
+- Depois disto: módulo Planejamento, começando pela EAP. Ela pediu terminar o Diário antes.
+
+Histórico da pausa (resolvido):
+
+- Feito:
+  - Projeto Supabase `gestao-de-obra` (id `pbhlrdvjeaqrctmkmouu`, sa-east-1), com `.env.local` montado.
+  - Tabelas `obras`, `obras_clientes`, `diarios`, `diarios_equipe`, `diarios_execucoes`, `fotos` e a função `salvar_diario`, em `supabase/migrations/`.
+  - RLS ligada com políticas `dev_*` liberadas (TEMPORÁRIO, sai no passo 10).
+  - CHECK testado.
+  - Seed carregado (`supabase-seed.sql`, gerado por `scripts/gerar-seed.mjs`).
+  - Ids das duas obras do mock viraram uuid fixo (`OBRA_AP302`, `OBRA_CJF`).
+  - O miolo de exemplo virou `src/lib/dadosMock.js`, e os testes usam ele.
+- Falta:
+  - Escrever no `src/lib/dados.js` (hoje só repassa o mock) as funções de banco de obras, diários, execuções, fotos e das bases de Gestão e Faturamento, com `USAR_MOCK = false`.
+  - Guardas de execução no banco em `salvarServico` e `excluirServico`.
+  - Erro de carregamento no `ObraContext`.
+  - `banco-resumo.md`, `tests/check-schema.mjs` com snapshot, conferência com ela e revisão de código.
+- Nada disso foi para o GitHub ainda.
+
 **Rodada 1 pronta, esperando a Manuela testar**
 
 - Feito:

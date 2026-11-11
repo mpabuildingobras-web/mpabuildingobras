@@ -1,6 +1,6 @@
 // Apoio do teste de lançamentos: a camada de dados, mais uma obra vazia pronta para usar.
-export * from '../src/lib/dados.js'
-import { salvarObra } from '../src/lib/dados.js'
+export * from '../src/lib/dadosMock.js'
+import { salvarObra } from '../src/lib/dadosMock.js'
 
 export async function criarObraParaTeste() {
   const { data } = await salvarObra({

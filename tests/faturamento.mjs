@@ -1,7 +1,7 @@
 // Faturamento: a única conta que junta obras, e a única porta é a do sócio.
-import { buscarBaseFaturamento, definirObraAtual, definirPerfil } from '../src/lib/dados.js'
+import { buscarBaseFaturamento, definirObraAtual, definirPerfil } from '../src/lib/dadosMock.js'
 import { calcularFaturamento } from '../src/lib/faturamento.js'
-import { HOJE } from '../src/lib/mockData.js'
+import { HOJE, OBRA_AP302, OBRA_CJF } from '../src/lib/mockData.js'
 
 let ok = 0
 let tot = 0
@@ -18,7 +18,7 @@ function conferir(descricao, real, esperado) {
 }
 
 definirPerfil('socio')
-definirObraAtual('obra-ap302')
+definirObraAtual(OBRA_AP302)
 const f = calcularFaturamento((await buscarBaseFaturamento()).data, HOJE)
 const ap = f.obras.find((o) => o.codigo === 'AP302')
 const cjf = f.obras.find((o) => o.codigo === 'CJF')
@@ -37,7 +37,7 @@ conferir('obra sem bruto não tem margem', cjf.margem, null)
 conferir('totais somam as obras', [f.totais.bruto, f.totais.liquido], [14173.5, -906.5])
 
 // Não depende da obra selecionada.
-definirObraAtual('obra-cjf')
+definirObraAtual(OBRA_CJF)
 const g = calcularFaturamento((await buscarBaseFaturamento()).data, HOJE)
 conferir('trocar de obra não muda o faturamento', g.totais.bruto, f.totais.bruto)
 

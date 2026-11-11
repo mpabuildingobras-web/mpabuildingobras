@@ -3,10 +3,10 @@ import { conflitosDoServico, detectarConflitos, diasCorridos, segundaDaSemana } 
 import {
   buscarBaseGestao, buscarDiario, comentarCotacao, criarTarefa, definirObraAtual, definirPerfil, definirPrestadorDoServico,
   enviarDiario, listarContratados, listarCotacoes, listarObras, listarTarefas, listarTarefasDeTodasAsObras, listarUsuarios, salvarDiario, salvarObra, salvarUsuario,
-} from '../src/lib/dados.js'
+} from '../src/lib/dadosMock.js'
 import { calcularGestao, montarAlocacoes } from '../src/lib/gestao.js'
 import { menuDoUsuario, podeAbrir, telaInicial, telasConfiguraveis } from '../src/lib/menus.js'
-import { HOJE, obras, usuarios } from '../src/lib/mockData.js'
+import { HOJE, OBRA_AP302, OBRA_CJF, obras, usuarios } from '../src/lib/mockData.js'
 import { conferirObra } from '../src/lib/obras.js'
 import { agruparTarefas, conferirTarefa, estaAtrasada } from '../src/lib/tarefas.js'
 import { conferirUsuario } from '../src/lib/usuarios.js'
@@ -57,11 +57,11 @@ conferir('concluídas vão para o último grupo', agruparTarefas([
 ]).map((g) => g.chave), ['2026-12-01', 'Concluídas'])
 
 definirPerfil('socio')
-definirObraAtual('obra-cjf')
+definirObraAtual(OBRA_CJF)
 const daCjf = (await listarTarefas()).data
-conferir('tarefas da obra selecionada são só dela', daCjf.length > 0 && daCjf.every((t) => t.obra_id === 'obra-cjf'), true)
+conferir('tarefas da obra selecionada são só dela', daCjf.length > 0 && daCjf.every((t) => t.obra_id === OBRA_CJF), true)
 conferir('"todas as obras" traz as duas e diz de qual é', new Set((await listarTarefasDeTodasAsObras()).data.map((t) => t.obra_codigo)).size, 2)
-await criarTarefa({ titulo: 'Conferir telhado', prazo: HOJE, responsavel: 'Ana Exemplo', prioridade: 'Alta', obra_id: 'obra-cjf' })
+await criarTarefa({ titulo: 'Conferir telhado', prazo: HOJE, responsavel: 'Ana Exemplo', prioridade: 'Alta', obra_id: OBRA_CJF })
 conferir('tarefa nova aparece na obra', (await listarTarefas()).data.some((t) => t.titulo === 'Conferir telhado'), true)
 
 // ---------- Gestão: AP302 e CJF têm o Rafael nas mesmas datas ----------
@@ -89,7 +89,7 @@ definirPerfil('cliente')
 conferir('cliente não recebe a lista de contratados', (await listarContratados()).data, [])
 
 // ---------- Diário: nome do prestador e o que fez ----------
-definirObraAtual('obra-ap302')
+definirObraAtual(OBRA_AP302)
 definirPerfil('cliente')
 const aprovado = (await buscarDiario('d09')).data
 conferir('cliente lê o nome do prestador no diário aprovado', aprovado.equipe[0].nome, 'Carlos')
@@ -112,12 +112,12 @@ conferir('cliente comenta numa cotação aguardando',
 conferir('cliente não comenta em cotação já comprada', (await comentarCotacao('q4', 'Cláudia', 'oi')).erro !== null, true)
 definirPerfil('auxiliar')
 conferir('auxiliar não comenta', (await comentarCotacao('q1', 'Rita', 'oi')).erro !== null, true)
-definirObraAtual('obra-cjf')
+definirObraAtual(OBRA_CJF)
 definirPerfil('socio')
 conferir('não comenta em cotação de outra obra', (await comentarCotacao('q1', 'Ana', 'oi')).erro !== null, true)
 
 // ---------- Usuários: o perfil é o teto ----------
-const novo = { nome: 'Pedro Silva', email: 'pedro@exemplo.com', role: 'auxiliar', obras: ['obra-cjf'] }
+const novo = { nome: 'Pedro Silva', email: 'pedro@exemplo.com', role: 'auxiliar', obras: [OBRA_CJF] }
 conferir('usuário completo passa', conferirUsuario(novo, usuarios).ok, true)
 conferir('e-mail repetido não passa', conferirUsuario({ ...novo, email: 'ANA@exemplo.com' }, usuarios).erros.email, 'Já existe um usuário com este e-mail.')
 conferir('auxiliar precisa de obra', Object.keys(conferirUsuario({ ...novo, obras: [] }, usuarios).erros), ['obras'])

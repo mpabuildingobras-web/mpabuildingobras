@@ -10,7 +10,7 @@ import {
   conferirCusto, conferirDiario, conferirServico, faltaDoServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem,
 } from '../src/lib/lancamentos.js'
 import { telaPrecisaDeObra } from '../src/lib/menus.js'
-import { HOJE } from '../src/lib/mockData.js'
+import { HOJE, OBRA_AP302, OBRA_CJF } from '../src/lib/mockData.js'
 
 let ok = 0
 let tot = 0
@@ -106,7 +106,7 @@ conferir('Ficha de obra existente precisa', telaPrecisaDeObra('fichaObra', {}), 
 
 // ---------- O ciclo: quantidade lançada muda o avanço ----------
 definirPerfil('socio')
-definirObraAtual('obra-ap302')
+definirObraAtual(OBRA_AP302)
 const pctForro = async (contam) => {
   const { data } = await carregarCronograma()
   const c = calcularCascata({ ...data, hoje: HOJE, contam })
@@ -180,7 +180,7 @@ await excluirCusto(custo.id)
 conferir('excluir custo devolve o líquido', await liquido(), 0)
 
 // ---------- O que não pode se perder ----------
-definirObraAtual('obra-ap302')
+definirObraAtual(OBRA_AP302)
 await salvarDiario({ id: 'd02', data: '2026-10-05', equipe: [], lancamentos: [{ servico_id: 's1', quantidade: '45', qtd_pessoas: '3' }] })
 conferir('diário sem equipe marcada mantém a contagem de pessoas', (await buscarDiario('d02')).data.qtd_pessoas, 3)
 conferir('serviço com lançamento não troca entre verba e quantidade', Object.keys((await salvarServico({ id: 's3', nome: 'Hidráulica', frente: 'Hidráulica', unidade: 'm²', prevista: '10', duracao: '8', deps: ['s2'], valor: '9.500', responsavel_id: 'f2' })).erros ?? {}), ['unidade'])
@@ -197,7 +197,7 @@ conferir('cliente não vê orçamento ainda não publicado', (await buscarOrcame
 definirPerfil('socio')
 
 // ---------- Nada cruza de uma obra para outra ----------
-definirObraAtual('obra-cjf')
+definirObraAtual(OBRA_CJF)
 const antes = (await buscarDiarioDoDia('2026-09-30')).data
 conferir('diário de outra obra é recusado, não vira um novo', (await salvarDiario({ id: 'd01', data: '2026-09-30', equipe: [], lancamentos: [] })).erro !== null, true)
 conferir('e nada foi criado na obra atual', [antes, (await buscarDiarioDoDia('2026-09-30')).data], [null, null])

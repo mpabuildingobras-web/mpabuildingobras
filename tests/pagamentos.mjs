@@ -16,7 +16,7 @@ function conferir(descricao, real, esperado) {
   }
 }
 
-const doAp = mock.medicoes.filter((m) => m.obra_id === 'obra-ap302')
+const doAp = mock.medicoes.filter((m) => m.obra_id === mock.OBRA_AP302)
 const p = separarPagamentos(doAp, mock.HOJE)
 
 conferir('medição 1 está paga', p.totalPago, 8145.5)

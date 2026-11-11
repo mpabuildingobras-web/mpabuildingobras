@@ -28,5 +28,12 @@ export const corDoStatusDiario = (status) => ({
   [STATUS_DIARIO.rascunho]: 'slate', [STATUS_DIARIO.enviado]: 'amber', [STATUS_DIARIO.aprovado]: 'green', [STATUS_DIARIO.devolvido]: 'red',
 })[status] ?? 'slate'
 
+// Hora local de um momento gravado pelo banco: "17h12".
+export function horaBR(iso) {
+  if (!iso) return ''
+  const h = new Date(iso)
+  return `${String(h.getHours()).padStart(2, '0')}h${String(h.getMinutes()).padStart(2, '0')}`
+}
+
 export const corDaSituacao = (situacao) =>
   ({ 'Em andamento': 'green', Parada: 'amber', [CONCLUIDA]: 'slate' })[situacao] ?? 'slate'
