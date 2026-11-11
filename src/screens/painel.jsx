@@ -1,8 +1,7 @@
 import { Carregando, EntregaDestaque, Vazio, useCarregar } from '../components'
-import { carregarCronograma, listarDiarios, listarContratados } from '../lib/dados'
+import { HOJE, carregarCronograma, listarDiarios, listarContratados } from '../lib/dados'
 import { calcularCascata, ordenarPorAtraso, statusQueContam } from '../lib/cronograma'
 import { comSinal, ddmm } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 
 async function carregar() {
   const [cr, di, fu] = await Promise.all([carregarCronograma(), listarDiarios(), listarContratados()])

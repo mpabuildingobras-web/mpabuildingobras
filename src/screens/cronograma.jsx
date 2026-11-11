@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Carregando, Vazio, useCarregar } from '../components'
-import { carregarCronograma, listarContratados } from '../lib/dados'
+import { HOJE, carregarCronograma, listarContratados } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { ddmm } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 
 async function carregar() {
   const [cr, fu] = await Promise.all([carregarCronograma(), listarContratados()])

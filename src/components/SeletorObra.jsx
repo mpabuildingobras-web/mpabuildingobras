@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom'
 import { Icon } from '.'
 import { useObra } from '../lib/ObraContext'
 import { corDaSituacao, dataBR } from '../lib/formato'
+import { obrasDoSeletor } from '../lib/obras'
 
 // Sempre visível no topo: diz em qual obra a pessoa está. Quem só enxerga uma obra
 // vê o nome, sem botão de trocar.
 export function SeletorObra() {
   const { obras, obra, trocarObra } = useObra()
   const [aberto, setAberto] = useState(false)
+  const [verConcluidas, setVerConcluidas] = useState(false)
 
   if (!obra) {
     return (
@@ -32,6 +34,8 @@ export function SeletorObra() {
     </span>
   )
 
+  const qtdConcluidas = obras.length - obrasDoSeletor(obras, false).length
+
   const escolher = (id) => {
     setAberto(false)
     trocarObra(id)
@@ -54,7 +58,7 @@ export function SeletorObra() {
               <strong>Trocar de obra</strong>
               <button className="btn btn-mono" onClick={() => setAberto(false)}>Fechar</button>
             </div>
-            {obras.map((o) => (
+            {obrasDoSeletor(obras, verConcluidas).map((o) => (
               <button key={o.id} className="folha-opcao" aria-current={o.id === obra.id}
                 onClick={() => escolher(o.id)}>
                 <span>
@@ -64,6 +68,11 @@ export function SeletorObra() {
                 <span className={`tag ${corDaSituacao(o.situacao)}`}>{o.situacao}</span>
               </button>
             ))}
+            {qtdConcluidas > 0 && (
+              <button className="btn btn-block" style={{ marginTop: 12 }} onClick={() => setVerConcluidas(!verConcluidas)}>
+                {verConcluidas ? 'Esconder concluídas' : `Mostrar concluídas (${qtdConcluidas})`}
+              </button>
+            )}
           </div>
         </div>,
         document.body,

@@ -153,6 +153,9 @@ function proximoUtilAntes(iso) {
   return ehDiaUtil(iso) ? iso : somarDiasUteis(iso, -1)
 }
 
+// Só serviço Normal entra na cadeia; o item percentual (Gestão de obra) acompanha os outros.
+export const servicosDaCadeia = (servicos) => servicos.filter((s) => s.tipo === 'Normal')
+
 // Quais diários contam para quem está vendo: o cliente só vê o aprovado.
 export const statusQueContam = (perfil) => (perfil === 'cliente' ? ['Aprovado'] : ['Enviado', 'Aprovado'])
 

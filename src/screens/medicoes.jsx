@@ -1,7 +1,6 @@
 import { Carregando, Titulo, Vazio, useAviso, useCarregar } from '../components'
-import { buscarObraAtual, listarMedicoes } from '../lib/dados'
+import { HOJE, buscarObraAtual, listarMedicoes } from '../lib/dados'
 import { dataBR, ddmm } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 import { reais } from '../lib/orcamento'
 import { separarPagamentos } from '../lib/pagamentos'
 

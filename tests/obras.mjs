@@ -1,5 +1,5 @@
 // Regras de obra (multi-obra). Node puro: `node tests/obras.mjs`.
-import { situacaoValida, escolherObraInicial, somenteDaObra } from '../src/lib/obras.js'
+import { situacaoValida, escolherObraInicial, obrasDoSeletor, somenteDaObra } from '../src/lib/obras.js'
 
 let ok = 0
 let tot = 0
@@ -29,6 +29,9 @@ conferir('guardada que sumiu cai na primeira em andamento', escolherObraInicial(
 conferir('sem nada guardado, primeira em andamento', escolherObraInicial(obras, null), 'b')
 conferir('sem obra em andamento, a primeira', escolherObraInicial([{ id: 'z', situacao: 'Parada' }], null), 'z')
 conferir('sem obra nenhuma, nada', escolherObraInicial([], 'a'), null)
+
+conferir('seletor esconde a obra concluída', obrasDoSeletor(obras, false).map((o) => o.id), ['b', 'c'])
+conferir('e mostra quando a pessoa pede', obrasDoSeletor(obras, true).map((o) => o.id), ['a', 'b', 'c'])
 
 const diarios = [{ id: 1, obra_id: 'a' }, { id: 2, obra_id: 'b' }, { id: 3, obra_id: 'a' }]
 conferir('recorte traz só a obra pedida', somenteDaObra(diarios, 'a').map((d) => d.id), [1, 3])

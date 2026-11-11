@@ -78,7 +78,11 @@ O auxiliar lança no celular, todo dia, o diário de cada obra: quem estava lá,
 - **Vista em Gantt** (decidido em 03/11/2026): barras por frente, linha de hoje, linha da entrega contratada e o trecho que passa do limite destacado.
 - **Obra:** guarda a **data de entrega contratada com o cliente** (é dela que sai toda data-limite).
 - **Ações:** criar, editar, apagar (só sócios); importar de planilha [DESCOBRIR NO USO].
-- **Vazio:** "Esta obra ainda não tem serviços. Cadastre as frentes e os serviços do cronograma."
+- **Não existe obra sem cronograma** (decidido em 10/11/2026):
+  - A obra nova nasce na situação **Em preparação** e o app leva o sócio direto ao Cronograma.
+  - Em preparação, só os sócios veem a obra: o auxiliar não lança diário e o cliente não vê.
+  - Ela só pode passar para Em andamento quando tiver cronograma.
+- **Vazio** (só o sócio vê, durante a preparação): "Esta obra ainda não tem cronograma." Botão **Cadastrar o primeiro serviço**. Quando a importação existir, entra também **Importar planilha**, em destaque.
 
 ### 4. Medições
 - **Abre em:** lista de medições da obra (Medição 1, 2, 3…), com período e valor.
@@ -110,6 +114,11 @@ O auxiliar lança no celular, todo dia, o diário de cada obra: quem estava lá,
 - **Como cada item é medido** [CHUTE]: itens em m², ml, un → por **quantidade** (o auxiliar lança "12 m²"); itens em vb → por **percentual** (o auxiliar toca 25% · 50% · 75% · 100%). O % executado de qualquer item = executado ÷ previsto.
 - **O que o cliente vê (aba Orçamento):** por etapa e por item: valor orçado, % executado, valor executado e saldo; total do contrato e % geral da obra. Só com diários aprovados. **Nunca vê TOTAL MO** (custo) nem a margem.
 - **O que os sócios veem a mais:** custo de mão de obra e margem por item e por etapa.
+- **Publicar para o cliente** (decidido em 10/11/2026):
+  - O cliente só vê a aba Orçamento depois que o orçamento é publicado.
+  - **Importar a planilha publica sozinho.**
+  - Orçamento montado à mão, com valor digitado em cada serviço no Cronograma, fica só para os sócios até um sócio tocar **Publicar para o cliente** na tela Orçamento.
+  - [CHUTE] Depois de publicado, valor novo ou alterado aparece para o cliente na hora, sem publicar de novo.
 - **A medição muda junto:** valor medido de um item = valor ao cliente × % executado no período. Não existe mais "preço unitário".
 - **Fase:** a importação entra na **Fase 1** (economiza cadastrar serviços à mão); a aba do cliente entra na **Fase 2**, junto com as medições.
 
@@ -250,7 +259,7 @@ Sistema anterior de R$ 297/mês e motivo de ter parado: `[PENDENTE]`.
 - **Cores (decidido em 04/11/2026):** as do logo: preto, branco e vermelho, em tons leves. Tom exato a conferir com o arquivo do logo.
 - **Fonte (decidido em 04/11/2026):** Inter, em caixa normal.
 - **Tema:** claro (melhor no sol do canteiro)
-- **Logo:** [CHUTE] sem logo; o nome do sistema aparece no lugar.
+- **Logo (decidido em 10/11/2026):** logo da MPA Building na entrada, no menu e no ícone do celular. Na aba do navegador aparece "MPA Building | Gestão de Obras".
 
 ---
 

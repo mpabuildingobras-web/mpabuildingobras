@@ -2,8 +2,9 @@
 import { calcularCascata } from '../src/lib/cronograma.js'
 import {
   aprovarDiario, buscarBaseFaturamento, buscarDiario, buscarDiarioDoDia, buscarOrcamento, carregarCronograma, criarObraParaTeste,
-  definirObraAtual, definirPerfil, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, listarValoresDosServicos, salvarCusto, salvarDiario, salvarServico,
+  definirObraAtual, definirPerfil, definirPrestadorDoServico, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, salvarCusto, salvarDiario, salvarServico,
 } from './apoio-lancamentos.js'
+import { acoesDoDiario, botoesDePercentual, podeEditarDiario, problemaParaEnviar } from '../src/lib/diario.js'
 import { calcularFaturamento } from '../src/lib/faturamento.js'
 import {
   conferirCusto, conferirDiario, conferirServico, faltaDoServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem,
@@ -51,9 +52,30 @@ conferir('quantidade pede pessoas', lancar('20', '').erros.a, 'Diga quantas pess
 conferir('texto na quantidade é recusado', lancar('muito').ok, false)
 conferir('campo vazio é ignorado', lancar('').lancamentos, [])
 
+// Item em verba: botões no lugar do campo, só os que cabem no que falta
+conferir('faltando 30%, só +25% e Concluído', botoesDePercentual(30).map((b) => b.liberado), [true, false, false, true])
+conferir('Concluído lança exatamente o que falta', botoesDePercentual(30)[3].valor, 30)
+conferir('serviço já concluído não tem botão', botoesDePercentual(0).some((b) => b.liberado), false)
+
+// Quem mexe no diário e quais botões aparecem
+conferir('auxiliar edita até aprovar', [podeEditarDiario('auxiliar', 'Enviado'), podeEditarDiario('auxiliar', 'Aprovado')], [true, false])
+conferir('cliente nunca edita', podeEditarDiario('cliente', 'Rascunho'), false)
+conferir('sócio decide o enviado', acoesDoDiario('socio', 'Enviado'), 'decidir')
+conferir('sócio corrige o aprovado', acoesDoDiario('socio', 'Aprovado'), 'corrigir')
+conferir('auxiliar envia o devolvido', acoesDoDiario('auxiliar', 'Devolvido'), 'enviar')
+conferir('auxiliar não tem botão no aprovado', acoesDoDiario('auxiliar', 'Aprovado'), 'nenhuma')
+
+// Enviar pede pelo menos uma pessoa na obra
+conferir('sem ninguém não envia', problemaParaEnviar({ qtd_pessoas: 0 }), 'Marque pelo menos uma pessoa na equipe do dia antes de enviar.')
+conferir('com uma pessoa envia', problemaParaEnviar({ qtd_pessoas: 1 }), null)
+
 // ---------- Regras do serviço ----------
-const base = { nome: 'Reboco', frente: 'Alvenaria', unidade: 'm²', duracao: '5', prevista: '60', deps: [] }
+const base = { nome: 'Reboco', frente: 'Alvenaria', unidade: 'm²', duracao: '5', prevista: '60', deps: [], valor: '1.000', responsavel_id: 'f4' }
 conferir('serviço completo passa', conferirServico(base, []).ok, true)
+conferir('sem valor ao cliente é recusado', conferirServico({ ...base, valor: '' }, []).erros.valor, 'Digite o valor ao cliente.')
+conferir('sem prestador é recusado', conferirServico({ ...base, responsavel_id: '' }, []).erros.responsavel_id, 'Escolha o prestador.')
+conferir('segundo serviço sem anterior é recusado', conferirServico(base, [{ id: 'x', deps: [] }]).erros.deps?.startsWith('Escolha de qual serviço'), true)
+conferir('o primeiro serviço continua sem anterior ao ser editado', conferirServico({ ...base, id: 'x' }, [{ id: 'x', deps: [] }, { id: 'y', deps: ['x'] }]).ok, true)
 conferir('vb é medido por percentual', [conferirServico({ ...base, unidade: 'vb', prevista: '' }, []).forma, conferirServico({ ...base, unidade: 'vb', prevista: '' }, []).prevista], ['Percentual', 100])
 conferir('duração quebrada é recusada', Object.keys(conferirServico({ ...base, duracao: '2,5' }, []).erros), ['duracao'])
 conferir('ciclo é recusado nomeando os serviços',
@@ -93,6 +115,13 @@ const relido = (await buscarDiario(d12.id)).data
 conferir('clima e ocorrência ficam gravados', [relido.clima_manha, relido.ocorrencias, relido.qtd_pessoas], ['Chuva', 'Teste', 1])
 await aprovarDiario(d12.id)
 conferir('aprovado, conta para o cliente', await pctForro(['Aprovado']), 38)
+definirPerfil('cliente')
+const vistoPeloCliente = (await buscarDiario(d12.id)).data
+conferir('cliente vê nome e atividade de quem trabalhou', [vistoPeloCliente.equipe[0].nome !== '', vistoPeloCliente.equipe[0].atividade], [true, 'Forro'])
+conferir('cliente não recebe a função do prestador', vistoPeloCliente.equipe.map((p) => p.funcao), [''])
+conferir('cliente vê o prestador de cada serviço lançado', vistoPeloCliente.execucoes.every((e) => e.prestador !== ''), true)
+definirPerfil('socio')
+conferir('sócio recebe a função', (await buscarDiario(d12.id)).data.equipe[0].funcao !== '', true)
 const excesso = await salvarDiario({ id: d12.id, data: HOJE, equipe: [], lancamentos: [{ servico_id: 's9', quantidade: '999', qtd_pessoas: '2' }] })
 conferir('passar do previsto não grava e diz onde', [excesso.data, excesso.erros.s9.startsWith('Faltam só')], [null, true])
 
@@ -110,14 +139,18 @@ conferir('reenviar limpa o motivo', (await buscarDiario(d12.id)).data.comentario
 const nova = await criarObraParaTeste()
 definirObraAtual(nova.id)
 conferir('obra nova começa sem diário', (await buscarDiarioDoDia(HOJE)).data, null)
-const s1 = (await salvarServico({ nome: 'Demolição', frente: 'Demolição', unidade: 'm²', duracao: '3', prevista: '30', deps: [], valor: '3.000,00', custo_mo: '1.500' })).data
+const s1 = (await salvarServico({ nome: 'Demolição', frente: 'Demolição', unidade: 'm²', duracao: '3', prevista: '30', deps: [], valor: '3.000,00', custo_mo: '1.500', responsavel_id: 'f1' })).data
 conferir('serviço criado ganha número de item', s1.numero_item, '1.1')
-const s2 = (await salvarServico({ nome: 'Pintura', frente: 'Pintura', unidade: 'vb', duracao: '2', deps: [s1.id] })).data
+const s2 = (await salvarServico({ nome: 'Pintura', frente: 'Pintura', unidade: 'vb', duracao: '2', deps: [s1.id], valor: '2.000', responsavel_id: 'f7' })).data
 conferir('serviço em vb nasce com 100', [s2.prevista, s2.forma], [100, 'Percentual'])
-conferir('orçamento nasce ao lançar o primeiro valor', (await buscarOrcamento()).data.itens.length, 1)
+conferir('orçamento tem um item por serviço com valor', (await buscarOrcamento()).data.itens.length, 2)
 const criado = await salvarDiario({ data: HOJE, clima_manha: 'Sol', clima_tarde: 'Sol', equipe: ['f1'], atividades: {}, lancamentos: [{ servico_id: s1.id, quantidade: '10', qtd_pessoas: '1' }] })
 conferir('diário é criado na obra nova', [criado.erro, criado.data.status, criado.data.obra_id], [null, 'Rascunho', nova.id])
 conferir('rascunho ainda não conta', (await carregarCronograma()).data.execucoes.filter((e) => e.status === 'Enviado').length, 0)
+const semGente = (await salvarDiario({ data: '2026-11-04', clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], lancamentos: [] })).data
+conferir('diário sem ninguém na equipe não é enviado', (await enviarDiario(semGente.id)).erro, 'Marque pelo menos uma pessoa na equipe do dia antes de enviar.')
+conferir('e continua rascunho', (await buscarDiario(semGente.id)).data.status, 'Rascunho')
+conferir('diário com equipe é enviado', (await enviarDiario(criado.data.id)).erro, null)
 const cicloErro = await salvarServico({ ...s1, duracao: '3', prevista: '30', deps: [s2.id] })
 conferir('editar criando ciclo é recusado', cicloErro.erros?.deps?.includes('Ciclo'), true)
 conferir('excluir com dependente é recusado', (await excluirServico(s1.id)).erro !== null, true)
@@ -140,8 +173,12 @@ conferir('excluir custo devolve o líquido', await liquido(), 0)
 definirObraAtual('obra-ap302')
 await salvarDiario({ id: 'd02', data: '2026-10-05', equipe: [], lancamentos: [{ servico_id: 's1', quantidade: '45', qtd_pessoas: '3' }] })
 conferir('diário sem equipe marcada mantém a contagem de pessoas', (await buscarDiario('d02')).data.qtd_pessoas, 3)
-conferir('serviço com lançamento não troca entre verba e quantidade', Object.keys((await salvarServico({ id: 's3', nome: 'Hidráulica', frente: 'Hidráulica', unidade: 'm²', prevista: '10', duracao: '8', deps: ['s2'] })).erros ?? {}), ['unidade'])
+conferir('serviço com lançamento não troca entre verba e quantidade', Object.keys((await salvarServico({ id: 's3', nome: 'Hidráulica', frente: 'Hidráulica', unidade: 'm²', prevista: '10', duracao: '8', deps: ['s2'], valor: '9.500', responsavel_id: 'f2' })).erros ?? {}), ['unidade'])
 conferir('serviço medido não é excluído', (await excluirServico('s4')).erro.includes('medição'), true)
+const trocado = (await salvarServico({ id: 's4', nome: 'Infra elétrica (eletrodutos)', frente: 'Instalações', unidade: 'm', prevista: '120', duracao: '6', deps: ['s2'], valor: '3.360', responsavel_id: 'f3' })).data
+conferir('trocar de frente não muda o número do item', [trocado.frente, trocado.numero_item], ['Instalações', '3.1'])
+conferir('e a medição continua achando o serviço', (await excluirServico('s4')).erro.includes('medição'), true)
+conferir('prestador não pode ficar vazio', (await definirPrestadorDoServico('s1', '')).erro, 'Todo serviço precisa de um prestador.')
 definirObraAtual(nova.id)
 
 // Orçamento digitado à mão: o sócio vê, o cliente só depois de publicado
@@ -159,9 +196,11 @@ conferir('custo de outra obra é recusado', (await salvarCusto({ id: 'k1', data:
 conferir('dependência em serviço de outra obra é recusada', (await salvarServico({ nome: 'X', frente: 'Y', unidade: 'vb', duracao: '1', deps: ['s1'] })).erros?.deps, 'Só dá para depender de um serviço desta obra.')
 definirObraAtual(nova.id)
 
-// Serviço só com custo, sem valor ao cliente: o custo não some
-const soCusto = (await salvarServico({ nome: 'Só custo', frente: 'Z', unidade: 'vb', duracao: '1', deps: [], custo_mo: '500' })).data
-conferir('custo sem valor continua disponível para editar', (await listarValoresDosServicos()).data.find((v) => v.servico_id === soCusto.id).custo_mo, 500)
+// Serviço sem valor ao cliente não entra: sumiria do orçamento e do contrato sem aviso
+const soCusto = await salvarServico({ nome: 'Só custo', frente: 'Z', unidade: 'vb', duracao: '1', deps: [s1.id], custo_mo: '500', responsavel_id: 'f1' })
+conferir('serviço sem valor não é gravado', [soCusto.data, soCusto.erros?.valor], [null, 'Digite o valor ao cliente.'])
+const semAnterior = await salvarServico({ nome: 'Solto', frente: 'Z', unidade: 'vb', duracao: '1', deps: [], valor: '100', responsavel_id: 'f1' })
+conferir('segundo serviço sem anterior não é gravado', semAnterior.erros?.deps?.startsWith('Escolha de qual serviço'), true)
 
 // ---------- Só quem pode ----------
 definirPerfil('auxiliar')

@@ -14,7 +14,7 @@ Um sistema de acompanhamento da execução de obras de reforma: o auxiliar lanç
 - React + Vite (versões atuais), sem biblioteca de componente pronta.
 - Visual a partir de um `index.css` próprio.
 - Navegação por estado, sem endereço no navegador.
-- Cores do logo da empresa: preto `#1E1E1E`, branco e vermelho `#C8232C`, em tons leves (tom exato a conferir com o arquivo do logo). Vermelho só na marca e em "atrasado"; botão principal preto. Verde e âmbar ficam só como status. Fonte **Inter** em tudo, caixa normal. Tema claro. Sem logo por enquanto (nome do sistema no lugar).
+- Cores do logo da empresa: preto `#1E1E1E`, branco e vermelho `#C8232C`, em tons leves (tom exato a conferir com o arquivo do logo). Vermelho só na marca e em "atrasado"; botão principal preto. Verde e âmbar ficam só como status. Fonte **Inter** em tudo, caixa normal. Tema claro. Logo da MPA Building na entrada, no menu e no ícone do celular (decidido em 10/11/2026).
 - Mobile primeiro: botões grandes, campos numéricos com teclado numérico, pouca digitação.
 - Celular: barra inferior fixa com até 5 itens. Computador: menu lateral à esquerda.
 - **Seletor de obra** no topo de toda tela interna para quem enxerga mais de uma obra. Trocar a obra recarrega a tela com os dados só daquela obra. Nenhuma tela mistura dados de obras diferentes.
@@ -49,6 +49,9 @@ Tudo é calculado na hora, a partir dos dados; nada disto é digitado.
 - **Dias úteis:** segunda a sexta. Sábados e feriados não contam [DESCOBRIR NO USO].
 - **Executado de um serviço:** soma das quantidades lançadas nos diários. Para sócios e auxiliar contam diários **Enviado** e **Aprovado**; para o cliente, só **Aprovado**.
 - **% executado:** executado ÷ quantidade prevista, no máximo 100%.
+- **Lançar mais do que falta** (decidido em 10/11/2026): não pode.
+  - O diário recusa a quantidade acima do que falta no serviço, com a mensagem "Faltam só X neste serviço."
+  - Se a obra fez mais do que o previsto, o sócio aumenta a quantidade prevista antes.
 - **Concluído:** quando o % chega a 100%, ou quando um sócio marca "Concluir serviço". A data de término real é a do diário que fechou os 100%, ou a data em que o sócio marcou.
 - **Data-limite de término (de trás para frente):** serviço sem ninguém depois dele termina, no limite, na data de entrega contratada da obra. Os outros: 1 dia útil antes da menor data-limite de início dos serviços que dependem dele.
 - **Data-limite para programar (= data-limite de início):** data-limite de término − (duração − 1) dias úteis. É a última data em que o serviço pode começar sem empurrar a entrega.
@@ -204,7 +207,7 @@ Sócio e Auxiliar: "Nenhum diário lançado ainda. Lance o de hoje." Cliente: "N
 | Executado hoje (por serviço) | número decimal | não | itens por quantidade: na unidade do serviço, não negativo. Itens em `vb` (por percentual): botões grandes **+25% · +50% · +75% · Concluído**, mostrando "já feito 40%" |
 | Pessoas neste serviço | número inteiro | não | obrigatório se lançou quantidade |
 | O que foi feito (por serviço) | texto curto | não | |
-| Ocorrências | texto longo | não | |
+| Ocorrências | texto longo | não | campo de observação livre do dia, para incluir o que for preciso (lembrete da sócia em 10/11/2026); não é só para problema |
 | Fotos | imagem | não | comprimida antes de subir |
 | Legenda da foto | texto curto | não | |
 | Serviço da foto | lista | não | |
@@ -215,6 +218,8 @@ Sócio e Auxiliar: "Nenhum diário lançado ainda. Lance o de hoje." Cliente: "N
 - **Aprovar** (Sócio, diário Enviado): grava como Aprovado. Mostra "Diário aprovado. O cliente já pode ver."
 - **Devolver** (Sócio, diário Enviado): pede um comentário obrigatório e grava como Devolvido.
 - **Editar** (Sócio, qualquer status): corrige quantidades, equipe, fotos.
+  - `[PENDENTE: decidir quando as medições forem construídas (Fase 2)]` Diário que já entrou numa medição pode ser editado?
+  - A trava antiga nunca funcionava, porque nada liga o diário à medição, e saiu em 10/11/2026.
 - **Excluir diário** (Sócio): pede confirmação.
 
 **Regras por perfil**
@@ -249,7 +254,10 @@ Sem serviços liberados para hoje: "Nenhum serviço liberado para hoje. Toque em
 - **Excluir frente:** só se não tiver serviços.
 
 **Estado vazio**
-"Esta obra ainda não tem cronograma. Importe a planilha de orçamento para criar as etapas e os serviços de uma vez." Botão **Importar planilha** (leva a Orçamento) e link "ou criar à mão".
+Só o sócio vê, com a obra Em preparação (decidido em 10/11/2026).
+
+- **Hoje:** "Esta obra ainda não tem cronograma." com o botão **Cadastrar o primeiro serviço**.
+- **Quando a importação existir:** entra o botão **Importar planilha** em destaque (leva a Orçamento), e o cadastro vira o link "ou criar à mão".
 
 ---
 
@@ -279,6 +287,8 @@ Sem serviços liberados para hoje: "Nenhum serviço liberado para hoje. Toque em
 **Ações**
 - **Salvar:** se a dependência criar um ciclo, recusa e mostra "Não dá para salvar: 'Pintura' depende de 'Reboco', que já depende de 'Pintura'."
 - **Excluir serviço:** só se não tiver lançamento em diário nem em medição; senão mostra "Este serviço já tem lançamentos e não pode ser excluído."
+  - Também não exclui serviço do qual outro depende (decidido em 10/11/2026). Mostra "'Pintura' depende deste serviço. Tire a dependência antes de excluir."
+  - Nada é religado sozinho, para nenhuma data prevista mudar sem o sócio ver.
 
 ---
 
@@ -329,8 +339,12 @@ Número, período, vencimento, status. Tabela de itens: nº do item, serviço, e
 6. **Só Sócio:** coluna de custo de mão de obra e margem (valor ao cliente − custo) por etapa e no total; botão **Baixar planilha original**.
 
 **Ações (Sócio)**
-- **Importar planilha** (obra sem orçamento): escolher o `.xlsx` → tela de conferência → **Confirmar importação**.
-- **Baixar planilha original.**
+- **Importar planilha** (obra sem orçamento): escolher o `.xlsx` → tela de conferência → **Confirmar importação**. Importar já publica para o cliente.
+- **Publicar para o cliente** (decidido em 10/11/2026): aparece só quando o orçamento foi montado à mão e ainda não foi publicado.
+  - Pede confirmação: "O cliente passa a ver o valor de cada serviço e o total do contrato. Publicar?"
+  - Depois de publicado, o rótulo do título mostra "Publicado em dd/mm" e o botão some.
+  - Antes de publicar, uma faixa avisa: "O cliente ainda não vê este orçamento."
+- **Baixar planilha original** (só quando veio de planilha).
 
 **Tela de conferência da importação (Sócio)**
 - "Lemos a aba ORÇAMENTO: **14 etapas · 28 itens · total R$ 48.795,98 · confere com a planilha ✓**".
@@ -486,10 +500,14 @@ Galeria da obra por data (mais recente primeiro), filtrável por frente e servi�
 | Data de início | data | sim | |
 | Data-meta de entrega | data | sim | base de todo o cálculo de prazos |
 | Valor do contrato (R$) | dinheiro | não | vem do orçamento importado; guardado à parte para o auxiliar nunca ver |
-| Situação | lista: Em andamento, Parada, Concluída | sim | |
+| Situação | lista: Em preparação, Em andamento, Parada, Concluída | sim | obra nova nasce Em preparação |
 
 **Ações**
 - Nova obra, editar, mudar situação. Obras Concluída saem do seletor (aparecem em "Mostrar concluídas").
+- **Não existe obra sem cronograma** (decidido em 10/11/2026):
+  - Ao cadastrar, a obra nasce **Em preparação** e o app abre o Cronograma dela.
+  - Em preparação, só os sócios veem a obra: auxiliar e cliente não.
+  - Passar para Em andamento sem nenhum serviço é recusado com "Cadastre o cronograma antes de começar a obra."
 - **Pessoas desta obra:** vincular auxiliares e o cliente à obra.
 
 **Estado vazio**
@@ -660,7 +678,9 @@ Hoje nos dados de exemplo: **terça, 03/11/2026**. Nomes fictícios.
 ## A conta que vai chegar depois
 
 - `[PENDENTE: confirmar os CHUTES de visual (cor, tema, logo) e de uso (celular × computador)]` — custo: retrabalho de interface se mudar depois.
-- `[PENDENTE: cliente vê o responsável de cada serviço?]` — hoje ficou: não vê.
+- Cliente vê o prestador no diário (decidido em 10/11/2026):
+  - No diário aprovado, vê o nome de cada prestador e a atividade que ele fez, tanto na equipe do dia quanto no serviço lançado.
+  - Não vê a função, o contato nem a lista de contratados.
 - `[PENDENTE: peso do % da frente e da obra]` — hoje ficou: ponderado pela duração; se a sócia quiser pelo valor, muda o número que o cliente vê.
 
 ## Decidir depois de usar

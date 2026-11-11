@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar } from '../components'
 import { conflitosDoServico, detectarConflitos, diasCorridos, segundaDaSemana } from '../lib/conflitos'
-import { buscarBaseGestao, definirPrestadorDoServico, listarContratados } from '../lib/dados'
+import { HOJE, buscarBaseGestao, definirPrestadorDoServico, listarContratados } from '../lib/dados'
 import { ddmm } from '../lib/formato'
 import { montarAlocacoes } from '../lib/gestao'
-import { HOJE } from '../lib/mockData'
 import { useObra } from '../lib/ObraContext'
 
 const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -81,7 +80,7 @@ export function Servicos({ goto }) {
                     <div className="field" style={{ marginTop: 8 }}>
                       <label className="label" htmlFor={`p-${a.servico_id}`}>Prestador</label>
                       <select id={`p-${a.servico_id}`} value={a.prestador_id ?? ''} onChange={(e) => trocarPrestador(a.servico_id, e.target.value)}>
-                        <option value="">Sem prestador</option>
+                        <option value="" disabled>Escolha o prestador</option>
                         {d.contratados.map((c) => <option key={c.id} value={c.id}>{c.nome} ({c.funcao})</option>)}
                       </select>
                     </div>

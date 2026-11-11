@@ -63,6 +63,8 @@ export function conferirServico(dados, servicosDaObra) {
   const porPercentual = medeEmPercentual(dados.unidade)
   const prevista = porPercentual ? 100 : lerNumero(dados.prevista)
   if (!prevista || prevista <= 0) erros.prevista = 'Digite a quantidade prevista.'
+  if (!String(dados.valor ?? '').trim()) erros.valor = 'Digite o valor ao cliente.'
+  if (!dados.responsavel_id) erros.responsavel_id = 'Escolha o prestador.'
   for (const campo of ['valor', 'custo_mo']) {
     const texto = String(dados[campo] ?? '').trim()
     if (texto && (lerNumero(texto) === null || lerNumero(texto) < 0)) erros[campo] = 'Digite um valor, como 1.340,50.'
@@ -70,6 +72,9 @@ export function conferirServico(dados, servicosDaObra) {
   // Dependência é sempre dentro da mesma obra.
   const idsDaObra = servicosDaObra.map((s) => s.id)
   if ((dados.deps ?? []).some((d) => !idsDaObra.includes(d))) erros.deps = 'Só dá para depender de um serviço desta obra.'
+  // Só o primeiro serviço da obra fica sem anterior.
+  const jaTemPrimeiro = servicosDaObra.some((s) => s.id !== dados.id && (s.deps ?? []).length === 0)
+  if ((dados.deps ?? []).length === 0 && jaTemPrimeiro) erros.deps = 'Escolha de qual serviço este depende. Só o primeiro serviço da obra fica sem anterior.'
   if (!erros.duracao && !erros.prevista && !erros.deps) {
     const id = dados.id ?? '__novo__'
     const lista = [...servicosDaObra.filter((s) => s.id !== id), { ...dados, id, nome: dados.nome ?? 'Este serviço' }]

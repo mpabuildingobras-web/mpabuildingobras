@@ -496,6 +496,7 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -.01em; }
 .acesso-btn.secundario { border: 1px solid var(--linha-campo); }
 .seg button { border: 1px solid var(--linha-campo); border-radius: 6px; font-weight: 500; transition: background-color .12s; }
 .seg button[aria-pressed="true"] { background: var(--acao); border-color: var(--acao); color: var(--white); }
+.seg button:disabled { opacity: .4; cursor: not-allowed; }
 .foto-add { border-radius: 8px; border-width: 1px; }
 .foto { border-radius: 8px; }
 

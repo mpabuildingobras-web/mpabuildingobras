@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar } from '../components'
-import { buscarOrcamento, carregarCronograma } from '../lib/dados'
+import { HOJE, buscarOrcamento, carregarCronograma } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { dataBR } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 import { porcento, reais, resumirOrcamento } from '../lib/orcamento'
 
 // Busca o orçamento e o executado de cada item na visão de quem está olhando.

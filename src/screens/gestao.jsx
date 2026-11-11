@@ -1,8 +1,7 @@
 import { Carregando, Titulo, Vazio, useCarregar } from '../components'
-import { buscarBaseGestao, listarContratados } from '../lib/dados'
+import { HOJE, buscarBaseGestao, listarContratados } from '../lib/dados'
 import { ddmm } from '../lib/formato'
 import { calcularGestao } from '../lib/gestao'
-import { HOJE } from '../lib/mockData'
 import { useObra } from '../lib/ObraContext'
 import { porcento } from '../lib/orcamento'
 

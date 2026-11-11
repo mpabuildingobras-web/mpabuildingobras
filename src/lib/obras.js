@@ -5,6 +5,10 @@ export const SITUACOES = ['Em andamento', 'Parada', 'Concluída']
 
 export const situacaoValida = (situacao) => SITUACOES.includes(situacao)
 
+// Obra Concluída sai do seletor; volta só quando a pessoa pede para ver.
+export const obrasDoSeletor = (obras, mostrarConcluidas) =>
+  obras.filter((o) => mostrarConcluidas || o.situacao !== 'Concluída')
+
 // Ao abrir o app: volta na obra guardada, se ela ainda existir para esta pessoa.
 // Senão, a primeira em andamento; senão, a primeira da lista.
 export function escolherObraInicial(obras, idGuardado) {

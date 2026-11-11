@@ -1,8 +1,7 @@
 import { Carregando, Titulo, Vazio, useCarregar } from '../components'
-import { buscarBaseFaturamento } from '../lib/dados'
+import { HOJE, buscarBaseFaturamento } from '../lib/dados'
 import { calcularFaturamento } from '../lib/faturamento'
 import { corDaSituacao } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 import { useObra } from '../lib/ObraContext'
 import { porcento, reais } from '../lib/orcamento'
 

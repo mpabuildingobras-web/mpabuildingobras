@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
-import { excluirCusto, listarCustos, listarMedicoes, salvarCusto } from '../lib/dados'
+import { HOJE, excluirCusto, listarCustos, listarMedicoes, salvarCusto } from '../lib/dados'
 import { dataBR } from '../lib/formato'
 import { CATEGORIAS_CUSTO } from '../lib/lancamentos'
-import { HOJE } from '../lib/mockData'
 import { reais } from '../lib/orcamento'
 import { carregarResumoOrcamento } from './orcamento'
 

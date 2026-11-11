@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Carregando, Icon, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
 import {
-  aprovarDiario, buscarDiario, buscarDiarioDoDia, carregarCronograma, devolverDiario,
+  HOJE, aprovarDiario, buscarDiario, buscarDiarioDoDia, carregarCronograma, devolverDiario,
   enviarDiario, listarContratados, listarDiarios, salvarDiario,
 } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
+import { STATUS_DIARIO, acoesDoDiario, botoesDePercentual, podeEditarDiario } from '../lib/diario'
 import { corDoStatusDiario, dataBR, numeroBR, qtd } from '../lib/formato'
 import { faltaDoServico } from '../lib/lancamentos'
-import { HOJE } from '../lib/mockData'
 
 const CLIMAS = ['Sol', 'Nublado', 'Chuva', 'Chuva forte']
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
@@ -84,7 +84,8 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const [aviso, avisar] = useAviso()
   const [salvando, rodar] = useOcupado()
   const d = diario ?? { status: 'Rascunho', data, clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], execucoes: [], fotos: [], qtd_pessoas: 0 }
-  const somenteLeitura = perfil === 'cliente' || (perfil === 'auxiliar' && d.status === 'Aprovado')
+  const somenteLeitura = !podeEditarDiario(perfil, d.status)
+  const acoes = acoesDoDiario(perfil, d.status)
 
   const [clima, setClima] = useState([d.clima_manha, d.clima_tarde])
   const [equipe, setEquipe] = useState(d.equipe.map((p) => p.id))
@@ -252,7 +253,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
       )}
       {!somenteLeitura && (
         <div className="actionbar">
-          {perfil === 'socio' && d.status === 'Enviado' ? (
+          {acoes === 'decidir' ? (
             devolvendo ? (
               <>
                 <button className="btn" disabled={salvando} onClick={() => setDevolvendo(false)}>Cancelar</button>
@@ -264,11 +265,11 @@ function Formulario({ perfil, dados, data, recarregar }) {
                 <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário aprovado. O cliente já pode ver.', aprovarDiario)}>{salvando ? 'Salvando…' : 'Aprovar diário'}</button>
               </>
             )
-          ) : d.status === 'Aprovado' ? (
+          ) : acoes === 'corrigir' ? (
             <button className="btn btn-primary" style={{ gridColumn: '1 / -1' }} disabled={salvando} onClick={() => salvar('Alterações salvas.')}>{salvando ? 'Salvando…' : 'Salvar alterações'}</button>
           ) : (
             <>
-              <button className="btn" disabled={salvando} onClick={() => salvar(d.status === 'Rascunho' ? 'Rascunho salvo.' : 'Alterações salvas.')}>{d.status === 'Rascunho' ? 'Salvar rascunho' : 'Salvar alterações'}</button>
+              <button className="btn" disabled={salvando} onClick={() => salvar(d.status === STATUS_DIARIO.rascunho ? 'Rascunho salvo.' : 'Alterações salvas.')}>{d.status === STATUS_DIARIO.rascunho ? 'Salvar rascunho' : 'Salvar alterações'}</button>
               <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário enviado para aprovação.', enviarDiario)}>{salvando ? 'Salvando…' : 'Enviar para aprovação'}</button>
             </>
           )}
@@ -313,22 +314,34 @@ function CartaoServico({ l, lancamento, erro, descricao, falta, aoMudar, somente
         </div>
         <div className="bar"><i style={{ width: `${l.pct * 100}%` }}></i></div>
         {porPercentual && (
-          <div className="seg" style={{ marginTop: 14 }}>
-            {[25, 50, 75].map((n) => (
-              <button key={n} type="button" disabled={n > falta} aria-pressed={valor === String(n)} onClick={() => aoMudar('quantidade', valor === String(n) ? '' : String(n))}>+{n}%</button>
-            ))}
-            <button type="button" disabled={falta <= 0} aria-pressed={valor === numeroBR(falta)} onClick={() => aoMudar('quantidade', numeroBR(falta))}>Concluído</button>
+          <div className="seg" style={{ marginTop: 14 }} role="group" aria-label="Avanço de hoje">
+            {botoesDePercentual(falta).map((b) => {
+              const texto = numeroBR(b.valor)
+              return (
+                <button key={b.rotulo} type="button" disabled={!b.liberado} aria-pressed={valor === texto}
+                  onClick={() => aoMudar('quantidade', valor === texto ? '' : texto)}>{b.rotulo}</button>
+              )
+            })}
           </div>
         )}
+        {porPercentual && valor !== '' && (
+          <p className="label" style={{ marginTop: 8 }}>
+            Lançado hoje: <b className="num">{valor}%</b>{' '}
+            <button type="button" className="btn btn-mono" onClick={() => aoMudar('quantidade', '')}>Tirar</button>
+          </p>
+        )}
         <div className="fields">
-          <div className="field">
-            <label className="label" htmlFor={`q-${l.id}`}>Executado hoje</label>
-            <div className="with-unit">
-              <input className="big num" id={`q-${l.id}`} inputMode="decimal" placeholder="0" value={valor} aria-invalid={!!erro}
-                onChange={(e) => aoMudar('quantidade', e.target.value)} />
-              <span>{porPercentual ? '%' : l.unidade}</span>
+          {/* Em verba os botões ficam no lugar do campo de quantidade. */}
+          {!porPercentual && (
+            <div className="field">
+              <label className="label" htmlFor={`q-${l.id}`}>Executado hoje</label>
+              <div className="with-unit">
+                <input className="big num" id={`q-${l.id}`} inputMode="decimal" placeholder="0" value={valor} aria-invalid={!!erro}
+                  onChange={(e) => aoMudar('quantidade', e.target.value)} />
+                <span>{l.unidade}</span>
+              </div>
             </div>
-          </div>
+          )}
           <div className="field">
             <label className="label" htmlFor={`p-${l.id}`}>Pessoas no serviço</label>
             <input className="big num" id={`p-${l.id}`} inputMode="numeric" placeholder="0" value={pessoas}

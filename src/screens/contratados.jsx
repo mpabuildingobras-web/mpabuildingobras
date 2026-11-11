@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
 import { detectarConflitos } from '../lib/conflitos'
-import { buscarBaseGestao, listarContratados, salvarContratado } from '../lib/dados'
+import { HOJE, buscarBaseGestao, listarContratados, salvarContratado } from '../lib/dados'
 import { montarAlocacoes } from '../lib/gestao'
-import { HOJE } from '../lib/mockData'
 
 async function carregar() {
   const [c, b] = await Promise.all([listarContratados(), buscarBaseGestao()])

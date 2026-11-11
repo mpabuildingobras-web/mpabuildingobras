@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Carregando, Titulo, useAviso, useCarregar, useOcupado } from '../components'
 import { excluirServico, listarContratados, listarServicos, listarValoresDosServicos, salvarServico } from '../lib/dados'
+import { servicosDaCadeia } from '../lib/cronograma'
 import { numeroBR } from '../lib/formato'
 import { UNIDADES, medeEmPercentual } from '../lib/lancamentos'
 
 async function carregar() {
   const [s, c, v] = await Promise.all([listarServicos(), listarContratados(), listarValoresDosServicos()])
   return {
-    data: { servicos: s.data.filter((x) => x.tipo === 'Normal'), contratados: c.data, valores: v.data },
+    data: { servicos: servicosDaCadeia(s.data), contratados: c.data, valores: v.data },
     erro: s.erro ?? c.erro ?? v.erro,
   }
 }
@@ -67,10 +68,10 @@ function Formulario({ dados, id, goto }) {
               <input id="s-frente" list="s-frentes" value={d.frente} onChange={muda('frente')} placeholder="Ex.: Alvenaria" />
               <datalist id="s-frentes">{frentes.map((f) => <option key={f} value={f} />)}</datalist>{erro('frente')}</div>
             <div className="field"><label className="label" htmlFor="s-resp">Prestador</label>
-              <select id="s-resp" value={d.responsavel_id} onChange={muda('responsavel_id')}>
-                <option value="">Sem prestador</option>
+              <select id="s-resp" value={d.responsavel_id} onChange={muda('responsavel_id')} aria-invalid={!!erros.responsavel_id}>
+                <option value="" disabled>Escolha o prestador</option>
                 {contratados.map((c) => <option key={c.id} value={c.id}>{c.nome} ({c.funcao})</option>)}
-              </select></div>
+              </select>{erro('responsavel_id')}</div>
             <div className="field"><label className="label" htmlFor="s-un">Unidade</label>
               <select id="s-un" value={d.unidade} onChange={muda('unidade')}>{UNIDADES.map((u) => <option key={u}>{u}</option>)}</select>{erro('unidade')}
               {porPercentual && <span className="form-nota">Em verba (vb), o avanço é lançado em percentual.</span>}</div>

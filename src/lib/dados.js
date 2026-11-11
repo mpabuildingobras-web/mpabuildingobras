@@ -6,11 +6,16 @@
 // PERFIL: o recorte por perfil imita o que a RLS vai fazer no banco (auxiliar não recebe
 // valor nenhum; cliente só recebe o aprovado e nunca custo).
 import { conferirLogin } from './acesso.js'
+import { servicosDaCadeia } from './cronograma.js'
+import { STATUS_DIARIO, podeEditarDiario, problemaParaEnviar } from './diario.js'
 import { conferirCusto, conferirDiario, conferirServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem } from './lancamentos.js'
 import * as mock from './mockData.js'
 import { conferirObra, somenteDaObra } from './obras.js'
 import { conferirTarefa } from './tarefas.js'
 import { conferirUsuario } from './usuarios.js'
+
+// O "hoje" do protótipo é uma data fixa dos dados de exemplo; as telas leem daqui, nunca do mock.
+export { HOJE } from './mockData.js'
 
 let obraAtual = null
 let perfilAtual = null
@@ -72,7 +77,7 @@ export function listarServicos() {
   return resposta(daObra(mock.servicos))
 }
 
-const diariosVisiveis = () => daObra(mock.diarios).filter((d) => !ehCliente() || d.status === 'Aprovado')
+const diariosVisiveis = () => daObra(mock.diarios).filter((d) => !ehCliente() || d.status === STATUS_DIARIO.aprovado)
 
 export function listarDiarios() {
   const lista = diariosVisiveis().map((d) => ({
@@ -92,7 +97,7 @@ export function listarExecucoes() {
 export async function carregarCronograma() {
   const [{ data: obra }, { data: servicos }, { data: execucoes }] =
     await Promise.all([buscarObraAtual(), listarServicos(), listarExecucoes()])
-  return { data: { obra, servicos: servicos.filter((s) => s.tipo === 'Normal'), execucoes }, erro: null }
+  return { data: { obra, servicos: servicosDaCadeia(servicos), execucoes }, erro: null }
 }
 
 export function buscarDiario(id) {
@@ -123,24 +128,25 @@ function mudarStatus(id, status, extra = {}) {
   Object.assign(d, { status, ...extra })
   return resposta(d)
 }
-// Auxiliar só mexe até a aprovação; depois disso, só sócio.
-const podeMexerNoDiario = (id) => {
-  if (ehSocio()) return true
-  if (perfilAtual !== 'auxiliar') return false
-  return daObra(mock.diarios).find((x) => x.id === id)?.status !== 'Aprovado'
+const diarioDaObra = (id) => daObra(mock.diarios).find((x) => x.id === id)
+const podeMexerNoDiario = (id) => podeEditarDiario(perfilAtual, diarioDaObra(id)?.status)
+export function enviarDiario(id) {
+  if (!podeMexerNoDiario(id)) return recusa('Sem permissão para enviar este diário.')
+  const problema = diarioDaObra(id) && problemaParaEnviar(diarioDaObra(id))
+  if (problema) return recusa(problema)
+  return mudarStatus(id, STATUS_DIARIO.enviado, { comentario_devolucao: null })
 }
-export const enviarDiario = (id) => (podeMexerNoDiario(id) ? mudarStatus(id, 'Enviado', { comentario_devolucao: null }) : recusa('Sem permissão para enviar este diário.'))
-const estaEnviado = (id) => daObra(mock.diarios).find((x) => x.id === id)?.status === 'Enviado'
+const estaEnviado = (id) => diarioDaObra(id)?.status === STATUS_DIARIO.enviado
 export function aprovarDiario(id) {
   if (!ehSocio()) return recusa('Só sócio aprova.')
   if (!estaEnviado(id)) return recusa('Só dá para aprovar um diário enviado.')
-  return mudarStatus(id, 'Aprovado')
+  return mudarStatus(id, STATUS_DIARIO.aprovado)
 }
 export function devolverDiario(id, comentario) {
   if (!ehSocio()) return recusa('Só sócio devolve.')
   if (!estaEnviado(id)) return recusa('Só dá para devolver um diário enviado.')
   if (!comentario || !comentario.trim()) return recusa('Escreva o motivo da devolução.')
-  return mudarStatus(id, 'Devolvido', { comentario_devolucao: comentario.trim() })
+  return mudarStatus(id, STATUS_DIARIO.devolvido, { comentario_devolucao: comentario.trim() })
 }
 
 // Grava o diário inteiro: clima, equipe, o que cada um fez, ocorrências e as quantidades lançadas.
@@ -151,11 +157,10 @@ export function salvarDiario({ id, data, clima_manha, clima_tarde, ocorrencias, 
   let d = daObra(mock.diarios).find((x) => (id ? x.id === id : x.data === data))
   if (id && !d) return recusa('Este diário não é desta obra.')
   if (d && !podeMexerNoDiario(d.id)) return recusa('Sem permissão para alterar este diário.')
-  if (d && mock.execucoes.some((e) => e.diario_id === d.id && e.medicao_id)) return recusa('Este diário já entrou numa medição e não pode mudar.')
-  const r = conferirDiario({ data, lancamentos, diarioId: d?.id ?? null }, daObra(mock.servicos).filter((s) => s.tipo === 'Normal'), mock.execucoesComStatus())
+  const r = conferirDiario({ data, lancamentos, diarioId: d?.id ?? null }, servicosDaCadeia(daObra(mock.servicos)), mock.execucoesComStatus())
   if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
   if (!d) {
-    d = { id: novoId('d'), obra_id: obraAtual, data, status: 'Rascunho' }
+    d = { id: novoId('d'), obra_id: obraAtual, data, status: STATUS_DIARIO.rascunho }
     mock.diarios.push(d)
   }
   Object.assign(d, { clima_manha, clima_tarde, ocorrencias, equipe, atividades, qtd_pessoas: equipe.length || d.qtd_pessoas || 0 })
@@ -179,8 +184,7 @@ export function salvarServico(dados) {
   if (!obraAtual) return recusa('Escolha uma obra antes de cadastrar serviços.')
   const daObraAtual = daObra(mock.servicos)
   if (dados.id && !daObraAtual.some((x) => x.id === dados.id)) return recusa('Este serviço não é desta obra.')
-  const normais = daObraAtual.filter((s) => s.tipo === 'Normal')
-  const r = conferirServico(dados, normais)
+  const r = conferirServico(dados, servicosDaCadeia(daObraAtual))
   if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
   const existente = daObraAtual.find((x) => x.id === dados.id)
   if (existente && existente.forma !== r.forma && mock.execucoes.some((e) => e.servico_id === existente.id)) {
@@ -193,7 +197,7 @@ export function salvarServico(dados) {
   }
   let s = daObraAtual.find((x) => x.id === dados.id)
   if (s) {
-    if (s.frente !== frente) campos.numero_item = proximoNumeroItem(daObraAtual.filter((x) => x.id !== s.id), frente)
+    // O número do item vem da planilha e é o que a medição guarda: trocar de frente não renumera.
     Object.assign(s, campos)
   } else {
     s = { ...campos, id: novoId('s'), obra_id: obraAtual, tipo: 'Normal', numero_item: proximoNumeroItem(daObraAtual, frente) }
@@ -249,6 +253,7 @@ export function salvarContratado(dados) {
 
 export function definirPrestadorDoServico(servicoId, contratadoId) {
   if (!ehSocio()) return recusa('Só sócio escolhe o prestador.')
+  if (!contratadoId) return recusa('Todo serviço precisa de um prestador.')
   const s = daObra(mock.servicos).find((x) => x.id === servicoId)
   if (!s) return recusa('Serviço não encontrado nesta obra.')
   s.responsavel_id = contratadoId || null
@@ -361,7 +366,7 @@ export function buscarBaseFaturamento() {
   return resposta(mock.obras.map((obra) => ({
     obra,
     itens: mock.itensDoOrcamento(obra.id),
-    servicos: mock.servicos.filter((s) => s.obra_id === obra.id && s.tipo === 'Normal'),
+    servicos: servicosDaCadeia(mock.servicos.filter((s) => s.obra_id === obra.id)),
     execucoes: execucoes.filter((e) => e.obra_id === obra.id),
     medicoes: mock.medicoes.filter((m) => m.obra_id === obra.id),
     custos: mock.custos.filter((k) => k.obra_id === obra.id),
@@ -373,7 +378,7 @@ export function buscarBaseGestao() {
   const execucoes = mock.execucoesComStatus()
   return resposta(mock.obras.map((obra) => ({
     obra,
-    servicos: mock.servicos.filter((s) => s.obra_id === obra.id && s.tipo === 'Normal'),
+    servicos: servicosDaCadeia(mock.servicos.filter((s) => s.obra_id === obra.id)),
     execucoes: execucoes.filter((e) => e.obra_id === obra.id),
     diarios: mock.diarios.filter((d) => d.obra_id === obra.id),
     tarefas: mock.tarefas.filter((t) => t.obra_id === obra.id),

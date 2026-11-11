@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
-import { criarTarefa, listarTarefas, listarTarefasDeTodasAsObras, listarUsuarios, mudarStatusTarefa } from '../lib/dados'
+import { HOJE, criarTarefa, listarTarefas, listarTarefasDeTodasAsObras, listarUsuarios, mudarStatusTarefa } from '../lib/dados'
 import { dataBR } from '../lib/formato'
-import { HOJE } from '../lib/mockData'
 import { useObra } from '../lib/ObraContext'
 import { PRIORIDADES, agruparTarefas, estaAtrasada } from '../lib/tarefas'
 
