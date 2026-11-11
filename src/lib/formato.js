@@ -1,3 +1,6 @@
+import { STATUS_DIARIO } from './diario.js'
+import { CONCLUIDA } from './obras.js'
+
 // Formatação para a tela. Datas chegam como 'AAAA-MM-DD' (tipo date do banco).
 // Não usar new Date('AAAA-MM-DD'): vira UTC e mostra o dia anterior no fuso do Brasil.
 export function dataBR(iso) {
@@ -21,8 +24,9 @@ export function qtd(valor, unidade, forma) {
   return forma === 'Percentual' ? `${v}%` : `${v} ${unidade}`
 }
 
-export const corDoStatusDiario = (status) =>
-  ({ Rascunho: 'slate', Enviado: 'amber', Aprovado: 'green', Devolvido: 'red' })[status] ?? 'slate'
+export const corDoStatusDiario = (status) => ({
+  [STATUS_DIARIO.rascunho]: 'slate', [STATUS_DIARIO.enviado]: 'amber', [STATUS_DIARIO.aprovado]: 'green', [STATUS_DIARIO.devolvido]: 'red',
+})[status] ?? 'slate'
 
 export const corDaSituacao = (situacao) =>
-  ({ 'Em andamento': 'green', Parada: 'amber', 'Concluída': 'slate' })[situacao] ?? 'slate'
+  ({ 'Em andamento': 'green', Parada: 'amber', [CONCLUIDA]: 'slate' })[situacao] ?? 'slate'

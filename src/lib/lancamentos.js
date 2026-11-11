@@ -73,8 +73,10 @@ export function conferirServico(dados, servicosDaObra) {
   const idsDaObra = servicosDaObra.map((s) => s.id)
   if ((dados.deps ?? []).some((d) => !idsDaObra.includes(d))) erros.deps = 'Só dá para depender de um serviço desta obra.'
   // Só o primeiro serviço da obra fica sem anterior.
-  const jaTemPrimeiro = servicosDaObra.some((s) => s.id !== dados.id && (s.deps ?? []).length === 0)
-  if ((dados.deps ?? []).length === 0 && jaTemPrimeiro) erros.deps = 'Escolha de qual serviço este depende. Só o primeiro serviço da obra fica sem anterior.'
+  const primeiro = servicosDaObra.find((s) => s.id !== dados.id && (s.deps ?? []).length === 0)
+  if ((dados.deps ?? []).length === 0 && primeiro) {
+    erros.deps = `Escolha de qual serviço este depende. Só o primeiro serviço da obra ("${primeiro.nome}") fica sem anterior.`
+  }
   if (!erros.duracao && !erros.prevista && !erros.deps) {
     const id = dados.id ?? '__novo__'
     const lista = [...servicosDaObra.filter((s) => s.id !== id), { ...dados, id, nome: dados.nome ?? 'Este serviço' }]

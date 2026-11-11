@@ -1,6 +1,7 @@
 // Gestão de Obras: parâmetro geral de todas as obras. Comparativo explícito, só sócios.
 import { calcularCascata } from './cronograma.js'
 import { detectarConflitos } from './conflitos.js'
+import { STATUS_DIARIO } from './diario.js'
 import { estaAtrasada } from './tarefas.js'
 
 // base: uma entrada por obra { obra, servicos, execucoes, diarios, tarefas, cotacoes }
@@ -31,7 +32,7 @@ export function calcularGestao(base, contratados, hoje) {
       fisico, atrasados, totalServicos: linhas.length,
       tarefasAtrasadas: tarefas.filter((t) => estaAtrasada(t, hoje)).length,
       tarefasAbertas: tarefas.filter((t) => t.status !== 'Concluída').length,
-      diariosParaAprovar: diarios.filter((d) => d.status === 'Enviado').length,
+      diariosParaAprovar: diarios.filter((d) => d.status === STATUS_DIARIO.enviado).length,
       ultimoDiario: diarios.map((d) => d.data).sort().at(-1) ?? null,
       comprasAguardando: cotacoes.filter((q) => q.status === 'Aguardando cliente').length,
       saude: atrasoEntrega > 0 ? 'Atrasada' : atrasados > 0 ? 'Atenção' : 'No prazo',

@@ -1,5 +1,6 @@
 // A cascata de prazos: o coração do Painel do dia e do Gantt.
 // Regras em PRD-FRONTEND.md, "Regras de cálculo". Datas sempre 'AAAA-MM-DD'.
+import { STATUS_DIARIO } from './diario.js'
 
 // ---------- Dias úteis (segunda a sexta; feriados ainda não contam) ----------
 const DIA = 864e5
@@ -57,7 +58,7 @@ export function ordenarCadeia(servicos) {
 // servicos:  [{ id, nome, frente, duracao, deps: [ids], prevista, concluido_em? }]
 // execucoes: [{ servico_id, data, quantidade, status }]  (status = do diário)
 // contam:    status de diário que valem para quem está vendo (sócio: Enviado+Aprovado; cliente: Aprovado)
-export function calcularCascata({ servicos, execucoes, obra, hoje, contam = ['Enviado', 'Aprovado'] }) {
+export function calcularCascata({ servicos, execucoes, obra, hoje, contam = statusQueContam('socio') }) {
   const ordem = ordenarCadeia(servicos)
   const porId = new Map(servicos.map((s) => [s.id, s]))
   const sucessores = new Map(servicos.map((s) => [s.id, []]))
@@ -157,7 +158,8 @@ function proximoUtilAntes(iso) {
 export const servicosDaCadeia = (servicos) => servicos.filter((s) => s.tipo === 'Normal')
 
 // Quais diários contam para quem está vendo: o cliente só vê o aprovado.
-export const statusQueContam = (perfil) => (perfil === 'cliente' ? ['Aprovado'] : ['Enviado', 'Aprovado'])
+export const statusQueContam = (perfil) =>
+  (perfil === 'cliente' ? [STATUS_DIARIO.aprovado] : [STATUS_DIARIO.enviado, STATUS_DIARIO.aprovado])
 
 // Ordem do Painel do dia: menor folga primeiro; empate, a data-limite mais cedo.
 export function ordenarPorAtraso(linhas) {

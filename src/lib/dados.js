@@ -7,7 +7,7 @@
 // valor nenhum; cliente só recebe o aprovado e nunca custo).
 import { conferirLogin } from './acesso.js'
 import { servicosDaCadeia } from './cronograma.js'
-import { STATUS_DIARIO, podeEditarDiario, problemaParaEnviar } from './diario.js'
+import { STATUS_DIARIO, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from './diario.js'
 import { conferirCusto, conferirDiario, conferirServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem } from './lancamentos.js'
 import * as mock from './mockData.js'
 import { conferirObra, somenteDaObra } from './obras.js'
@@ -132,7 +132,8 @@ const diarioDaObra = (id) => daObra(mock.diarios).find((x) => x.id === id)
 const podeMexerNoDiario = (id) => podeEditarDiario(perfilAtual, diarioDaObra(id)?.status)
 export function enviarDiario(id) {
   if (!podeMexerNoDiario(id)) return recusa('Sem permissão para enviar este diário.')
-  const problema = diarioDaObra(id) && problemaParaEnviar(diarioDaObra(id))
+  const d = diarioDaObra(id)
+  const problema = d && problemaParaEnviar(d)
   if (problema) return recusa(problema)
   return mudarStatus(id, STATUS_DIARIO.enviado, { comentario_devolucao: null })
 }
@@ -163,7 +164,7 @@ export function salvarDiario({ id, data, clima_manha, clima_tarde, ocorrencias, 
     d = { id: novoId('d'), obra_id: obraAtual, data, status: STATUS_DIARIO.rascunho }
     mock.diarios.push(d)
   }
-  Object.assign(d, { clima_manha, clima_tarde, ocorrencias, equipe, atividades, qtd_pessoas: equipe.length || d.qtd_pessoas || 0 })
+  Object.assign(d, { clima_manha, clima_tarde, ocorrencias, equipe, atividades, qtd_pessoas: pessoasDoDia(equipe, d) })
   for (let i = mock.execucoes.length - 1; i >= 0; i--) {
     if (mock.execucoes[i].diario_id === d.id) mock.execucoes.splice(i, 1)
   }
@@ -256,7 +257,7 @@ export function definirPrestadorDoServico(servicoId, contratadoId) {
   if (!contratadoId) return recusa('Todo serviço precisa de um prestador.')
   const s = daObra(mock.servicos).find((x) => x.id === servicoId)
   if (!s) return recusa('Serviço não encontrado nesta obra.')
-  s.responsavel_id = contratadoId || null
+  s.responsavel_id = contratadoId
   return resposta(s)
 }
 

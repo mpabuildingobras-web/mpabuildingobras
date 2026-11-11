@@ -1,13 +1,14 @@
 // Regras da obra, a unidade principal do app. Sem React, sem banco: o teste alcança.
 
 // Mesmo texto da tela e do CHECK do banco. Se divergir, o salvamento falha em silêncio.
-export const SITUACOES = ['Em andamento', 'Parada', 'Concluída']
+export const CONCLUIDA = 'Concluída'
+export const SITUACOES = ['Em andamento', 'Parada', CONCLUIDA]
 
 export const situacaoValida = (situacao) => SITUACOES.includes(situacao)
 
 // Obra Concluída sai do seletor; volta só quando a pessoa pede para ver.
 export const obrasDoSeletor = (obras, mostrarConcluidas) =>
-  obras.filter((o) => mostrarConcluidas || o.situacao !== 'Concluída')
+  obras.filter((o) => mostrarConcluidas || o.situacao !== CONCLUIDA)
 
 // Ao abrir o app: volta na obra guardada, se ela ainda existir para esta pessoa.
 // Senão, a primeira em andamento; senão, a primeira da lista.

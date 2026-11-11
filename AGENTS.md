@@ -153,76 +153,50 @@ Em português simples, sem jargão. Se precisar de uma decisão minha, pergunte 
 
 Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
 
-**Pronto**
+**Rodada 1 pronta, esperando a Manuela testar**
 
-- Combinado da página de testes guardado na seção "Checklist de testes vivo". A página em si ainda não existe: nasce na primeira melhoria que precisar de teste.
-- `npm run check` passou (11/11 arquivos de teste). Nenhum código do app mudou nesta conversa.
-- Combinado no ramo principal, aqui e no GitHub (versão `36ede35`), desde 10/11/2026.
+- Feito:
+  - Item em vb por botões, com "Lançado hoje" e Tirar.
+  - Equipe mínima de 1 para enviar.
+  - Valor ao cliente e prestador obrigatórios.
+  - Só o primeiro serviço da obra sem anterior.
+  - Trocar de frente não renumera.
+  - Obra Concluída fora do seletor.
+  - Trava de medição do diário removida; ficou [PENDENTE] no PRD para a Fase 2.
+- Arrumação:
+  - Regras e status do diário em `src/lib/diario.js`.
+  - Telas leem `HOJE` de `dados.js`.
+  - Teste da função do prestador escondida do cliente.
+- Verificado:
+  - `npm run check` em zero.
+  - Telas olhadas no navegador.
+  - Revisão de código em duas partes (padrão e pedido), com os achados corrigidos.
+- Página de testes: "Testes do Gestão de Obra" (link no fim desta seção). As marcas ficam no banco da página (`rodada/atual` e a coleção `itens`).
+- Fonte da página: `docs/testes/testes.html`.
+- **Ficou de fora, de propósito:**
+  - `src/pages/Shell.jsx:81` (`perfil === 'socio'` decide quem cadastra a primeira obra), o caso mais leve de `if` em tela.
+  - Os cheiros de avaliação da revisão de 04/11: repetições de "Confira os campos.", `gravarValor`, `arred`, `'__novo__'` e o apoio de teste que só reexporta.
+- **Dado de exemplo:** os serviços da obra CJF não têm valor ao cliente, então editá-los pede o valor antes de salvar. É o comportamento decidido.
 
-**Pela metade**
+**Decisões de 10/11** (registradas no PLANO e no PRD)
 
-- **Ainda sem commit:** esta seção e as decisões de 10/11 no `AGENTS.md`, no `PLANO-DO-PROJETO.md` e no `PRD-FRONTEND.md` são mudanças locais.
-- **Revisão de código de `5107597...HEAD`, feita em duas partes:**
-  - As duas partes terminaram: padrão do projeto e o que ela pediu (contra `PLANO-DO-PROJETO.md`, `PRD-FRONTEND.md` e `PRD-BACKEND.md`). Resultados abaixo.
-  - **Nada foi consertado ainda.** A ordem do conserto está em "Próximo passo".
-  - Vieram de subagentes, que leram o código; não foram conferidos de novo nem testados com o app rodando.
-
-**Achados de padrão (violações das regras deste arquivo)**
-
-1. Bug corrigido em `src/lib/` sem teste: `src/lib/dados.js:105` corrige o vazamento da função do prestador para o cliente, e nenhum teste cita `funcao`. É o mais importante, porque protege o que o cliente vê.
-2. `if` de negócio em tela: `src/screens/diario.jsx:255,267,271,318,320`, `src/screens/editarServico.jsx:10` e `src/pages/Shell.jsx:81` (o mais leve).
-3. Status do diário sem dono único: literais em `src/lib/dados.js:158` e `src/screens/diario.jsx:267,271`.
-4. Tela importa direto de `mockData`: `src/screens/financeiro.jsx:6`, e outras 12 telas e páginas já faziam o mesmo. A regra está escrita, mas não é seguida na prática.
-
-Além disso, a revisão apontou pontos de avaliação, que não são violações: repetições (recusa "Confira os campos." em `dados.js`, tratamento de `r.erros`/`r.erro` em cinco telas, logo em três páginas), nomes pouco claros (`gravarValor` também apaga; `arred`) e o texto mágico `'__novo__'` em `src/lib/lancamentos.js:74`.
-
-**Achados contra o que ela pediu**
-
-Quem vê o quê: nenhum vazamento encontrado. Em aberto: o cliente vê o prestador no cartão do diário (`dados.js:108`, `diario.jsx:208,292`), e PRD-FRONTEND:663 está [PENDENTE], "hoje ficou: não vê".
-
-Faltando ou parcial:
-
-1. Excluir diário não existe (PRD-FRONTEND:218, PLANO:73).
-2. Diário: sem campo "O que foi feito" (PRD-FRONTEND:206), sem ajuste de pessoas (:203), equipe mínima de 1 não conferida (:202).
-3. Editar serviço: faltam Nº do item, Como medir e Meta manual (:265,269,277). Valor e Responsável são obrigatórios na especificação e opcionais no código (:271,276); serviço sem valor some do orçamento e do contrato sem aviso (`mockData.js:203`). Dependência vazia é aceita (:275, PLANO:55).
-4. Cronograma: sem marca de Aditivo (:248); sem nova frente, reordenar ou excluir frente (:247,249).
-5. Financeiro (Fase 3): faltam recebido, a receber, saldo e gráfico (:421); não há editar custo (:434).
-6. Seletor: obra Concluída continua na lista (:492; `SeletorObra.jsx:57`).
-7. Cronograma vazio perdeu o caminho para importar (:252), mas PLANO:81 pede só cadastro: a especificação se contradiz.
-
-Não pedido:
-
-1. Recusa lançamento acima do que falta (`lancamentos.js:47`); PRD-FRONTEND:51 só limita o % a 100, e isso pode travar o diário de um dia real.
-2. Orçamento criado sozinho ao digitar valor (`dados.js:205-207`). O cliente não o vê (`dados.js:303`), não há botão de publicar e a importação está inativa (`orcamento.jsx:24`): obra nova nunca chega ao cliente (PLANO:111).
-3. Exclusão bloqueada por dependente (`lancamentos.js:93-94`); PRD-FRONTEND:281 só cita lançamento e medição.
-4. Botão Voltar nas subtelas (`Shell.jsx:117`). Pequeno.
-5. Logo e nome "MPA Building" (`index.html:7`): PLANO:253 está [CHUTE] e PRD-FRONTEND:17 diz sem logo. Se ela pediu, falta registrar no plano.
-
-Parece pronto, mas está errado:
-
-1. Item em vb: os botões deveriam ficar "no lugar do campo" (PRD-FRONTEND:204,652); aparecem botões e campo juntos (`diario.jsx:315-331`). O campo de pessoas precisa ficar.
-2. Trava de medição (`dados.js:154`) nunca dispara: nada grava `medicao_id`. Se disparasse, contrariaria "Sócio, qualquer status" (PRD-FRONTEND:217).
-3. Trocar de frente renumera o item sem avisar (`dados.js:196`). A medição guarda o número antigo (`mockData.js:161`), e a trava de `dados.js:225` deixa de encontrá-lo.
+- Orçamento: botão **Publicar para o cliente**; importar já publica.
+- Prestador no diário: o cliente vê o nome e a atividade, nunca a função.
+- Lançar acima do que falta: não pode.
+- Excluir serviço com dependente: não pode.
+- Logo e nome "MPA Building": ficam.
+- Obra sem cronograma: não existe. Obra nova nasce **Em preparação**, visível só para os sócios.
+- O campo Ocorrências é a observação livre do dia.
 
 **Próximo passo**
 
-Ordem combinada com a Manuela em 10/11/2026:
-
-**As 6 decisões foram fechadas em 10/11** e estão registradas no PLANO e no PRD. Isso tira da lista acima os itens "Não pedido" 1, 2, 3 e 5, o item 7 de "Faltando" e o "Em aberto" do prestador:
-
-- **Orçamento:** botão **Publicar para o cliente**; importar já publica. A construir.
-- **Prestador no diário:** o cliente vê o nome e a atividade, nunca a função. Já é assim; falta o teste.
-- **Lançar acima do que falta:** não pode. A recusa atual fica.
-- **Excluir serviço com dependente:** não pode. O bloqueio atual fica.
-- **Logo e nome "MPA Building":** ficam.
-- **Obra sem cronograma:** não existe. Obra nova nasce **Em preparação**, visível só para os sócios, e só vira Em andamento com cronograma. A construir.
-- **Lembrete dela:** o campo Ocorrências do diário é a observação livre do dia.
-
-1. **Rodada 1: consertar o que está errado:** item em vb, renumeração ao trocar de frente, trava de medição, obra Concluída no seletor, Valor/Responsável obrigatórios, dependência vazia, equipe mínima. Junto vai a arrumação de padrão e os testes da função do prestador.
-2. **Rodada 2: o que foi decidido:** situação Em preparação e botão Publicar para o cliente.
-3. **Rodadas seguintes: o que falta**, um módulo por rodada, na ordem que ela escolher: diário, editar serviço, cronograma, financeiro.
-
-Toda rodada segue o "Checklist de testes vivo", que cria a página de testes.
+1. Ler as marcas da página de testes quando a Manuela avisar, e seguir o ciclo do "Checklist de testes vivo".
+2. **Rodada 2:** situação Em preparação e botão Publicar para o cliente.
+3. **Rodadas seguintes, um módulo por vez, na ordem que ela escolher:**
+   - Diário: excluir, "O que foi feito" e ajuste de pessoas.
+   - Editar serviço: Nº do item, Como medir e Meta manual.
+   - Cronograma: Aditivo, nova frente, reordenar e excluir frente.
+   - Financeiro: recebido, a receber, saldo, gráfico e editar custo.
 
 ## O que entra neste arquivo
 

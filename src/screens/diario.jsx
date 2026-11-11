@@ -5,7 +5,7 @@ import {
   enviarDiario, listarContratados, listarDiarios, salvarDiario,
 } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
-import { STATUS_DIARIO, acoesDoDiario, botoesDePercentual, podeEditarDiario } from '../lib/diario'
+import { ACOES_DIARIO, STATUS_DIARIO, acoesDoDiario, botoesDePercentual, pedeAcao } from '../lib/diario'
 import { corDoStatusDiario, dataBR, numeroBR, qtd } from '../lib/formato'
 import { faltaDoServico } from '../lib/lancamentos'
 
@@ -13,9 +13,7 @@ const CLIMAS = ['Sol', 'Nublado', 'Chuva', 'Chuva forte']
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const diaDaSemana = (iso) => DIAS[new Date(`${iso}T12:00:00`).getDay()]
 
-// Ordem da lista: o que pede ação de quem está olhando vem primeiro.
-const prioridade = (perfil, d) =>
-  (perfil === 'socio' && d.status === 'Enviado') || (perfil === 'auxiliar' && d.status === 'Devolvido') ? 0 : 1
+const prioridade = (perfil, d) => (pedeAcao(perfil, d.status) ? 0 : 1)
 
 // ---------- Lista de diários (Sócio: "Diário"; Auxiliar: "Meus diários"; Cliente: só aprovados) ----------
 export function DiarioLista({ perfil, goto }) {
@@ -40,17 +38,17 @@ export function DiarioLista({ perfil, goto }) {
           <div className="section">
             {lista.map((d) => (
               <button key={d.id} className="item" onClick={() => goto('diarioDia', { id: d.id })}>
-                <span className={`sq ${{ Aprovado: 'green', Enviado: 'amber', Devolvido: 'red' }[d.status] ?? ''}`}></span>
+                <span className={`sq ${corDoStatusDiario(d.status)}`}></span>
                 <span>
                   <span className="item-title">{diaDaSemana(d.data)}, {dataBR(d.data)}</span>
                   <span className="label item-meta" style={{ display: 'block' }}>
                     {d.qtd_pessoas} pessoas, {d.qtd_servicos} serviços, {d.qtd_fotos} fotos
                   </span>
-                  {d.status === 'Devolvido' && d.comentario_devolucao && (
+                  {d.status === STATUS_DIARIO.devolvido && d.comentario_devolucao && (
                     <span className="tags"><span className="tag red">Devolvido: {d.comentario_devolucao}</span></span>
                   )}
                 </span>
-                <span className={`tag ${corDoStatusDiario(d.status)}`}>{d.status === 'Enviado' ? 'Aguardando' : d.status}</span>
+                <span className={`tag ${corDoStatusDiario(d.status)}`}>{d.status === STATUS_DIARIO.enviado ? 'Aguardando' : d.status}</span>
               </button>
             ))}
           </div>
@@ -83,9 +81,9 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const { diario, obra, servicos, execucoes, contratados } = dados
   const [aviso, avisar] = useAviso()
   const [salvando, rodar] = useOcupado()
-  const d = diario ?? { status: 'Rascunho', data, clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], execucoes: [], fotos: [], qtd_pessoas: 0 }
-  const somenteLeitura = !podeEditarDiario(perfil, d.status)
+  const d = diario ?? { status: STATUS_DIARIO.rascunho, data, clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], execucoes: [], fotos: [], qtd_pessoas: 0 }
   const acoes = acoesDoDiario(perfil, d.status)
+  const somenteLeitura = acoes === ACOES_DIARIO.nenhuma
 
   const [clima, setClima] = useState([d.clima_manha, d.clima_tarde])
   const [equipe, setEquipe] = useState(d.equipe.map((p) => p.id))
@@ -145,10 +143,10 @@ function Formulario({ perfil, dados, data, recarregar }) {
     <>
       <Titulo rotulo={`Diário de ${obra.codigo}`} titulo={`${diaDaSemana(d.data)}, ${dataBR(d.data)}`}>
         <div className="tags">
-          <span className={`tag ${corDoStatusDiario(d.status)}`}>{diario ? (d.status === 'Enviado' ? 'Enviado, aguardando aprovação' : d.status) : 'Novo, ainda não salvo'}</span>
+          <span className={`tag ${corDoStatusDiario(d.status)}`}>{diario ? (d.status === STATUS_DIARIO.enviado ? 'Enviado, aguardando aprovação' : d.status) : 'Novo, ainda não salvo'}</span>
         </div>
         {d.enviado_por && <p>Lançado por {d.enviado_por} às {d.enviado_as}</p>}
-        {d.status === 'Devolvido' && d.comentario_devolucao && <p className="c-red"><b>Devolvido:</b> {d.comentario_devolucao}</p>}
+        {d.status === STATUS_DIARIO.devolvido && d.comentario_devolucao && <p className="c-red"><b>Devolvido:</b> {d.comentario_devolucao}</p>}
       </Titulo>
 
       <div className="section">
@@ -253,7 +251,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
       )}
       {!somenteLeitura && (
         <div className="actionbar">
-          {acoes === 'decidir' ? (
+          {acoes === ACOES_DIARIO.decidir ? (
             devolvendo ? (
               <>
                 <button className="btn" disabled={salvando} onClick={() => setDevolvendo(false)}>Cancelar</button>
@@ -265,7 +263,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
                 <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário aprovado. O cliente já pode ver.', aprovarDiario)}>{salvando ? 'Salvando…' : 'Aprovar diário'}</button>
               </>
             )
-          ) : acoes === 'corrigir' ? (
+          ) : acoes === ACOES_DIARIO.corrigir ? (
             <button className="btn btn-primary" style={{ gridColumn: '1 / -1' }} disabled={salvando} onClick={() => salvar('Alterações salvas.')}>{salvando ? 'Salvando…' : 'Salvar alterações'}</button>
           ) : (
             <>

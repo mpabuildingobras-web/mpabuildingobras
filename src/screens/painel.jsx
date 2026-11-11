@@ -1,6 +1,7 @@
 import { Carregando, EntregaDestaque, Vazio, useCarregar } from '../components'
 import { HOJE, carregarCronograma, listarDiarios, listarContratados } from '../lib/dados'
 import { calcularCascata, ordenarPorAtraso, statusQueContam } from '../lib/cronograma'
+import { STATUS_DIARIO } from '../lib/diario'
 import { comSinal, ddmm } from '../lib/formato'
 
 async function carregar() {
@@ -32,7 +33,7 @@ function Conteudo({ dados, goto }) {
   const nome = (id) => contratados.find((f) => f.id === id)?.nome ?? '—'
   const atrasados = abertos.filter((l) => l.cor === 'red').length
   const pessoasHoje = diarios.find((d) => d.data === HOJE)?.qtd_pessoas ?? 0
-  const aguardando = diarios.filter((d) => d.status === 'Enviado')
+  const aguardando = diarios.filter((d) => d.status === STATUS_DIARIO.enviado)
   const diarioHoje = diarios.find((d) => d.data === HOJE)
 
   // Agrupa por frente mantendo a ordem do mais atrasado.
@@ -47,7 +48,7 @@ function Conteudo({ dados, goto }) {
     <div className="diario-box">
       <div>
         <span className="label">Diário de hoje</span>
-        <strong>{diarioHoje.status === 'Enviado' ? 'Enviado, aguardando sua aprovação' : diarioHoje.status}</strong>
+        <strong>{diarioHoje.status === STATUS_DIARIO.enviado ? 'Enviado, aguardando sua aprovação' : diarioHoje.status}</strong>
       </div>
       <button className="btn" onClick={() => goto('diarioDia', { id: diarioHoje.id })}>Abrir</button>
     </div>
@@ -92,7 +93,7 @@ function Conteudo({ dados, goto }) {
                         </span>
                       </span>
                     )}
-                    {execucoes.some((e) => e.servico_id === l.id && e.status === 'Enviado') && <span className="label c-amber item-nota">Lançamento aguardando aprovação</span>}
+                    {execucoes.some((e) => e.servico_id === l.id && e.status === STATUS_DIARIO.enviado) && <span className="label c-amber item-nota">Lançamento aguardando aprovação</span>}
                     {!l.inicioReal && l.deps.some((d) => !c.linhas.find((x) => x.id === d)?.concluido) && (
                       <span className="label item-nota">Espera {l.deps.map((d) => c.linhas.find((x) => x.id === d)).filter((x) => !x.concluido).map((x) => x.nome.split(' ')[0]).join(', ')}</span>
                     )}

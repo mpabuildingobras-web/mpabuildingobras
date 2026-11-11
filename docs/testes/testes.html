@@ -1,0 +1,187 @@
+<title>Testes do Gestão de Obra</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Uma coluna de cartões, como uma ficha de vistoria: rodada no topo, itens por módulo. */
+:root {
+  --fundo: #f6f5f3; --papel: #ffffff; --tinta: #1e1e1e; --suave: #5f5b57; --linha: #dedad5;
+  --vermelho: #b3202a; --verde: #1f6b3a; --verde-fundo: #e5f2e9; --ambar: #8a5a00; --ambar-fundo: #fbf0d9;
+  --vermelho-fundo: #fbe7e8; --foco: #1e1e1e;
+  --texto: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fundo: #161514; --papel: #201f1d; --tinta: #f1efec; --suave: #aaa49d; --linha: #3a3734;
+  --vermelho: #f0767c; --verde: #7fd09a; --verde-fundo: #1d3324; --ambar: #f0c063; --ambar-fundo: #3a2f17;
+  --vermelho-fundo: #3d1f21; --foco: #f1efec; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --fundo: #161514; --papel: #201f1d; --tinta: #f1efec; --suave: #aaa49d; --linha: #3a3734;
+  --vermelho: #f0767c; --verde: #7fd09a; --verde-fundo: #1d3324; --ambar: #f0c063; --ambar-fundo: #3a2f17;
+  --vermelho-fundo: #3d1f21; --foco: #f1efec; color-scheme: dark }
+body { background: var(--fundo); color: var(--tinta); font: 16px/1.5 var(--texto); }
+.pagina { max-width: 720px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+.rotulo { font: 500 12px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+h1 { font-size: 24px; line-height: 1.25; margin: 4px 0 0; text-wrap: balance; }
+.rodada { display: grid; gap: 8px; }
+.rodada p { margin: 0; max-width: 62ch; }
+.antes { background: var(--papel); border: 1px solid var(--linha); border-radius: 8px; padding: 10px 14px; }
+.placar { display: flex; flex-wrap: wrap; gap: 8px; }
+.placar span { font: 500 13px/1 var(--mono); padding: 7px 10px; border-radius: 999px; border: 1px solid var(--linha); background: var(--papel); font-variant-numeric: tabular-nums; }
+.aviso { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--ambar-fundo); color: var(--ambar); }
+.modulo { display: grid; gap: 12px; }
+.modulo h2 { font-size: 15px; margin: 8px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--linha); }
+.item { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.item[data-status="Funcionou"] { border-color: var(--verde); }
+.item[data-status="Problema"] { border-color: var(--vermelho); }
+.item h3 { font-size: 17px; line-height: 1.35; margin: 0; text-wrap: balance; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: var(--suave); }
+ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.esperado { border-left: 3px solid var(--tinta); padding: 2px 0 2px 12px; }
+.esperado b { display: block; font: 500 12px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+.marcas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.marcas button { font: 500 15px/1.2 var(--texto); padding: 12px 6px; border-radius: 8px; border: 1px solid var(--linha); background: var(--fundo); color: var(--tinta); cursor: pointer; }
+.marcas button:focus-visible, textarea:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.marcas button[aria-pressed="true"][data-v="A testar"] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.marcas button[aria-pressed="true"][data-v="Funcionou"] { background: var(--verde-fundo); color: var(--verde); border-color: var(--verde); }
+.marcas button[aria-pressed="true"][data-v="Problema"] { background: var(--vermelho-fundo); color: var(--vermelho); border-color: var(--vermelho); }
+.marcas button:disabled { cursor: not-allowed; opacity: .6; }
+label.obs { display: grid; gap: 4px; font-size: 14px; color: var(--suave); }
+textarea { font: 15px/1.45 var(--texto); color: var(--tinta); background: var(--fundo); border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px; min-height: 64px; resize: vertical; }
+.salvo { font-size: 13px; color: var(--suave); min-height: 1.2em; }
+.vazio { background: var(--papel); border: 1px dashed var(--linha); border-radius: 10px; padding: 28px 16px; text-align: center; }
+.vazio strong { display: block; font-size: 18px; }
+@media (prefers-reduced-motion: no-preference) { .marcas button { transition: background-color .12s, border-color .12s; } }
+</style>
+
+<main class="pagina">
+  <header class="rodada">
+    <span class="rotulo" id="r-nome">Rodada</span>
+    <h1>Testes do Gestão de Obra</h1>
+    <p id="r-nota">Carregando a rodada…</p>
+    <p class="antes" id="r-antes" hidden></p>
+    <div class="placar" id="placar" hidden></div>
+  </header>
+  <p class="aviso" id="aviso" hidden></p>
+  <section id="lista" aria-live="polite"></section>
+</main>
+
+<script>
+const STATUS = ['A testar', 'Funcionou', 'Problema']
+const $ = (id) => document.getElementById(id)
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+// Nomes da tela entre ** ficam em negrito, como na combinação.
+const comNegrito = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+
+let db = null
+let podeMarcar = true
+let itens = []
+const rascunhos = {}
+
+function avisar(texto) { $('aviso').textContent = texto; $('aviso').hidden = !texto }
+
+function desenharRodada(r) {
+  $('r-nome').textContent = r?.nome || 'Rodada'
+  $('r-nota').textContent = r?.nota || 'Nenhuma rodada aberta.'
+  $('r-antes').hidden = !r?.antes
+  $('r-antes').innerHTML = r?.antes ? `<b>Antes de começar:</b> ${comNegrito(r.antes)}` : ''
+}
+
+function desenharLista() {
+  const lista = $('lista')
+  const placar = $('placar')
+  if (itens.length === 0) {
+    placar.hidden = true
+    lista.innerHTML = '<div class="vazio"><strong>Nada a testar agora.</strong>Quando houver melhoria nova, os itens aparecem aqui.</div>'
+    return
+  }
+  const conta = Object.fromEntries(STATUS.map((s) => [s, itens.filter((i) => (i.status || 'A testar') === s).length]))
+  placar.hidden = false
+  placar.innerHTML = STATUS.map((s) => `<span>${conta[s]} ${s.toLowerCase()}</span>`).join('')
+  const modulos = [...new Set(itens.map((i) => i.modulo || 'Geral'))]
+  lista.innerHTML = modulos.map((m) => `
+    <div class="modulo"><h2>${esc(m)}</h2>
+      ${itens.filter((i) => (i.modulo || 'Geral') === m).map(cartao).join('')}
+    </div>`).join('')
+}
+
+function cartao(i) {
+  const status = i.status || 'A testar'
+  const obs = rascunhos[i.id] ?? i.obs ?? ''
+  return `
+  <article class="item" data-status="${esc(status)}" data-id="${esc(i.id)}">
+    <h3>${comNegrito(i.titulo)}</h3>
+    <div class="meta">${i.conta ? `<span>Conta: ${comNegrito(i.conta)}</span>` : ''}${i.grava ? `<span>${comNegrito(i.grava)}</span>` : ''}</div>
+    <ol>${(i.passos || []).map((p) => `<li>${comNegrito(p)}</li>`).join('')}</ol>
+    <div class="esperado"><b>Esperado</b>${comNegrito(i.esperado)}</div>
+    <div class="marcas" role="group" aria-label="Resultado">
+      ${STATUS.map((s) => `<button type="button" data-v="${s}" aria-pressed="${s === status}" ${podeMarcar ? '' : 'disabled'}>${s}</button>`).join('')}
+    </div>
+    <label class="obs">O que você viu
+      <textarea id="obs-${esc(i.id)}" data-id="${esc(i.id)}" placeholder="Escreva aqui o que apareceu na tela, principalmente se deu problema." ${podeMarcar ? '' : 'readonly'}>${esc(obs)}</textarea>
+    </label>
+    <span class="salvo" id="salvo-${esc(i.id)}"></span>
+  </article>`
+}
+
+async function gravar(id, campos) {
+  const salvo = $(`salvo-${id}`)
+  try {
+    await db.collection('itens').doc(id).update(campos)
+    if (salvo) salvo.textContent = 'Guardado.'
+  } catch (e) {
+    if (e?.code === 'invalid_argument') { podeMarcar = false; desenharLista() }
+    avisar('Não consegui guardar a marca. Confira a internet e tente de novo.')
+  }
+}
+
+$('lista').addEventListener('click', (ev) => {
+  const b = ev.target.closest('.marcas button')
+  if (!b || !db || !podeMarcar) return
+  const id = b.closest('.item').dataset.id
+  const item = itens.find((i) => i.id === id)
+  if (!item || (item.status || 'A testar') === b.dataset.v) return
+  gravar(id, { status: b.dataset.v })
+})
+
+const pausas = {}
+$('lista').addEventListener('input', (ev) => {
+  const t = ev.target.closest('textarea')
+  if (!t || !db) return
+  const id = t.dataset.id
+  rascunhos[id] = t.value
+  $(`salvo-${id}`).textContent = 'Escrevendo…'
+  clearTimeout(pausas[id])
+  pausas[id] = setTimeout(async () => {
+    const item = itens.find((i) => i.id === id)
+    if (item && (item.obs ?? '') !== rascunhos[id]) await gravar(id, { obs: rascunhos[id] })
+    delete rascunhos[id]
+  }, 900)
+})
+
+async function iniciar() {
+  desenharRodada(null)
+  desenharLista()
+  db = await window.claude?.use?.('db').catch(() => null) ?? null
+  if (!db) {
+    $('r-nota').textContent = 'Abra esta página no claude.ai, entrando com a sua conta, para ver e marcar os testes.'
+    return
+  }
+  const user = await window.claude.use('user').catch(() => null)
+  if (user && (await user.can('data.write')) === false) podeMarcar = false
+
+  const espera = setTimeout(() => avisar('Ainda não consegui buscar os testes. Confira a internet; a página tenta de novo sozinha.'), 10000)
+  db.doc('rodada/atual').onSnapshot((s) => desenharRodada(s.exists ? s.data() : null), () => {})
+  db.collection('itens').orderBy('ordem').onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) { clearTimeout(espera); avisar('') }
+    itens = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    // Não redesenha por cima de quem está escrevendo.
+    const ativo = document.activeElement?.closest?.('textarea')?.dataset.id
+    desenharLista()
+    if (ativo) { const t = $(`obs-${ativo}`); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length) } }
+  }, () => { clearTimeout(espera); avisar('A página perdeu o acesso aos testes. Recarregue para tentar de novo.') })
+}
+iniciar()
+</script>

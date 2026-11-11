@@ -4,7 +4,7 @@ import {
   aprovarDiario, buscarBaseFaturamento, buscarDiario, buscarDiarioDoDia, buscarOrcamento, carregarCronograma, criarObraParaTeste,
   definirObraAtual, definirPerfil, definirPrestadorDoServico, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, salvarCusto, salvarDiario, salvarServico,
 } from './apoio-lancamentos.js'
-import { acoesDoDiario, botoesDePercentual, podeEditarDiario, problemaParaEnviar } from '../src/lib/diario.js'
+import { acoesDoDiario, botoesDePercentual, pedeAcao, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from '../src/lib/diario.js'
 import { calcularFaturamento } from '../src/lib/faturamento.js'
 import {
   conferirCusto, conferirDiario, conferirServico, faltaDoServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem,
@@ -56,6 +56,13 @@ conferir('campo vazio é ignorado', lancar('').lancamentos, [])
 conferir('faltando 30%, só +25% e Concluído', botoesDePercentual(30).map((b) => b.liberado), [true, false, false, true])
 conferir('Concluído lança exatamente o que falta', botoesDePercentual(30)[3].valor, 30)
 conferir('serviço já concluído não tem botão', botoesDePercentual(0).some((b) => b.liberado), false)
+conferir('faltando 25%, só o Concluído (nunca dois botões iguais)', botoesDePercentual(25).map((b) => b.liberado), [false, false, false, true])
+
+// Pessoas do dia
+conferir('equipe marcada conta as pessoas', pessoasDoDia(['a', 'b'], null), 2)
+conferir('desmarcar todo mundo zera', pessoasDoDia([], { equipe: ['a', 'b'], qtd_pessoas: 2 }), 0)
+conferir('diário antigo sem equipe marcada mantém o número', pessoasDoDia([], { qtd_pessoas: 3 }), 3)
+conferir('pedir ação: sócio no enviado, auxiliar no devolvido', [pedeAcao('socio', 'Enviado'), pedeAcao('auxiliar', 'Devolvido'), pedeAcao('auxiliar', 'Enviado')], [true, true, false])
 
 // Quem mexe no diário e quais botões aparecem
 conferir('auxiliar edita até aprovar', [podeEditarDiario('auxiliar', 'Enviado'), podeEditarDiario('auxiliar', 'Aprovado')], [true, false])
@@ -150,6 +157,9 @@ conferir('rascunho ainda não conta', (await carregarCronograma()).data.execucoe
 const semGente = (await salvarDiario({ data: '2026-11-04', clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], lancamentos: [] })).data
 conferir('diário sem ninguém na equipe não é enviado', (await enviarDiario(semGente.id)).erro, 'Marque pelo menos uma pessoa na equipe do dia antes de enviar.')
 conferir('e continua rascunho', (await buscarDiario(semGente.id)).data.status, 'Rascunho')
+await salvarDiario({ id: semGente.id, data: '2026-11-04', clima_manha: 'Sol', clima_tarde: 'Sol', equipe: ['f1', 'f2'], lancamentos: [] })
+await salvarDiario({ id: semGente.id, data: '2026-11-04', clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], lancamentos: [] })
+conferir('marcar, salvar e desmarcar todo mundo também não envia', (await enviarDiario(semGente.id)).erro !== null, true)
 conferir('diário com equipe é enviado', (await enviarDiario(criado.data.id)).erro, null)
 const cicloErro = await salvarServico({ ...s1, duracao: '3', prevista: '30', deps: [s2.id] })
 conferir('editar criando ciclo é recusado', cicloErro.erros?.deps?.includes('Ciclo'), true)
