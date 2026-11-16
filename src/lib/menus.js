@@ -15,6 +15,7 @@ export const TELAS = {
   avanco: { titulo: 'Avanço da obra', curto: 'Avanço', icone: 'home' },
   diario: { titulo: 'Diário de obra', curto: 'Diário', icone: 'diario' },
   cronograma: { titulo: 'Cronograma', curto: 'Cronog.', icone: 'crono' },
+  planejamento: { titulo: 'Planejamento', curto: 'Planej.', icone: 'eap' },
   medicoes: { titulo: 'Medições', curto: 'Medições', icone: 'medicao' },
   gestao: { titulo: 'Gestão de Obras', curto: 'Gestão', icone: 'gestao' },
   tarefas: { titulo: 'Tarefas', curto: 'Tarefas', icone: 'tarefa' },
@@ -37,7 +38,7 @@ export const TELAS = {
 export const MENUS = {
   socio: {
     barra: ['painel', 'diario', 'cronograma', 'tarefas'],
-    mais: ['gestao', 'servicos', 'contratados', 'cotacoes', 'medicoes', 'orcamento', 'financeiro', 'faturamento', 'fotos', 'obras', 'usuarios', 'perfil'],
+    mais: ['planejamento', 'gestao', 'servicos', 'contratados', 'cotacoes', 'medicoes', 'orcamento', 'financeiro', 'faturamento', 'fotos', 'obras', 'usuarios', 'perfil'],
   },
   auxiliar: {
     barra: ['hoje', 'meusDiarios', 'perfil'],
@@ -53,7 +54,7 @@ export const MENUS = {
 export const TELAS_COM_DINHEIRO = ['medicoes', 'orcamento', 'pagamentos', 'faturamento', 'cotacoes', 'financeiro']
 
 // Telas que mostram custo interno, dados da equipe ou juntam obras. Só sócio.
-export const TELAS_SO_SOCIO = ['faturamento', 'gestao', 'tarefas', 'servicos', 'contratados', 'financeiro', 'cronograma', 'medicoes', 'obras', 'usuarios']
+export const TELAS_SO_SOCIO = ['faturamento', 'gestao', 'tarefas', 'servicos', 'contratados', 'financeiro', 'cronograma', 'planejamento', 'medicoes', 'obras', 'usuarios']
 
 // Telas que não estão no menu, abertas a partir de outra. Herdam a permissão de quem as abre.
 export const SUBTELAS = {

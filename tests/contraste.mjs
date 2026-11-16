@@ -27,6 +27,7 @@ const PARES = [
   ['amber-ink', 'white', 4.5], ['amber-ink', 'amber-tint', 4.5],
   ['green-ink', 'white', 4.5], ['green-ink', 'green-tint', 4.5],
   ['linha-campo', 'white', 3],
+  ...['material', 'mao-de-obra', 'metodo', 'equipamento', 'projeto', 'seguranca', 'logistica'].map((t) => [`rt-${t}`, 'white', 4.5]),
 ]
 
 let ok = 0

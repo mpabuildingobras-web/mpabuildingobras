@@ -28,6 +28,15 @@
   --green-ink: #1F6E4B;
   --green-tint: #EAF5EF;
 
+  /* Planejamento: um tom por tipo de restrição (texto sobre branco, 4,5:1 no mínimo). */
+  --rt-material: #8A5300;
+  --rt-mao-de-obra: #1E4FA8;
+  --rt-metodo: #6B3FA0;
+  --rt-equipamento: #0E6B63;
+  --rt-projeto: #A3245E;
+  --rt-seguranca: #B3261E;
+  --rt-logistica: #4F6B12;
+
   /* Inter em tudo, em caixa normal e peso leve, como o modelo enviado pela sócia. --mono só existe porque as regras antigas o citam. */
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --mono: var(--sans);

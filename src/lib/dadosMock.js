@@ -12,6 +12,7 @@ import { STATUS_DIARIO, pessoaNoDiario, pessoasDoDia, podeEditarDiario, problema
 import { conferirCusto, conferirDiario, conferirServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem } from './lancamentos.js'
 import * as mock from './mockData.js'
 import { conferirObra, somenteDaObra } from './obras.js'
+import { STATUS_KANBAN, conferirNaoRealizado, conferirRestricao, conferirSubatividade, somarSemanas } from './planejamento.js'
 import { conferirTarefa } from './tarefas.js'
 import { conferirUsuario } from './usuarios.js'
 
@@ -288,6 +289,111 @@ export function mudarStatusTarefa(id, status) {
   if (!t) return recusa('Tarefa não encontrada.')
   t.status = status
   return resposta(t)
+}
+
+// ---------- Planejamento: subatividades (só sócios; por enquanto só nos dados de exemplo) ----------
+export function listarSubatividades() {
+  return resposta(ehSocio() ? daObra(mock.subatividades).map((x) => ({ ...x })) : [])
+}
+
+// Cria ou edita. Mudar o serviço move a subatividade de lugar na EAP (vai para o fim do novo serviço).
+export function salvarSubatividade(dados) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de planejar.')
+  const existente = daObra(mock.subatividades).find((x) => x.id === dados.id)
+  if (dados.id && !existente) return recusa('Esta subatividade não é desta obra.')
+  const r = conferirSubatividade(dados, daObra(mock.servicos).map((s) => s.id))
+  if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
+  const proximaOrdem = Math.max(0, ...daObra(mock.subatividades).filter((x) => x.servico_id === dados.servico_id).map((x) => x.ordem)) + 1
+  const campos = { titulo: dados.titulo.trim(), servico_id: dados.servico_id, inicio: dados.inicio, fim: dados.fim }
+  if (existente) {
+    if (existente.servico_id !== dados.servico_id) campos.ordem = proximaOrdem
+    Object.assign(existente, campos)
+    return resposta({ ...existente })
+  }
+  const nova = { ...campos, id: novoId('sa'), obra_id: obraAtual, ordem: proximaOrdem, concluida: false, arquivada: false }
+  mock.subatividades.push(nova)
+  return resposta({ ...nova })
+}
+
+// Arquivar não apaga: tira da EAP e da contagem, e volta quando desarquivada.
+export function arquivarSubatividade(id, arquivada) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  const x = daObra(mock.subatividades).find((s) => s.id === id)
+  if (!x) return recusa('Subatividade não encontrada nesta obra.')
+  x.arquivada = !!arquivada
+  return resposta({ ...x })
+}
+
+// ---------- Planejamento: restrições do médio prazo (só sócios; por enquanto só nos dados de exemplo) ----------
+export function listarRestricoes() {
+  return resposta(ehSocio() ? daObra(mock.restricoes).map((r) => ({ ...r })) : [])
+}
+
+// Cria ou edita. A restrição nova entra na semana do prazo dela.
+export function salvarRestricao(dados) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de planejar.')
+  const existente = daObra(mock.restricoes).find((r) => r.id === dados.id)
+  if (dados.id && !existente) return recusa('Esta restrição não é desta obra.')
+  const r = conferirRestricao(dados, daObra(mock.servicos).map((s) => s.id))
+  if (!r.ok) return Promise.resolve({ data: null, erro: 'Confira os campos.', erros: r.erros })
+  const campos = { descricao: dados.descricao.trim(), tipo: dados.tipo, servico_id: dados.servico_id, prazo: dados.prazo, responsavel: dados.responsavel.trim() }
+  if (existente) { Object.assign(existente, campos); return resposta({ ...existente }) }
+  const nova = { ...campos, id: novoId('r'), obra_id: obraAtual, semana: somarSemanas(dados.prazo, 0), resolvida: false }
+  mock.restricoes.push(nova)
+  return resposta({ ...nova })
+}
+
+export function resolverRestricao(id, resolvida) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  const r = daObra(mock.restricoes).find((x) => x.id === id)
+  if (!r) return recusa('Restrição não encontrada nesta obra.')
+  r.resolvida = !!resolvida
+  return resposta({ ...r })
+}
+
+// Muda a restrição de coluna no quadro: delta = -1 (semana anterior) ou +1 (próxima).
+export function moverRestricao(id, delta) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  const r = daObra(mock.restricoes).find((x) => x.id === id)
+  if (!r) return recusa('Restrição não encontrada nesta obra.')
+  r.semana = somarSemanas(r.semana, delta)
+  return resposta({ ...r })
+}
+
+// ---------- Planejamento: kanban da semana (só sócios; por enquanto só nos dados de exemplo) ----------
+export function listarCompromissos() {
+  return resposta(ehSocio() ? daObra(mock.compromissos).map((c) => ({ ...c })) : [])
+}
+
+// Coloca um serviço numa coluna do kanban da semana. "Não realizado" exige a causa.
+export function moverAtividade({ servico_id, semana, status, causa = null }) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de planejar.')
+  if (!daObra(mock.servicos).some((s) => s.id === servico_id)) return recusa('Este serviço não é desta obra.')
+  if (!STATUS_KANBAN[status]) return recusa('Escolha a coluna.')
+  const problema = status === 'nao_realizado' ? conferirNaoRealizado(causa) : null
+  if (problema) return recusa(problema)
+  const campos = { status, causa: status === 'nao_realizado' ? causa : null }
+  const segunda = somarSemanas(semana, 0)
+  const existente = daObra(mock.compromissos).find((c) => c.servico_id === servico_id && c.semana === segunda)
+  if (existente) { Object.assign(existente, campos); return resposta({ ...existente }) }
+  const novo = { id: novoId('cp'), obra_id: obraAtual, servico_id, semana: segunda, ...campos }
+  mock.compromissos.push(novo)
+  return resposta({ ...novo })
+}
+
+// Item do checklist: feito, não feito (com causa) ou de volta a pendente.
+export function marcarSubatividade(id, { concluida = false, nao_realizada = false, causa = null }) {
+  if (!ehSocio()) return recusa('Só sócio mexe no planejamento.')
+  const x = daObra(mock.subatividades).find((s) => s.id === id)
+  if (!x) return recusa('Subatividade não encontrada nesta obra.')
+  if (concluida && nao_realizada) return recusa('Ou foi feita, ou não foi.')
+  const problema = nao_realizada ? conferirNaoRealizado(causa) : null
+  if (problema) return recusa(problema)
+  Object.assign(x, { concluida: !!concluida, nao_realizada: !!nao_realizada, causa: nao_realizada ? causa : null })
+  return resposta({ ...x })
 }
 
 // ---------- Fotos ----------

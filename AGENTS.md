@@ -149,9 +149,23 @@ Depois de cada rodada, uma resposta curta:
 
 Em português simples, sem jargão. Se precisar de uma decisão minha, pergunte uma coisa de cada vez, com a sua recomendação.
 
-## Onde paramos (atualizado em 10/11/2026)
+## Onde paramos (atualizado em 15/11/2026)
 
 Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
+
+**Módulo Planejamento (Last Planner): PRONTO e no GitHub, só com dados de exemplo (15/11/2026)**
+
+- **Abas** (só sócios, em Mais → Planejamento):
+  - EAP: frente → serviço → subatividade;
+  - Longo prazo: barras por semana e por mês, real x previsto;
+  - Médio prazo: quadro de restrições por semana;
+  - Curto prazo: kanban da semana, checklist, causa do "não realizado" e PPC.
+- **A EAP é o Cronograma.** Os serviços e as frentes são os mesmos; o único nível novo é a subatividade. Não criar uma lista de atividades paralela.
+- **Andamento da semana mora em `compromissos`** (serviço + segunda-feira), não no serviço. "Concluído" no kanban não conclui o serviço no Cronograma.
+- **Regras em `src/lib/planejamento.js`**, com testes em `tests/planejamento.mjs`.
+- **Subatividades, restrições e compromissos ainda vivem só no `dadosMock.js`**: ao apertar F5, o que ela mudou volta ao início. Levar ao banco é um passo à parte, como foi com o Diário.
+- **Decidido ficar como está:** dias úteis de segunda a sexta, sem configurar sábados e feriados, porque isso muda as datas do app inteiro e precisa da decisão dela.
+- **O Supabase do plano grátis pausa sozinho.** Em 15/11 ele estava pausado e foi religado com o ok dela. Se o app mostrar "Não deu para carregar as obras", confira o status do projeto antes de qualquer outra coisa.
 
 **Back-end do Diário: PRONTO e no GitHub (6b6cc96, 10/11/2026)**
 
@@ -163,7 +177,7 @@ Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
   - o `HOJE` do app é fixo em 03/11/2026 (protótipo): decidir com ela quando passa a ser a data real;
   - a tela não faz atualização otimista: espera o banco e recarrega.
 - Servidor que enxerga o banco: porta 5174 (`gestao-de-obra-prints`). O da 5173 precisa ser religado para ler o `.env.local`.
-- **Próximo:** módulo Planejamento, começando pela EAP (proposta em 5 linhas já aprovada pela ordem dela: reaproveitar serviços e frentes do Cronograma, sem lista paralela).
+- Depois do Diário veio o Planejamento: ver o bloco acima.
 
 **Rodada 1 pronta, esperando a Manuela testar**
 

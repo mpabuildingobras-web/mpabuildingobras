@@ -21,6 +21,7 @@ import { MedicaoDetalhe, Medicoes, Pagamentos } from '../screens/medicoes'
 import { FichaObra, Obras } from '../screens/obras'
 import { Orcamento } from '../screens/orcamento'
 import { Painel } from '../screens/painel'
+import { Planejamento } from '../screens/planejamento'
 import { Servicos } from '../screens/servicos'
 import { Tarefas } from '../screens/tarefas'
 import { Usuarios } from '../screens/usuarios'
@@ -54,6 +55,7 @@ export default function Shell({ usuario, onSair }) {
     case 'meusDiarios': body = <DiarioLista {...p} />; break
     case 'diarioDia': body = <DiarioDia {...p} />; break
     case 'cronograma': body = <Cronograma {...p} />; break
+    case 'planejamento': body = <Planejamento {...p} />; break
     case 'editarServico': body = <EditarServico {...p} />; break
     case 'gestao': body = <Gestao {...p} />; break
     case 'tarefas': body = <Tarefas {...p} />; break

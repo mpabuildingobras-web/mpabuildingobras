@@ -167,6 +167,61 @@ export const fotos = [
   { id: 'p7', diario_id: 'e03', servico_id: 'c2', legenda: 'Demolição da cozinha' },
 ]
 
+// Planejamento: o passo menor dentro de cada serviço (EAP nível 3). Só nos dados de exemplo por enquanto.
+// A CJF tem só duas, de propósito: trocar de obra tem que trocar a árvore inteira.
+const SA = (id, obra_id, servico_id, ordem, titulo, inicio, fim, extra = {}) => ({
+  id, obra_id, servico_id, ordem, titulo, inicio, fim, concluida: false, arquivada: false, nao_realizada: false, causa: null, ...extra,
+})
+
+export const subatividades = [
+  SA('sa1', OBRA_AP302, 's1', 1, 'Remover azulejos dos banheiros', '2026-09-30', '2026-10-02', { concluida: true }),
+  SA('sa2', OBRA_AP302, 's1', 2, 'Remover piso da área social', '2026-10-01', '2026-10-05', { concluida: true }),
+  SA('sa3', OBRA_AP302, 's3', 1, 'Abrir parede da suíte para a prumada', '2026-10-08', '2026-10-15', { concluida: true }),
+  SA('sa4', OBRA_AP302, 's3', 2, 'Passar tubulação de água fria e quente', '2026-10-15', '2026-11-03'),
+  SA('sa5', OBRA_AP302, 's3', 3, 'Teste de estanqueidade', '2026-11-04', '2026-11-06'),
+  SA('sa6', OBRA_AP302, 's4', 1, 'Eletrodutos do corredor e dos quartos', '2026-10-08', '2026-10-15', { concluida: true }),
+  SA('sa7', OBRA_AP302, 's5', 1, 'Chapisco das paredes do banheiro', '2026-11-09', '2026-11-11'),
+  SA('sa8', OBRA_AP302, 's5', 2, 'Reboco e desempeno', '2026-11-12', '2026-11-17'),
+  SA('sa9', OBRA_AP302, 's9', 1, 'Tabicas e perfis do forro da sala', '2026-10-27', '2026-10-29', { concluida: true }),
+  SA('sa10', OBRA_AP302, 's9', 2, 'Placas de gesso da sala e dos quartos', '2026-10-29', '2026-11-05'),
+  SA('sa11', OBRA_AP302, 's7', 1, 'Paginação do piso com a cliente', '2026-10-20', '2026-10-20', { arquivada: true }),
+  SA('sb1', OBRA_CJF, 'c3', 1, 'Levantamento do quadro antigo', '2026-11-03', '2026-11-04'),
+  SA('sb2', OBRA_CJF, 'c4', 1, 'Vistoria do telhado e das calhas', '2026-11-03', '2026-11-05'),
+]
+
+// Planejamento, médio prazo: o que impede cada serviço de andar. "semana" é a segunda-feira da coluna
+// do quadro. Uma está atrasada (de semana passada, ainda aberta) e duas já foram resolvidas.
+const RS = (id, obra_id, servico_id, tipo, descricao, prazo, responsavel, semana, extra = {}) => ({
+  id, obra_id, servico_id, tipo, descricao, prazo, responsavel, semana, resolvida: false, ...extra,
+})
+
+export const restricoes = [
+  RS('r1', OBRA_AP302, 's3', 'Método', 'Combinar com o síndico o dia do teste de estanqueidade', '2026-10-30', 'Bruno Exemplo', '2026-10-26'),
+  RS('r2', OBRA_AP302, 's3', 'Material', 'Registro de gaveta da suíte faltando: compra pedida', '2026-11-04', 'Ana Exemplo', '2026-11-02'),
+  RS('r3', OBRA_AP302, 's5', 'Mão de obra', 'Marcos também está escalado na CJF nesta semana', '2026-11-06', 'Bruno Exemplo', '2026-11-02'),
+  RS('r4', OBRA_AP302, 's7', 'Material', 'Argamassa AC-III para o porcelanato: aguardando a cliente escolher o fornecedor', '2026-11-10', 'Ana Exemplo', '2026-11-09'),
+  RS('r5', OBRA_AP302, 's6', 'Logística', 'Elevador de serviço só às terças e quintas para subir areia e cimento', '2026-11-05', 'Ana Exemplo', '2026-11-02'),
+  RS('r6', OBRA_AP302, 's8', 'Projeto', 'Paginação do revestimento dos banheiros ainda não aprovada pela cliente', '2026-11-13', 'Ana Exemplo', '2026-11-16'),
+  RS('r7', OBRA_AP302, 's10', 'Segurança', 'Proteger esquadrias e piso antes do lixamento', '2026-11-24', 'Bruno Exemplo', '2026-11-23'),
+  RS('r8', OBRA_AP302, 's9', 'Equipamento', 'Andaime para o pé-direito da sala', '2026-10-27', 'Bruno Exemplo', '2026-10-26', { resolvida: true }),
+  RS('r9', OBRA_AP302, 's4', 'Material', 'Fios e cabos atrasados pelo fornecedor (previsão 05/11)', '2026-11-05', 'Ana Exemplo', '2026-11-02', { resolvida: true }),
+  RS('rc1', OBRA_CJF, 'c3', 'Projeto', 'Projeto elétrico ainda não aprovado pelo cliente', '2026-11-10', 'Bruno Exemplo', '2026-11-09'),
+]
+
+// Planejamento, curto prazo: o que foi prometido para cada semana e como ficou. Semana passada
+// (26/10) e esta (02/11) já têm marcações, para o PPC e o histórico terem o que mostrar.
+const CP = (id, obra_id, servico_id, semana, status, causa = null) => ({ id, obra_id, servico_id, semana, status, causa })
+
+export const compromissos = [
+  CP('cp1', OBRA_AP302, 's3', '2026-10-26', 'nao_realizado', 'Método'),
+  CP('cp2', OBRA_AP302, 's9', '2026-10-26', 'concluido'),
+  CP('cp3', OBRA_AP302, 's3', '2026-11-02', 'em_andamento'),
+  CP('cp4', OBRA_AP302, 's9', '2026-11-02', 'concluido'),
+  CP('cp5', OBRA_AP302, 's6', '2026-11-02', 'nao_realizado', 'Logística'),
+  CP('cp6', OBRA_AP302, 's5', '2026-11-02', 'a_fazer'),
+  CP('cc1', OBRA_CJF, 'c2', '2026-11-02', 'em_andamento'),
+]
+
 export const medicoes = [
   { id: 'm1', obra_id: OBRA_AP302, numero: 1, periodo_inicio: '2026-09-29', periodo_fim: '2026-10-09', vencimento: '2026-10-14', status: 'Paga', data_pagamento: '2026-10-14',
     itens: [['1.1', 'Demolição de revestimentos', '85 m²', 2975], ['1.2', 'Retirada de entulho', '100%', 1800], ['3.1', 'Infra elétrica', '60 m', 1680], ['2.1', 'Hidráulica embutida', '10%', 950], ['9.1', 'Gestão de obra (10%)', '', 740.5]] },
