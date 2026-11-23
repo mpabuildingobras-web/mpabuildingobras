@@ -2,17 +2,19 @@ import { useState } from 'react'
 import { Carregando, Titulo, Vazio, useAviso, useCarregar, useOcupado } from '../components'
 import { comentarCotacao, listarCotacoes } from '../lib/dados'
 import { reais } from '../lib/orcamento'
+import { pode } from '../lib/permissoes'
 
 const COR = { 'Em cotação': 'slate', 'Aguardando cliente': 'amber', Escolhido: 'green', Comprado: 'green' }
 
 // Compras: o quadro de concorrência. O cliente vê os preços e aprova num comentário.
-export function Cotacoes({ perfil, usuario }) {
+export function Cotacoes({ usuario }) {
   const estado = useCarregar(listarCotacoes)
   const [aberta, setAberta] = useState(null)
   const [textos, setTextos] = useState({})
   const [aviso, avisar] = useAviso()
   const [enviando, rodar] = useOcupado()
-  const socio = perfil === 'socio'
+  // Quem monta e manda cotação (o sócio); o cliente só vê e comenta.
+  const socio = pode('compras.editar', usuario)
 
   const comentar = async (q) => {
     const { erro } = await comentarCotacao(q.id, usuario.nome, textos[q.id] ?? '')

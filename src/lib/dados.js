@@ -1,8 +1,9 @@
 // CAMADA DE DADOS: única porta de entrada dos dados. As telas importam só daqui, e só este
 // arquivo chama supabase.from(...).
 //
-// Hoje o banco (Supabase) cuida de OBRAS e do DIÁRIO (diários, equipe do dia, lançamentos e fotos).
-// O resto (serviços, contratados, tarefas, dinheiro, usuários e login) ainda vem dos dados de
+// Hoje o banco (Supabase) cuida do LOGIN (auth + profiles + membros), de OBRAS e do DIÁRIO
+// (diários, equipe do dia, lançamentos e fotos).
+// O resto (serviços, contratados, tarefas, dinheiro e a tela de Usuários) ainda vem dos dados de
 // exemplo em dadosMock.js, até a vez de cada módulo. As duas obras de exemplo têm o mesmo id
 // no mock e no banco (OBRA_AP302, OBRA_CJF), por isso as duas metades conversam.
 //
@@ -10,6 +11,7 @@
 // Sem obra escolhida, as listas voltam vazias, nunca com tudo.
 // RESPOSTA: sempre { data, erro } (erro em português). O Supabase devolve { data, error } e
 // não estoura exceção: todo resultado é conferido aqui.
+import { conferirCamposLogin, erroDePorta } from './acesso.js'
 import { servicosDaCadeia } from './cronograma.js'
 import * as mockApi from './dadosMock.js'
 import { STATUS_DIARIO, pessoaNoDiario, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from './diario.js'
@@ -53,6 +55,53 @@ function traduzirErro(error) {
 }
 const falha = (error) => recusa(traduzirErro(error))
 
+// ---------- Entrada (Supabase Auth + tabela profiles) ----------
+// A conta do app = o login (auth) + a linha dela em profiles (perfil e situação).
+// `role` repete o perfil porque as telas antigas ainda leem esse nome.
+async function lerMinhaConta() {
+  const { data: sessao } = await supabase.auth.getSession()
+  const id = sessao?.session?.user?.id
+  if (!id) return resposta(null)
+  const { data, error } = await supabase.from('profiles').select('id, nome, email, perfil, situacao, telas_bloqueadas').eq('id', id).maybeSingle()
+  if (error) return falha(error)
+  if (!data) return recusa('Sua conta ainda não foi preparada. Fale com um dos sócios.')
+  return resposta({ ...data, role: data.perfil })
+}
+
+// Ao abrir o app: se a sessão existe mas a conta não pôde ser lida, sai de vez,
+// para a pessoa não ficar com um login vivo e a tela de entrada na frente.
+export const minhaConta = escolher(mockApi.minhaConta, async () => {
+  const r = await lerMinhaConta()
+  if (r.erro) await supabase.auth.signOut()
+  return r
+})
+
+export const entrar = escolher(mockApi.entrar, async ({ email, senha, porta }) => {
+  const campos = conferirCamposLogin({ email, senha })
+  if (campos) return recusa(campos)
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha })
+  if (error) {
+    if (error.code === 'invalid_credentials' || /invalid login credentials/i.test(error.message)) return recusa('E-mail ou senha não conferem.')
+    return falha(error)
+  }
+  const r = await lerMinhaConta()
+  const problema = r.erro ?? erroDePorta(r.data?.perfil, porta)
+  if (problema) { await supabase.auth.signOut(); return recusa(problema) }
+  return r
+})
+
+export const sair = escolher(mockApi.sair, async () => {
+  const { error } = await supabase.auth.signOut()
+  return error ? falha(error) : resposta(true)
+})
+
+export const trocarSenha = escolher(mockApi.trocarSenha, async (senha) => {
+  const { error } = await supabase.auth.updateUser({ password: senha })
+  if (error?.code === 'same_password') return recusa('A senha nova precisa ser diferente da atual.')
+  if (error?.code === 'weak_password') return recusa('Senha fraca: use pelo menos 8 caracteres, misturando letras e números.')
+  return error ? falha(error) : resposta(true)
+})
+
 // ---------- Obras ----------
 // Dados pessoais do contratante (obras_clientes) só vão para sócio.
 function consultaObras(perfil) {
@@ -66,11 +115,11 @@ function achatarObra({ obras_clientes: c, ...obra }) {
   return { ...obra, cliente_telefone: cli?.telefone ?? '', cliente_email: cli?.email ?? '', cliente_documento: cli?.documento ?? '' }
 }
 
-export const listarObras = escolher(mockApi.listarObras, async (perfil, usuarioId) => {
-  let consulta = consultaObras(perfil)
-  // Quem é membro de qual obra ainda mora no mock (o login é de exemplo até o passo 10).
-  if (perfil !== 'socio') consulta = consulta.in('id', mock.membros.filter((m) => m.usuario_id === usuarioId).map((m) => m.obra_id))
-  const { data, error } = await consulta.order('codigo')
+export const listarObras = escolher(mockApi.listarObras, async (perfil) => {
+  // Quais obras a pessoa vê é o banco que diz (minhas_obras: sócio, todas; os outros, as liberadas).
+  const { data: ids, error: erroIds } = await supabase.rpc('minhas_obras')
+  if (erroIds) return falha(erroIds)
+  const { data, error } = await consultaObras(perfil).in('id', ids ?? []).order('codigo')
   if (error) return falha(error)
   return resposta(data.map(achatarObra))
 })

@@ -4,6 +4,7 @@ import { HOJE, buscarOrcamento, carregarCronograma } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { dataBR } from '../lib/formato'
 import { porcento, reais, resumirOrcamento } from '../lib/orcamento'
+import { pode } from '../lib/permissoes'
 
 // Busca o orçamento e o executado de cada item na visão de quem está olhando.
 export async function carregarResumoOrcamento(perfil) {
@@ -16,10 +17,10 @@ export async function carregarResumoOrcamento(perfil) {
   return { data: { orcamento: orc.data, obra, resumo: resumirOrcamento(orc.data.itens, fracoes), cascata: c }, erro: null }
 }
 
-export function Orcamento({ perfil }) {
+export function Orcamento({ perfil, usuario }) {
   const estado = useCarregar(() => carregarResumoOrcamento(perfil))
   const [aviso, avisar] = useAviso()
-  const socio = perfil === 'socio'
+  const socio = pode('orcamento.editar', usuario)
   const importar = () => avisar('A importação da planilha .xlsx entra na Fase 1, junto com o banco.')
   return (
     <Carregando estado={estado}>

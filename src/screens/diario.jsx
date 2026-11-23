@@ -8,6 +8,7 @@ import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { ACOES_DIARIO, STATUS_DIARIO, acoesDoDiario, botoesDePercentual, pedeAcao } from '../lib/diario'
 import { corDoStatusDiario, dataBR, numeroBR, qtd } from '../lib/formato'
 import { faltaDoServico } from '../lib/lancamentos'
+import { pode } from '../lib/permissoes'
 
 const CLIMAS = ['Sol', 'Nublado', 'Chuva', 'Chuva forte']
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
@@ -16,10 +17,10 @@ const diaDaSemana = (iso) => DIAS[new Date(`${iso}T12:00:00`).getDay()]
 const prioridade = (perfil, d) => (pedeAcao(perfil, d.status) ? 0 : 1)
 
 // ---------- Lista de diários (Sócio: "Diário"; Auxiliar: "Meus diários"; Cliente: só aprovados) ----------
-export function DiarioLista({ perfil, goto }) {
+export function DiarioLista({ perfil, usuario, goto }) {
   const estado = useCarregar(listarDiarios)
   const lista = [...(estado.data ?? [])].sort((a, b) => prioridade(perfil, a) - prioridade(perfil, b))
-  const podeLancar = perfil !== 'cliente'
+  const podeLancar = pode('diario.criar', usuario)
   return (
     <>
       <Titulo rotulo="Diário de obra" titulo={perfil === 'auxiliar' ? 'Meus diários' : 'Diários da obra'}>

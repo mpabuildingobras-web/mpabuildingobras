@@ -28,12 +28,13 @@ export function Avanco({ goto }) {
             <div className="section-head"><span className="label">Etapas</span></div>
             {d.resumo.etapas.map((e) => (
               <div key={e.frente} className="etapa">
-                <button onClick={() => goto('orcamento')}>
+                {/* O cliente não abre o Orçamento (quadro, 15/11/2026): a etapa só mostra o avanço. */}
+                <div className="etapa-linha">
                   <span className="etapa-n">{e.numero}</span>
                   <span className="etapa-nome">{e.frente}</span>
                   <span className={`etapa-pct num ${e.fracao >= 1 ? 'c-green' : ''}`}>{porcento(e.fracao)}</span>
                   <span className={`bar ${e.fracao >= 1 ? 'done' : ''}`}><i style={{ width: `${Math.min(e.fracao, 1) * 100}%` }}></i></span>
-                </button>
+                </div>
               </div>
             ))}
           </div>

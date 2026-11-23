@@ -42,15 +42,10 @@ export function entrar({ email, senha, porta }) {
   return r.ok ? resposta(semSenha(r.usuario)) : recusa(r.erro)
 }
 
-// Primeiro acesso do cliente: a conta nasce pendente, sem obra, até um sócio liberar.
-export function cadastrarCliente({ nome, email, documento, tipoPessoa, senha }) {
-  if (mock.usuarios.some((u) => u.email.toLowerCase() === email.trim().toLowerCase())) {
-    return recusa('Já existe uma conta com este e-mail. Use "Já sou cadastrado".')
-  }
-  const u = { id: novoId('u'), nome: nome.trim(), email: email.trim(), role: 'pendente', tipo_pessoa: tipoPessoa, documento, telas_bloqueadas: [], senha_teste: senha }
-  mock.usuarios.push(u)
-  return resposta(semSenha(u))
-}
+// No exemplo não há sessão guardada: abrir o app sempre pede o login.
+export const minhaConta = () => resposta(null)
+export const sair = () => resposta(true)
+export const trocarSenha = () => resposta(true)
 
 // ---------- Obras ----------
 export function listarObras(perfil, usuarioId) {

@@ -233,7 +233,7 @@
 .orc-geral-top b { font-size: 34px; }
 .bar.big { height: 12px; margin-top: 10px; border-radius: 3px; }
 .etapa { border-bottom: 1px solid var(--line-soft); }
-.etapa > button {
+.etapa > button, .etapa > .etapa-linha {
   width: 100%; border: 0; background: none; text-align: left; padding: 14px 0; min-height: 64px;
   display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center;
 }

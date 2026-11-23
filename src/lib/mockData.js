@@ -40,11 +40,11 @@ export const membros = [
 
 // Senha de teste (só do ambiente de exemplo; some na Etapa 7, quando o login vira Supabase).
 export const usuarios = [
-  { id: 'u1', nome: 'Ana Exemplo', email: 'ana@exemplo.com', role: 'socio', telas_bloqueadas: [], senha_teste: 'obra1234' },
-  { id: 'u2', nome: 'Bruno Exemplo', email: 'bruno@exemplo.com', role: 'socio', telas_bloqueadas: [], senha_teste: 'obra1234' },
-  { id: 'u3', nome: 'Rita Auxiliar', email: 'rita@exemplo.com', role: 'auxiliar', telas_bloqueadas: [], senha_teste: 'obra1234' },
-  { id: 'u4', nome: 'Cláudia Cliente', email: 'claudia@exemplo.com', role: 'cliente', telas_bloqueadas: [], senha_teste: 'obra1234' },
-  { id: 'u5', nome: 'Novo Usuário', email: 'novo@exemplo.com', role: 'pendente', telas_bloqueadas: [], senha_teste: 'obra1234' },
+  { id: 'u1', nome: 'Ana Exemplo', email: 'ana@exemplo.com', role: 'socio', perfil: 'socio', situacao: 'ativo', telas_bloqueadas: [], senha_teste: 'obra1234' },
+  { id: 'u2', nome: 'Bruno Exemplo', email: 'bruno@exemplo.com', role: 'socio', perfil: 'socio', situacao: 'ativo', telas_bloqueadas: [], senha_teste: 'obra1234' },
+  { id: 'u3', nome: 'Rita Auxiliar', email: 'rita@exemplo.com', role: 'auxiliar', perfil: 'auxiliar', situacao: 'ativo', telas_bloqueadas: [], senha_teste: 'obra1234' },
+  { id: 'u4', nome: 'Cláudia Cliente', email: 'claudia@exemplo.com', role: 'cliente', perfil: 'cliente', situacao: 'ativo', telas_bloqueadas: [], senha_teste: 'obra1234' },
+  { id: 'u5', nome: 'Novo Usuário', email: 'novo@exemplo.com', role: 'pendente', perfil: null, situacao: 'pendente', telas_bloqueadas: [], senha_teste: 'obra1234' },
 ]
 
 // A equipe circula entre obras: não tem obra_id. Só sócios veem esta lista.

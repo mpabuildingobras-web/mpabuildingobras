@@ -45,8 +45,9 @@ export const MENUS = {
     mais: [],
   },
   cliente: {
-    barra: ['avanco', 'orcamento', 'pagamentos', 'diario'],
-    mais: ['fotos', 'cotacoes', 'perfil'],
+    // Sem Orçamento: o cliente vê só a evolução financeira, em Pagamentos (quadro, 15/11/2026).
+    barra: ['avanco', 'pagamentos', 'diario', 'fotos'],
+    mais: ['cotacoes', 'perfil'],
   },
 }
 

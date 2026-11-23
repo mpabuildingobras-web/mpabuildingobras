@@ -5,6 +5,7 @@ import { SeletorObra } from '../components/SeletorObra'
 import { useObra } from '../lib/ObraContext'
 import { PERFIS, SUBTELAS, TELAS, itensDaBarra, menuDoUsuario, podeAbrir, telaDoMenu, telaInicial, telaPrecisaDeObra } from '../lib/menus'
 import { HOJE } from '../lib/dados'
+import { pode } from '../lib/permissoes'
 import { Avanco } from '../screens/avanco'
 import { Perfil } from '../screens/cadastros'
 import { Contratados } from '../screens/contratados'
@@ -80,7 +81,7 @@ export default function Shell({ usuario, onSair }) {
 
   // Primeiro uso, ou pessoa sem obra liberada: nenhuma tela de obra abre sem obra.
   if (!obra && telaPrecisaDeObra(telaAtual, route.params)) {
-    body = perfil === 'socio'
+    body = pode('obra.criar', usuario)
       ? <Vazio icone="obra" titulo="Cadastre a sua primeira obra" texto="Tudo no app acontece dentro de uma obra: cronograma, diário, orçamento e custos."
         botao="Cadastrar a primeira obra" onBotao={() => goto('fichaObra', { nova: true })} />
       : <Vazio icone="obra" titulo="Nenhuma obra liberada para você" texto="Fale com a engenharia para vincular a sua obra à sua conta." />

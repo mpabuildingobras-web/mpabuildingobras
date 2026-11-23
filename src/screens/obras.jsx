@@ -7,6 +7,7 @@ import { montarAlocacoes } from '../lib/gestao'
 import { useObra } from '../lib/ObraContext'
 import { SITUACOES } from '../lib/obras'
 import { reais } from '../lib/orcamento'
+import { pode } from '../lib/permissoes'
 
 // Reduz a foto no navegador antes de guardar (máx. 1200px, qualidade 0.8).
 function comprimirFoto(arquivo) {
@@ -27,13 +28,13 @@ function comprimirFoto(arquivo) {
 }
 
 // Lista de obras: abrir obra é tela, não SQL (quem abre a próxima é a sócia, sem programador).
-export function Obras({ goto }) {
+export function Obras({ usuario, goto }) {
   const { obras, obraId, trocarObra } = useObra()
   const abrir = (id) => { trocarObra(id); goto('fichaObra', {}, id) }
   return (
     <>
       <Titulo rotulo="Obras" titulo="Todas as obras">
-        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => goto('fichaObra', { nova: true })}>+ Nova obra</button>
+        {pode('obra.criar', usuario) && <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => goto('fichaObra', { nova: true })}>+ Nova obra</button>}
       </Titulo>
       <div className="section">
         <div className="obras-grade">

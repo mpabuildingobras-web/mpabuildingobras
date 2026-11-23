@@ -63,6 +63,8 @@ Ainda não publicado (Etapa 9). O agente roda npm e git; a pessoa não digita co
 
 - **Pasta fora do OneDrive de propósito** (`C:\Users\manue\projetos\gestao-de-obra`). A `node_modules` dentro do OneDrive trava sincronização e o app.
 - **No Windows, se `npm` der "execução de scripts desabilitada"**, use `npm.cmd`. Nunca mexer na política do Windows.
+- **Teste de permissões do banco:** `tests/permissoes-banco.sql`. Roda pela ferramenta de SQL do Supabase depois de QUALQUER mudança de permissão; termina sempre com um erro de propósito ("RESULTADO n falha(s)") que desfaz tudo o que criou. Não entra no `npm run check` porque precisa do banco.
+- **O cadastro público do Supabase fica desligado** (Allow new users to sign up = off; conferido em `/auth/v1/settings`, `disable_signup: true`, 23/11/2026). Só os sócios criam login. Ligar de novo abre o app para qualquer um.
 - **Tabela nova nasce fechada para o app.** Toda tabela precisa de `grant` na migration, só para `authenticated`. Erro 42501 é GRANT faltando, não RLS. Nunca `grant all`, nunca `to anon`.
 
 ## Higiene de código (vale para toda mudança)
