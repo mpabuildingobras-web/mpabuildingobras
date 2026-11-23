@@ -4,7 +4,7 @@ import {
   aprovarDiario, buscarBaseFaturamento, buscarDiario, buscarDiarioDoDia, buscarOrcamento, carregarCronograma, criarObraParaTeste,
   definirObraAtual, definirPerfil, definirPrestadorDoServico, devolverDiario, enviarDiario, excluirCusto, excluirServico, listarCustos, salvarCusto, salvarDiario, salvarServico,
 } from './apoio-lancamentos.js'
-import { acoesDoDiario, botoesDePercentual, pedeAcao, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from '../src/lib/diario.js'
+import { acoesDoDiario, botoesDePercentual, obraAceitaDiario, pedeAcao, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from '../src/lib/diario.js'
 import { calcularFaturamento } from '../src/lib/faturamento.js'
 import {
   conferirCusto, conferirDiario, conferirServico, faltaDoServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem,
@@ -65,12 +65,15 @@ conferir('diário antigo sem equipe marcada mantém o número', pessoasDoDia([],
 conferir('pedir ação: sócio no enviado, auxiliar no devolvido', [pedeAcao('socio', 'Enviado'), pedeAcao('auxiliar', 'Devolvido'), pedeAcao('auxiliar', 'Enviado')], [true, true, false])
 
 // Quem mexe no diário e quais botões aparecem
-conferir('auxiliar edita até aprovar', [podeEditarDiario('auxiliar', 'Enviado'), podeEditarDiario('auxiliar', 'Aprovado')], [true, false])
+conferir('auxiliar edita só Rascunho e Devolvido', [podeEditarDiario('auxiliar', 'Rascunho'), podeEditarDiario('auxiliar', 'Devolvido'), podeEditarDiario('auxiliar', 'Enviado'), podeEditarDiario('auxiliar', 'Aprovado')], [true, true, false, false])
 conferir('cliente nunca edita', podeEditarDiario('cliente', 'Rascunho'), false)
 conferir('sócio decide o enviado', acoesDoDiario('socio', 'Enviado'), 'decidir')
-conferir('sócio corrige o aprovado', acoesDoDiario('socio', 'Aprovado'), 'corrigir')
+conferir('aprovado trava: nem o sócio edita (reabre)', [acoesDoDiario('socio', 'Aprovado'), podeEditarDiario('socio', 'Aprovado'), podeEditarDiario('socio', 'Enviado')], ['nenhuma', false, false])
 conferir('auxiliar envia o devolvido', acoesDoDiario('auxiliar', 'Devolvido'), 'enviar')
 conferir('auxiliar não tem botão no aprovado', acoesDoDiario('auxiliar', 'Aprovado'), 'nenhuma')
+conferir('diário só em obra Em andamento', ['Em andamento', 'Parada', 'Concluída'].map((s) => obraAceitaDiario({ situacao: s })), [true, false, false])
+conferir('obra parada: rascunho vira só leitura', acoesDoDiario('auxiliar', 'Rascunho', false), 'nenhuma')
+conferir('obra parada: o sócio ainda decide o enviado', acoesDoDiario('socio', 'Enviado', false), 'decidir')
 
 // Enviar pede pelo menos uma pessoa na obra
 conferir('sem ninguém não envia', problemaParaEnviar({ qtd_pessoas: 0 }), 'Marque pelo menos uma pessoa na equipe do dia antes de enviar.')
@@ -114,8 +117,18 @@ const pctForro = async (contam) => {
 }
 conferir('forro começa em 18', await pctForro(['Enviado', 'Aprovado']), 18)
 const d12 = (await buscarDiarioDoDia(HOJE)).data
+// Enviado não se edita (quadro, 23/11/2026): nem o sócio. Ele devolve, o diário é corrigido e reenviado.
+const naoEditaEnviado = await salvarDiario({ id: d12.id, data: HOJE, equipe: ['f6'] })
+conferir('diário enviado não se edita, nem pelo sócio', naoEditaEnviado.erro !== null, true)
+conferir('devolver sem motivo é recusado', (await devolverDiario(d12.id, '  ')).erro !== null, true)
+await devolverDiario(d12.id, 'Faltou foto.')
+conferir('devolvido guarda o motivo', (await buscarDiario(d12.id)).data.comentario_devolucao, 'Faltou foto.')
+const excesso = await salvarDiario({ id: d12.id, data: HOJE, equipe: [], lancamentos: [{ servico_id: 's9', quantidade: '999', qtd_pessoas: '2' }] })
+conferir('passar do previsto não grava e diz onde', [excesso.data, excesso.erros?.s9?.startsWith('Faltam só')], [null, true])
 await salvarDiario({ id: d12.id, data: HOJE, clima_manha: 'Chuva', clima_tarde: 'Sol', ocorrencias: 'Teste', equipe: ['f6'], atividades: { f6: 'Forro' },
   lancamentos: [{ servico_id: 's3', quantidade: '10', qtd_pessoas: '2' }, { servico_id: 's9', quantidade: '20', qtd_pessoas: '2' }] })
+await enviarDiario(d12.id)
+conferir('reenviar limpa o motivo', (await buscarDiario(d12.id)).data.comentario_devolucao ?? null, null)
 conferir('lançamento no diário enviado conta para o sócio', await pctForro(['Enviado', 'Aprovado']), 38)
 conferir('e não conta para o cliente antes de aprovar', await pctForro(['Aprovado']), 18)
 const relido = (await buscarDiario(d12.id)).data
@@ -129,18 +142,12 @@ conferir('cliente não recebe a função do prestador', vistoPeloCliente.equipe.
 conferir('cliente vê o prestador de cada serviço lançado', vistoPeloCliente.execucoes.every((e) => e.prestador !== ''), true)
 definirPerfil('socio')
 conferir('sócio recebe a função', (await buscarDiario(d12.id)).data.equipe[0].funcao !== '', true)
-const excesso = await salvarDiario({ id: d12.id, data: HOJE, equipe: [], lancamentos: [{ servico_id: 's9', quantidade: '999', qtd_pessoas: '2' }] })
-conferir('passar do previsto não grava e diz onde', [excesso.data, excesso.erros.s9.startsWith('Faltam só')], [null, true])
+conferir('aprovado trava: nem o sócio salva por cima', (await salvarDiario({ id: d12.id, data: HOJE, equipe: ['f6'] })).erro !== null, true)
 
 // Devolver pede motivo
 conferir('aprovado não pode ser devolvido', (await devolverDiario(d12.id, 'Motivo')).erro !== null, true)
 conferir('aprovado não pode ser aprovado de novo', (await aprovarDiario(d12.id)).erro !== null, true)
-await enviarDiario(d12.id)
-conferir('devolver sem motivo é recusado', (await devolverDiario(d12.id, '  ')).erro !== null, true)
-await devolverDiario(d12.id, 'Faltou foto.')
-conferir('devolvido guarda o motivo', (await buscarDiario(d12.id)).data.comentario_devolucao, 'Faltou foto.')
-await enviarDiario(d12.id)
-conferir('reenviar limpa o motivo', (await buscarDiario(d12.id)).data.comentario_devolucao ?? null, null)
+conferir('aprovado não volta a ser enviado (o sócio reabre)', (await enviarDiario(d12.id)).erro !== null, true)
 
 // ---------- Obra nova do zero ----------
 const nova = await criarObraParaTeste()

@@ -182,6 +182,8 @@ Mudar uma permissão é mudar, de uma vez: este quadro, o JSON, o `src/lib/permi
 
 - 15/11/2026 · Manuela · As 6 linhas pendentes foram confirmadas: o auxiliar e o cliente veem as obras liberadas (Em preparação, só sócio); só os sócios criam obra; o cliente não abre Contratados nem cadastra contratados (vê nome e atividade no diário aprovado); o cliente vê os diários aprovados da obra dele e os pagamentos dela, só para ler. Onde ela tinha marcado "só os dele" para o cliente, queria dizer "da obra dele", e isso já é a regra da obra.
 
+- 23/11/2026 · Manuela · O banco passou a seguir o quadro (RLS de obras, contratante, diário, equipe, lançamentos e fotos; nada para quem não fez login). Confirmado: diário enviado não se edita (o sócio aprova ou devolve) e o aprovado trava até para o sócio, que reabre; o botão "Corrigir" do aprovado saiu. Fotos passam a guardar quem enviou (as 7 antigas ficam sem dono, e o auxiliar não as apaga).
+
 - 23/11/2026 · Manuela · Revisão depois do módulo Planejamento: entram as Restrições (5 ações), a Semana com kanban e PPC (4 ações) e o Painel do dia (1 ação), todas só do sócio. O sócio pode apagar restrição de vez e mexer em semana que já terminou, com registro no histórico. Nenhuma das 63 linhas de 15/11 mudou.
 
 ## Em aberto

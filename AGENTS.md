@@ -63,7 +63,9 @@ Ainda não publicado (Etapa 9). O agente roda npm e git; a pessoa não digita co
 
 - **Pasta fora do OneDrive de propósito** (`C:\Users\manue\projetos\gestao-de-obra`). A `node_modules` dentro do OneDrive trava sincronização e o app.
 - **No Windows, se `npm` der "execução de scripts desabilitada"**, use `npm.cmd`. Nunca mexer na política do Windows.
-- **Teste de permissões do banco:** `tests/permissoes-banco.sql`. Roda pela ferramenta de SQL do Supabase depois de QUALQUER mudança de permissão; termina sempre com um erro de propósito ("RESULTADO n falha(s)") que desfaz tudo o que criou. Não entra no `npm run check` porque precisa do banco.
+- **Testes de permissões do banco:** `tests/permissoes-banco.sql` (pessoas e obras liberadas), `tests/permissoes-banco-diario.sql` e `tests/permissoes-banco-fotos.sql`. Rodam no SQL do Supabase depois de QUALQUER mudança de permissão; terminam sempre com um erro de propósito ("RESULTADO n falha(s)") que desfaz tudo o que criaram. Não entram no `npm run check` porque precisam do banco.
+- **O banco está fechado pelo quadro desde 23/11/2026:** nenhuma regra `using (true)`, nada liberado para quem não fez login (teste do estranho: as 8 tabelas devolvem 42501 só com a chave publicável). Tabela nova nasce com a regra do quadro, nunca com regra provisória.
+- **Neste ambiente, o agente não consegue aplicar mudança no banco** (o modo de permissão recusa `apply_migration` e SQL que escreve). O caminho combinado: o agente escreve a migration em `supabase/migrations/`, a Manuela cola no SQL Editor do Supabase, e o agente confere só lendo.
 - **O cadastro público do Supabase fica desligado** (Allow new users to sign up = off; conferido em `/auth/v1/settings`, `disable_signup: true`, 23/11/2026). Só os sócios criam login. Ligar de novo abre o app para qualquer um.
 - **Tabela nova nasce fechada para o app.** Toda tabela precisa de `grant` na migration, só para `authenticated`. Erro 42501 é GRANT faltando, não RLS. Nunca `grant all`, nunca `to anon`.
 
@@ -159,9 +161,17 @@ Depois de cada rodada, uma resposta curta:
 
 Em português simples, sem jargão. Se precisar de uma decisão minha, pergunte uma coisa de cada vez, com a sua recomendação.
 
-## Onde paramos (atualizado em 15/11/2026)
+## Onde paramos (atualizado em 23/11/2026)
 
 Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
+
+**Login e banco pelo quadro: PRONTOS (23/11/2026)**
+
+- Login de verdade (Supabase Auth): 2 sócios ativos; auxiliar e cliente criados, com perfil, mas **pendentes** até existirem as obras reais (as 2 de hoje são de exemplo). Cadastro público desligado.
+- RLS de obras, contratante, diário, equipe, lançamentos e fotos segue o quadro (migrations de 23/11). Testes do banco: 14/14 (obras), 19/19 (diário), 12/12 (fotos), 31/31 (pessoas).
+- Decidido em 23/11: diário **enviado** não se edita (o sócio aprova ou devolve) e **aprovado** trava tudo, até para o sócio. O botão Corrigir saiu; o "Reabrir com o porquê" + histórico é o próximo do diário.
+- Ainda em aberto: a tela **Usuários** ainda é de exemplo (liberar, bloquear e dar obra se faz pelo banco); o menu de cada perfil ainda é lista própria em `lib/menus.js` (o certo é sair do quadro); quem é bloqueado com o app aberto só sai na próxima consulta ao banco.
+- Próximo: publicar na Vercel (equipe **MPA Building**, conector ligado, nenhum projeto ainda).
 
 **Módulo Planejamento (Last Planner): PRONTO e no GitHub, só com dados de exemplo (15/11/2026)**
 

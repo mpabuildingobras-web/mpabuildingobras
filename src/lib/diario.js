@@ -1,25 +1,32 @@
 // Regras do diário que as telas e a camada de dados usam juntas. Sem React e sem banco.
+import { SITUACOES } from './obras.js'
+
 export const STATUS_DIARIO = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', devolvido: 'Devolvido' }
 
 // O que o rodapé do diário oferece a quem está olhando.
 export const ACOES_DIARIO = {
-  decidir: 'decidir', // aprovar ou devolver
-  corrigir: 'corrigir', // diário já aprovado: só salvar a correção
+  decidir: 'decidir', // aprovar ou devolver (o conteúdo fica como foi enviado)
   enviar: 'enviar', // salvar e enviar para aprovação
   nenhuma: 'nenhuma', // só leitura
 }
 
-// Sócio mexe sempre; auxiliar, até a aprovação; cliente, nunca.
+// Quadro (diario.criar e diario.editar): diário só nasce e só se mexe em obra Em andamento;
+// obra Parada ou Concluída fica só para leitura. O banco recusa o mesmo.
+export const obraAceitaDiario = (obra) => obra?.situacao === SITUACOES[0]
+
+// Quadro (diario.editar): só Rascunho ou Devolvido, para sócio e auxiliar; cliente nunca.
+// status ausente = diário que ainda não foi salvo (nasce Rascunho).
+// Enviado espera a decisão do sócio; Aprovado trava tudo (o sócio reabre, decidido em 23/11/2026).
+// O banco recusa o mesmo (20261123170000_regras_diario.sql e 20261123190000_trava_do_diario.sql).
 export function podeEditarDiario(perfil, status) {
-  if (perfil === 'socio') return true
-  return perfil === 'auxiliar' && status !== STATUS_DIARIO.aprovado
+  const aberto = status === undefined || status === STATUS_DIARIO.rascunho || status === STATUS_DIARIO.devolvido
+  return (perfil === 'socio' || perfil === 'auxiliar') && aberto
 }
 
-export function acoesDoDiario(perfil, status) {
-  if (!podeEditarDiario(perfil, status)) return ACOES_DIARIO.nenhuma
+export function acoesDoDiario(perfil, status, obraEmAndamento = true) {
   if (perfil === 'socio' && status === STATUS_DIARIO.enviado) return ACOES_DIARIO.decidir
-  if (status === STATUS_DIARIO.aprovado) return ACOES_DIARIO.corrigir
-  return ACOES_DIARIO.enviar
+  if (obraEmAndamento && podeEditarDiario(perfil, status)) return ACOES_DIARIO.enviar
+  return ACOES_DIARIO.nenhuma
 }
 
 // Na lista, o diário que pede ação de quem está olhando vem primeiro.

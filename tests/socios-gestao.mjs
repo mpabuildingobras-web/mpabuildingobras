@@ -102,7 +102,7 @@ conferir('cliente não altera equipe do diário', (await salvarDiario({ id: 'd12
 definirPerfil('auxiliar')
 conferir('auxiliar não altera diário aprovado', (await salvarDiario({ id: 'd09', data: '2026-10-28' })).erro !== null, true)
 conferir('auxiliar não reenvia diário aprovado', (await enviarDiario('d09')).erro !== null, true)
-conferir('auxiliar altera diário ainda não aprovado', (await salvarDiario({ id: 'd12', data: HOJE, equipe: ['f2'], atividades: { f2: 'Teste' } })).erro, null)
+conferir('auxiliar não altera diário já enviado (espera o sócio)', (await salvarDiario({ id: 'd12', data: HOJE, equipe: ['f2'], atividades: { f2: 'Teste' } })).erro !== null, true)
 definirPerfil('cliente')
 
 // ---------- Compras: o cliente comenta para aprovar ----------

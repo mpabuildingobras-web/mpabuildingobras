@@ -5,9 +5,10 @@ import {
   enviarDiario, listarContratados, listarDiarios, salvarDiario,
 } from '../lib/dados'
 import { calcularCascata, statusQueContam } from '../lib/cronograma'
-import { ACOES_DIARIO, STATUS_DIARIO, acoesDoDiario, botoesDePercentual, pedeAcao } from '../lib/diario'
+import { ACOES_DIARIO, STATUS_DIARIO, acoesDoDiario, botoesDePercentual, obraAceitaDiario, pedeAcao } from '../lib/diario'
 import { corDoStatusDiario, dataBR, numeroBR, qtd } from '../lib/formato'
 import { faltaDoServico } from '../lib/lancamentos'
+import { useObra } from '../lib/ObraContext'
 import { pode } from '../lib/permissoes'
 
 const CLIMAS = ['Sol', 'Nublado', 'Chuva', 'Chuva forte']
@@ -20,7 +21,8 @@ const prioridade = (perfil, d) => (pedeAcao(perfil, d.status) ? 0 : 1)
 export function DiarioLista({ perfil, usuario, goto }) {
   const estado = useCarregar(listarDiarios)
   const lista = [...(estado.data ?? [])].sort((a, b) => prioridade(perfil, a) - prioridade(perfil, b))
-  const podeLancar = pode('diario.criar', usuario)
+  const { obra } = useObra()
+  const podeLancar = pode('diario.criar', usuario) && obraAceitaDiario(obra)
   return (
     <>
       <Titulo rotulo="Diário de obra" titulo={perfil === 'auxiliar' ? 'Meus diários' : 'Diários da obra'}>
@@ -83,8 +85,9 @@ function Formulario({ perfil, dados, data, recarregar }) {
   const [aviso, avisar] = useAviso()
   const [salvando, rodar] = useOcupado()
   const d = diario ?? { status: STATUS_DIARIO.rascunho, data, clima_manha: 'Sol', clima_tarde: 'Sol', equipe: [], execucoes: [], fotos: [], qtd_pessoas: 0 }
-  const acoes = acoesDoDiario(perfil, d.status)
-  const somenteLeitura = acoes === ACOES_DIARIO.nenhuma
+  const acoes = acoesDoDiario(perfil, d.status, obraAceitaDiario(obra))
+  // Só se mexe no conteúdo em Rascunho ou Devolvido; o enviado o sócio só aprova ou devolve.
+  const somenteLeitura = acoes !== ACOES_DIARIO.enviar
 
   const [clima, setClima] = useState([d.clima_manha, d.clima_tarde])
   const [equipe, setEquipe] = useState(d.equipe.map((p) => p.id))
@@ -129,6 +132,13 @@ function Formulario({ perfil, dados, data, recarregar }) {
       if (passo.erro) { avisar(passo.erro); return }
     }
     avisar(ok)
+    recarregar()
+  })
+
+  const aprovar = () => rodar(async () => {
+    const r = await aprovarDiario(d.id)
+    if (r.erro) { avisar(r.erro); return }
+    avisar('Diário aprovado. O cliente já pode ver.')
     recarregar()
   })
 
@@ -240,7 +250,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
         </div>
       </div>
 
-      {!somenteLeitura && devolvendo && (
+      {acoes === ACOES_DIARIO.decidir && devolvendo && (
         <div className="section">
           <div className="panel form-painel">
             <div className="field full">
@@ -250,7 +260,7 @@ function Formulario({ perfil, dados, data, recarregar }) {
           </div>
         </div>
       )}
-      {!somenteLeitura && (
+      {acoes !== ACOES_DIARIO.nenhuma && (
         <div className="actionbar">
           {acoes === ACOES_DIARIO.decidir ? (
             devolvendo ? (
@@ -261,11 +271,9 @@ function Formulario({ perfil, dados, data, recarregar }) {
             ) : (
               <>
                 <button className="btn btn-danger" disabled={salvando} onClick={() => setDevolvendo(true)}>Devolver</button>
-                <button className="btn btn-primary" disabled={salvando} onClick={() => salvar('Diário aprovado. O cliente já pode ver.', aprovarDiario)}>{salvando ? 'Salvando…' : 'Aprovar diário'}</button>
+                <button className="btn btn-primary" disabled={salvando} onClick={aprovar}>{salvando ? 'Salvando…' : 'Aprovar diário'}</button>
               </>
             )
-          ) : acoes === ACOES_DIARIO.corrigir ? (
-            <button className="btn btn-primary" style={{ gridColumn: '1 / -1' }} disabled={salvando} onClick={() => salvar('Alterações salvas.')}>{salvando ? 'Salvando…' : 'Salvar alterações'}</button>
           ) : (
             <>
               <button className="btn" disabled={salvando} onClick={() => salvar(d.status === STATUS_DIARIO.rascunho ? 'Rascunho salvo.' : 'Alterações salvas.')}>{d.status === STATUS_DIARIO.rascunho ? 'Salvar rascunho' : 'Salvar alterações'}</button>
