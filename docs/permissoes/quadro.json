@@ -1,0 +1,682 @@
+{
+  "app": "Gestão de Obra",
+  "atualizado": "2026-11-23",
+  "decidido_por": "Manuela",
+  "fonte": "docs/permissoes/QUEM-PODE-O-QUE.md",
+  "perfis": [
+    "socio",
+    "auxiliar",
+    "cliente"
+  ],
+  "situacoes": [
+    "pendente",
+    "ativo",
+    "bloqueado"
+  ],
+  "valores": [
+    "pode",
+    "só os dele",
+    "só ver",
+    "·",
+    "ninguém"
+  ],
+  "acoes": {
+    "obra.ver": {
+      "assunto": "Obra",
+      "acao": "Ver",
+      "condicao": "Só as obras liberadas; obra Em preparação, só sócio",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "pode",
+      "sensivel": false
+    },
+    "obra.criar": {
+      "assunto": "Obra",
+      "acao": "Criar",
+      "condicao": "Nasce Em preparação",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "obra.editar": {
+      "assunto": "Obra",
+      "acao": "Editar os dados da obra",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "obra.apagar": {
+      "assunto": "Obra",
+      "acao": "Apagar",
+      "condicao": "Só obra sem nada lançado",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "obra.mudar_situacao": {
+      "assunto": "Obra",
+      "acao": "Mudar a situação",
+      "condicao": "Em andamento só com cronograma",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "obra.ver_concluida": {
+      "assunto": "Obra",
+      "acao": "Obra Concluída",
+      "condicao": "Fica só para leitura",
+      "socio": "pode",
+      "auxiliar": "só ver",
+      "cliente": "só ver",
+      "sensivel": false
+    },
+    "contratante.ver": {
+      "assunto": "Dados do contratante (CPF, telefone, e-mail)",
+      "acao": "Ver",
+      "condicao": "Cliente vê só os dados dele próprio",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "só os dele",
+      "sensivel": true
+    },
+    "contratante.editar": {
+      "assunto": "Dados do contratante (CPF, telefone, e-mail)",
+      "acao": "Criar e editar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "contratante.apagar": {
+      "assunto": "Dados do contratante (CPF, telefone, e-mail)",
+      "acao": "Apagar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "documentos.ver": {
+      "assunto": "Documentos da obra",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "documentos.editar": {
+      "assunto": "Documentos da obra",
+      "acao": "Criar, editar e apagar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "usuarios.ver": {
+      "assunto": "Usuários",
+      "acao": "Ver a lista",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "usuarios.gerenciar": {
+      "assunto": "Usuários",
+      "acao": "Criar login, liberar, mudar perfil, obras e telas, bloquear",
+      "condicao": "Só os sócios criam login, de todos. Ninguém mexe em si mesmo",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "usuarios.apagar": {
+      "assunto": "Usuários",
+      "acao": "Apagar",
+      "condicao": "Não se apaga: bloqueia",
+      "socio": "·",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "usuarios.meu_perfil": {
+      "assunto": "Usuários",
+      "acao": "Meu perfil: ver e mudar o próprio nome",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "só os dele",
+      "cliente": "só os dele",
+      "sensivel": true
+    },
+    "contratados.ver": {
+      "assunto": "Contratados",
+      "acao": "Ver nome e função",
+      "condicao": "O cliente não abre a tela: vê só nome e atividade de quem trabalhou na obra dele, no diário aprovado",
+      "socio": "pode",
+      "auxiliar": "só ver",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "contratados.editar": {
+      "assunto": "Contratados",
+      "acao": "Criar e editar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "contratados.apagar": {
+      "assunto": "Contratados",
+      "acao": "Apagar",
+      "condicao": "Só sem lançamento; com lançamento, desativa",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "cronograma.ver": {
+      "assunto": "Cronograma (frentes, serviços e dependências)",
+      "acao": "Ver serviços, quantidades e avanço",
+      "condicao": "Sem nenhum valor",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "pode",
+      "sensivel": false
+    },
+    "cronograma.editar": {
+      "assunto": "Cronograma (frentes, serviços e dependências)",
+      "acao": "Criar e editar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "cronograma.apagar": {
+      "assunto": "Cronograma (frentes, serviços e dependências)",
+      "acao": "Apagar",
+      "condicao": "Só sem lançamento e sem dependente",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "cronograma.importar": {
+      "assunto": "Cronograma (frentes, serviços e dependências)",
+      "acao": "Importar a planilha",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "cronograma.concluir": {
+      "assunto": "Cronograma (frentes, serviços e dependências)",
+      "acao": "Marcar concluído antes do previsto",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "planejamento.ver": {
+      "assunto": "Planejamento (EAP e subatividades)",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "planejamento.editar": {
+      "assunto": "Planejamento (EAP e subatividades)",
+      "acao": "Criar e editar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "planejamento.apagar": {
+      "assunto": "Planejamento (EAP e subatividades)",
+      "acao": "Apagar",
+      "condicao": "Arquiva",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "restricoes.ver": {
+      "assunto": "Restrições (Planejamento · médio prazo)",
+      "acao": "Ver",
+      "condicao": "O quadro das próximas semanas",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "restricoes.editar": {
+      "assunto": "Restrições",
+      "acao": "Criar e editar",
+      "condicao": "Editar só enquanto não resolvida",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "restricoes.resolver": {
+      "assunto": "Restrições",
+      "acao": "Marcar resolvida ou reabrir",
+      "condicao": "",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "restricoes.mudar_semana": {
+      "assunto": "Restrições",
+      "acao": "Mudar de semana",
+      "condicao": "",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "restricoes.apagar": {
+      "assunto": "Restrições",
+      "acao": "Apagar",
+      "condicao": "Apaga de vez; nada depende da restrição",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "semana.ver": {
+      "assunto": "Semana (Planejamento · curto prazo, kanban e PPC)",
+      "acao": "Ver o kanban e o PPC",
+      "condicao": "",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "semana.mover": {
+      "assunto": "Semana",
+      "acao": "Mover atividade e marcar subatividade feita",
+      "condicao": "",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "semana.nao_realizado": {
+      "assunto": "Semana",
+      "acao": "Marcar \"não realizado\"",
+      "condicao": "Pede a causa",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "semana.semana_passada": {
+      "assunto": "Semana",
+      "acao": "Mexer numa semana que já terminou",
+      "condicao": "Muda o PPC dela e fica no histórico",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.ver": {
+      "assunto": "Diário",
+      "acao": "Ver",
+      "condicao": "Cliente só os aprovados pelo sócio, da obra dele",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "pode",
+      "sensivel": false
+    },
+    "diario.criar": {
+      "assunto": "Diário",
+      "acao": "Criar",
+      "condicao": "Só em obra Em andamento",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.editar": {
+      "assunto": "Diário",
+      "acao": "Editar",
+      "condicao": "Só Rascunho ou Devolvido",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.apagar": {
+      "assunto": "Diário",
+      "acao": "Apagar",
+      "condicao": "Só antes de aprovado; as fotos saem junto",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.enviar": {
+      "assunto": "Diário",
+      "acao": "Enviar para aprovação",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.aprovar": {
+      "assunto": "Diário",
+      "acao": "Aprovar ou devolver",
+      "condicao": "Devolver pede o motivo",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "diario.reabrir": {
+      "assunto": "Diário",
+      "acao": "Reabrir diário aprovado",
+      "condicao": "Pede o porquê e fica no histórico",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "fotos.ver": {
+      "assunto": "Fotos do diário",
+      "acao": "Ver",
+      "condicao": "Cliente só de diário aprovado",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "pode",
+      "sensivel": false
+    },
+    "fotos.enviar": {
+      "assunto": "Fotos do diário",
+      "acao": "Enviar",
+      "condicao": "Só antes de aprovado",
+      "socio": "pode",
+      "auxiliar": "pode",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "fotos.apagar": {
+      "assunto": "Fotos do diário",
+      "acao": "Apagar",
+      "condicao": "Auxiliar só antes de enviar",
+      "socio": "pode",
+      "auxiliar": "só os dele",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "painel.ver": {
+      "assunto": "Painel do dia",
+      "acao": "Ver",
+      "condicao": "Junta o cronograma e os diários da obra",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "orcamento.ver": {
+      "assunto": "Orçamento (valor ao cliente por etapa e item)",
+      "acao": "Ver os valores",
+      "condicao": "O cliente não vê o orçamento: só a evolução financeira (ver Pagamentos)",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "orcamento.editar": {
+      "assunto": "Orçamento (valor ao cliente por etapa e item)",
+      "acao": "Editar valor e importar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "orcamento.publicar": {
+      "assunto": "Orçamento (valor ao cliente por etapa e item)",
+      "acao": "Publicar para o cliente",
+      "condicao": "Hoje sem efeito: o cliente não vê o orçamento (decidido em 15/11/2026)",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "custo_mo.ver": {
+      "assunto": "Custo de mão de obra e margem",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "custo_mo.editar": {
+      "assunto": "Custo de mão de obra e margem",
+      "acao": "Criar, editar e apagar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.ver": {
+      "assunto": "Medições",
+      "acao": "Ver a tela de medições",
+      "condicao": "O cliente recebe o PDF, não abre a tela",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.gerar": {
+      "assunto": "Medições",
+      "acao": "Gerar e editar",
+      "condicao": "Só Rascunho",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.apagar": {
+      "assunto": "Medições",
+      "acao": "Apagar",
+      "condicao": "Só Rascunho",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.fechar": {
+      "assunto": "Medições",
+      "acao": "Fechar",
+      "condicao": "Trava o que foi medido",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.marcar_paga": {
+      "assunto": "Medições",
+      "acao": "Marcar como paga",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.exportar": {
+      "assunto": "Medições",
+      "acao": "Exportar em PDF",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.disponibilizar": {
+      "assunto": "Medições",
+      "acao": "Disponibilizar o PDF ao cliente",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "medicoes.ver_pdf": {
+      "assunto": "Medições",
+      "acao": "Ver o PDF disponibilizado",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "só ver",
+      "sensivel": true
+    },
+    "pagamentos.ver": {
+      "assunto": "Pagamentos (evolução financeira da obra)",
+      "acao": "Ver quanto já pagou, quanto falta e o próximo pagamento com data",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "só ver",
+      "sensivel": true
+    },
+    "pagamentos.agendar": {
+      "assunto": "Pagamentos (evolução financeira da obra)",
+      "acao": "Agendar a data de um pagamento",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "compras.ver": {
+      "assunto": "Compras (cotações)",
+      "acao": "Ver as cotações",
+      "condicao": "Cliente só depois de enviada a ele, com os preços dos fornecedores",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "só ver",
+      "sensivel": true
+    },
+    "compras.editar": {
+      "assunto": "Compras (cotações)",
+      "acao": "Criar, editar e apagar",
+      "condicao": "Apagar só Em cotação",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "compras.enviar": {
+      "assunto": "Compras (cotações)",
+      "acao": "Enviar ao cliente e marcar comprado",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "compras.comentar": {
+      "assunto": "Compras (cotações)",
+      "acao": "Comentar a escolha",
+      "condicao": "Cliente só em Aguardando cliente ou Escolhido",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "pode",
+      "sensivel": true
+    },
+    "compras.mudar_comentario": {
+      "assunto": "Compras (cotações)",
+      "acao": "Editar ou apagar comentário",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "ninguém",
+      "cliente": "ninguém",
+      "sensivel": true
+    },
+    "financeiro.ver": {
+      "assunto": "Custos e Financeiro da obra",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "financeiro.editar": {
+      "assunto": "Custos e Financeiro da obra",
+      "acao": "Criar, editar e apagar custos",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "entre_obras.ver": {
+      "assunto": "Faturamento, Gestão de Obras e quadro de Serviços",
+      "acao": "Ver (juntam várias obras)",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "tarefas.ver": {
+      "assunto": "Tarefas",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "tarefas.editar": {
+      "assunto": "Tarefas",
+      "acao": "Criar, editar, concluir e apagar",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "historico.ver": {
+      "assunto": "Histórico de mudanças (novo)",
+      "acao": "Ver",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": false
+    },
+    "historico.mudar": {
+      "assunto": "Histórico de mudanças (novo)",
+      "acao": "Criar, editar e apagar",
+      "condicao": "O banco escreve sozinho",
+      "socio": "ninguém",
+      "auxiliar": "ninguém",
+      "cliente": "ninguém",
+      "sensivel": false
+    }
+  }
+}

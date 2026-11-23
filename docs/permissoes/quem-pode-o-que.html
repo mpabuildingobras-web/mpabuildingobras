@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quem pode o quê</title>
+<style>
+  :root {
+    --fundo: #f6f6f5; --cartao: #ffffff; --texto: #1c1c1c; --suave: #5f5f5f; --linha: #e2e2e0; --borda: #c9c9c6;
+    --vermelho: #b3261e; --verde: #1e6b3a; --verde-claro: #e6f4ea;
+    --amarelo: #8a5a00; --amarelo-claro: #fff4d6; --azul: #1a4f8b; --azul-claro: #e5eefa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #161616; --cartao: #202020; --texto: #ececec; --suave: #a8a8a8; --linha: #333; --borda: #4a4a4a;
+      --vermelho: #d9534a; --verde: #7fd19b; --verde-claro: #1d3325;
+      --amarelo: #f0c060; --amarelo-claro: #3a2f12; --azul: #8fb8ee; --azul-claro: #1b2a40;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 15px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px 16px 140px; }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  .nota { color: var(--suave); margin: 0 0 12px; }
+  .ajuda { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
+  .ajuda dt { font-weight: 600; display: inline; }
+  .ajuda dd { display: inline; margin: 0 12px 0 4px; color: var(--suave); }
+  .filtro { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  .filtro button { padding: 8px 14px; }
+  .filtro button[aria-pressed="true"] { background: var(--texto); color: var(--fundo); border-color: var(--texto); }
+  .progresso { font-weight: 600; }
+  .assunto { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; margin: 14px 0; overflow: hidden; }
+  .assunto > header { padding: 10px 14px; border-bottom: 1px solid var(--linha); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .assunto > header h3 { margin: 0; font-size: 16px; }
+  .selo { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--amarelo-claro); color: var(--amarelo); font-weight: 600; }
+  .selo.nova { background: var(--azul-claro); color: var(--azul); }
+  .linha { display: grid; grid-template-columns: 1fr repeat(3, 120px) 104px; gap: 8px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--linha); }
+  .linha.nova { box-shadow: inset 4px 0 0 var(--azul); }
+  .cab { font-size: 12px; color: var(--suave); text-transform: uppercase; letter-spacing: .03em; padding-top: 8px; padding-bottom: 6px; border-top: 0; }
+  .acao b { display: block; }
+  .acao small { color: var(--suave); display: block; }
+  select { width: 100%; font: inherit; padding: 6px; border: 1px solid var(--borda); border-radius: 6px; background: var(--cartao); color: var(--texto); }
+  select.mudou { background: var(--amarelo-claro); border-color: var(--amarelo); font-weight: 600; }
+  .rotulo-perfil { display: none; font-size: 12px; color: var(--suave); }
+  label.conf { display: flex; gap: 6px; align-items: center; font-size: 13px; cursor: pointer; min-height: 32px; }
+  label.conf input { width: 20px; height: 20px; accent-color: var(--verde); }
+  .linha.ok { background: var(--verde-claro); }
+  .era { font-size: 12px; color: var(--amarelo); }
+  .pergunta { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+  .pergunta.nova { border-left: 4px solid var(--azul); }
+  .pergunta p { margin: 0 0 6px; }
+  .pergunta .rec { color: var(--suave); }
+  details { margin: 14px 0; }
+  summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+  textarea { width: 100%; font: inherit; padding: 8px; border: 1px solid var(--borda); border-radius: 6px; min-height: 60px; resize: vertical; background: var(--cartao); color: var(--texto); }
+  .barra { position: fixed; left: 0; right: 0; bottom: 0; background: var(--cartao); border-top: 1px solid var(--linha); padding: 10px 16px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid transparent; background: var(--vermelho); color: #fff; cursor: pointer; }
+  button.leve { background: transparent; color: var(--texto); border-color: var(--borda); }
+  #aviso { color: var(--verde); font-weight: 600; }
+  #saida { width: 100%; min-height: 200px; display: none; margin-top: 12px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  .escondida { display: none; }
+  @media (max-width: 760px) {
+    .linha { grid-template-columns: repeat(3, 1fr); }
+    .linha .acao, .linha label.conf { grid-column: 1 / -1; }
+    .rotulo-perfil { display: block; }
+    .cab { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Quem pode o quê · Gestão de Obra</h1>
+  <p class="nota">Revisão de 23/11/2026. As linhas que você decidiu em 15/11 já vêm <b>confirmadas</b>. As <b>10 novas</b> (restrições, semana e Painel do dia) têm a faixa azul e o selo <b>nova</b>, e esperam a sua marca. Troque o que estiver errado no seletor (fica amarelo) e, no fim, toque em <b>Copiar o resultado</b> e cole no chat.</p>
+  <dl class="ajuda">
+    <dt>pode</dt><dd>em tudo das obras dele</dd>
+    <dt>só os dele</dt><dd>só no que ele mesmo criou</dd>
+    <dt>só ver</dt><dd>lê, não mexe</dd>
+    <dt>·</dt><dd>não pode e não vê o botão</dd>
+    <dt>ninguém</dt><dd>nem o sócio: só o banco escreve</dd>
+  </dl>
+  <div class="filtro" role="group" aria-label="Mostrar">
+    <button class="leve" id="f-novas" aria-pressed="true">Só as novas</button>
+    <button class="leve" id="f-todas" aria-pressed="false">O quadro inteiro</button>
+  </div>
+  <p class="progresso" id="progresso" role="status"></p>
+  <div id="quadro"></div>
+
+  <h2>Perguntas novas</h2>
+  <p class="nota">Deixe vazio para seguir a recomendação.</p>
+  <div id="perguntas"></div>
+
+  <details>
+    <summary>Perguntas já respondidas em 15/11 (abra só se quiser mudar alguma)</summary>
+    <div id="antigas"></div>
+  </details>
+
+  <h2>Mais alguma coisa?</h2>
+  <textarea id="geral" placeholder="Qualquer observação sobre o quadro."></textarea>
+  <textarea id="saida" readonly aria-label="Resultado para copiar"></textarea>
+</main>
+<div class="barra">
+  <button id="copiar">Copiar o resultado</button>
+  <button class="leve" id="limpar">Voltar à proposta</button>
+  <span id="aviso" role="status"></span>
+</div>
+<script>
+const VALORES = ['pode', 'só os dele', 'só ver', '·', 'ninguém']
+const PERFIS = [['socio', 'Sócio'], ['auxiliar', 'Auxiliar'], ['cliente', 'Cliente']]
+
+// [chave, assunto, mexe com dinheiro/dado pessoal/acesso?, [[ação, nome, condição, sócio, auxiliar, cliente, nova?]]]
+// Gerado a partir de docs/permissoes/quadro.json (15/11/2026) + as linhas novas da revisão de 23/11/2026.
+const ASSUNTOS = [["obra","Obra",false,[["ver","Ver","Só as obras liberadas; obra Em preparação, só sócio","pode","pode","pode",0],
+  ["criar","Criar","Nasce Em preparação","pode","·","·",0],
+  ["editar","Editar os dados da obra","","pode","·","·",0],
+  ["apagar","Apagar","Só obra sem nada lançado","pode","·","·",0],
+  ["mudar_situacao","Mudar a situação","Em andamento só com cronograma","pode","·","·",0],
+  ["ver_concluida","Obra Concluída","Fica só para leitura","pode","só ver","só ver",0]]],
+  ["contratante","Dados do contratante (CPF, telefone, e-mail)",true,[["ver","Ver","Cliente vê só os dados dele próprio","pode","·","só os dele",0],
+  ["editar","Criar e editar","","pode","·","·",0],
+  ["apagar","Apagar","","pode","·","·",0]]],
+  ["documentos","Documentos da obra",false,[["ver","Ver","","pode","·","·",0],
+  ["editar","Criar, editar e apagar","","pode","·","·",0]]],
+  ["usuarios","Usuários",true,[["ver","Ver a lista","","pode","·","·",0],
+  ["gerenciar","Criar login, liberar, mudar perfil, obras e telas, bloquear","Só os sócios criam login, de todos. Ninguém mexe em si mesmo","pode","·","·",0],
+  ["apagar","Apagar","Não se apaga: bloqueia","·","·","·",0],
+  ["meu_perfil","Meu perfil: ver e mudar o próprio nome","","pode","só os dele","só os dele",0]]],
+  ["contratados","Contratados",false,[["ver","Ver nome e função","O cliente não abre a tela: vê só nome e atividade de quem trabalhou na obra dele, no diário aprovado","pode","só ver","·",0],
+  ["editar","Criar e editar","","pode","·","·",0],
+  ["apagar","Apagar","Só sem lançamento; com lançamento, desativa","pode","·","·",0]]],
+  ["cronograma","Cronograma (frentes, serviços e dependências)",false,[["ver","Ver serviços, quantidades e avanço","Sem nenhum valor","pode","pode","pode",0],
+  ["editar","Criar e editar","","pode","·","·",0],
+  ["apagar","Apagar","Só sem lançamento e sem dependente","pode","·","·",0],
+  ["importar","Importar a planilha","","pode","·","·",0],
+  ["concluir","Marcar concluído antes do previsto","","pode","·","·",0]]],
+  ["planejamento","Planejamento (EAP e subatividades)",false,[["ver","Ver","","pode","·","·",0],
+  ["editar","Criar e editar","","pode","·","·",0],
+  ["apagar","Apagar","Arquiva","pode","·","·",0]]],
+  ["restricoes","Restrições (Planejamento · médio prazo)",false,[["ver","Ver","O quadro das próximas semanas","pode","·","·",1],
+  ["editar","Criar e editar","Editar só enquanto não resolvida","pode","·","·",1],
+  ["resolver","Marcar resolvida ou reabrir","","pode","·","·",1],
+  ["mudar_semana","Mudar de semana","","pode","·","·",1],
+  ["apagar","Apagar","Não se apaga: marca resolvida","·","·","·",1]]],
+  ["semana","Semana (Planejamento · curto prazo, kanban e PPC)",false,[["ver","Ver o kanban e o PPC","","pode","·","·",1],
+  ["mover","Mover atividade e marcar subatividade feita","","pode","·","·",1],
+  ["nao_realizado","Marcar \"não realizado\"","Pede a causa","pode","·","·",1],
+  ["semana_passada","Mexer numa semana que já terminou","Muda o PPC dela e fica no histórico","pode","·","·",1]]],
+  ["diario","Diário",false,[["ver","Ver","Cliente só os aprovados pelo sócio, da obra dele","pode","pode","pode",0],
+  ["criar","Criar","Só em obra Em andamento","pode","pode","·",0],
+  ["editar","Editar","Só Rascunho ou Devolvido","pode","pode","·",0],
+  ["apagar","Apagar","Só antes de aprovado; as fotos saem junto","pode","·","·",0],
+  ["enviar","Enviar para aprovação","","pode","pode","·",0],
+  ["aprovar","Aprovar ou devolver","Devolver pede o motivo","pode","·","·",0],
+  ["reabrir","Reabrir diário aprovado","Pede o porquê e fica no histórico","pode","·","·",0]]],
+  ["fotos","Fotos do diário",false,[["ver","Ver","Cliente só de diário aprovado","pode","pode","pode",0],
+  ["enviar","Enviar","Só antes de aprovado","pode","pode","·",0],
+  ["apagar","Apagar","Auxiliar só antes de enviar","pode","só os dele","·",0]]],
+  ["painel","Painel do dia",false,[["ver","Ver","Junta o cronograma e os diários da obra","pode","·","·",1]]],
+  ["orcamento","Orçamento (valor ao cliente por etapa e item)",true,[["ver","Ver os valores","O cliente não vê o orçamento: só a evolução financeira (ver Pagamentos)","pode","·","·",0],
+  ["editar","Editar valor e importar","","pode","·","·",0],
+  ["publicar","Publicar para o cliente","Hoje sem efeito: o cliente não vê o orçamento (decidido em 15/11/2026)","pode","·","·",0]]],
+  ["custo_mo","Custo de mão de obra e margem",true,[["ver","Ver","","pode","·","·",0],
+  ["editar","Criar, editar e apagar","","pode","·","·",0]]],
+  ["medicoes","Medições",true,[["ver","Ver a tela de medições","O cliente recebe o PDF, não abre a tela","pode","·","·",0],
+  ["gerar","Gerar e editar","Só Rascunho","pode","·","·",0],
+  ["apagar","Apagar","Só Rascunho","pode","·","·",0],
+  ["fechar","Fechar","Trava o que foi medido","pode","·","·",0],
+  ["marcar_paga","Marcar como paga","","pode","·","·",0],
+  ["exportar","Exportar em PDF","","pode","·","·",0],
+  ["disponibilizar","Disponibilizar o PDF ao cliente","","pode","·","·",0],
+  ["ver_pdf","Ver o PDF disponibilizado","","pode","·","só ver",0]]],
+  ["pagamentos","Pagamentos (evolução financeira da obra)",true,[["ver","Ver quanto já pagou, quanto falta e o próximo pagamento com data","","pode","·","só ver",0],
+  ["agendar","Agendar a data de um pagamento","","pode","·","·",0]]],
+  ["compras","Compras (cotações)",true,[["ver","Ver as cotações","Cliente só depois de enviada a ele, com os preços dos fornecedores","pode","·","só ver",0],
+  ["editar","Criar, editar e apagar","Apagar só Em cotação","pode","·","·",0],
+  ["enviar","Enviar ao cliente e marcar comprado","","pode","·","·",0],
+  ["comentar","Comentar a escolha","Cliente só em Aguardando cliente ou Escolhido","pode","·","pode",0],
+  ["mudar_comentario","Editar ou apagar comentário","","pode","ninguém","ninguém",0]]],
+  ["financeiro","Custos e Financeiro da obra",true,[["ver","Ver","","pode","·","·",0],
+  ["editar","Criar, editar e apagar custos","","pode","·","·",0]]],
+  ["entre_obras","Faturamento, Gestão de Obras e quadro de Serviços",true,[["ver","Ver (juntam várias obras)","","pode","·","·",0]]],
+  ["tarefas","Tarefas",false,[["ver","Ver","","pode","·","·",0],
+  ["editar","Criar, editar, concluir e apagar","","pode","·","·",0]]],
+  ["historico","Histórico de mudanças (novo)",false,[["ver","Ver","","pode","·","·",0],
+  ["mudar","Criar, editar e apagar","O banco escreve sozinho","ninguém","ninguém","ninguém",0]]]]
+
+// [chave, pergunta, recomendação]
+const NOVAS = [
+  ['auxiliar_semana', 'O auxiliar participa da semana (kanban do curto prazo)?', 'Não, por enquanto: só o sócio mexe na semana. Fica para descobrir no uso; se fizer falta, o auxiliar ganha só o "marcar subatividade feita".'],
+  ['cliente_ppc', 'O cliente vê o PPC ou as restrições?', 'Não. É gestão interna, e uma restrição pode expor problema com fornecedor ou equipe. O avanço ele já vê na tela Avanço.'],
+  ['semana_passada', 'Semana que já terminou: trava ou o sócio ainda mexe?', 'O sócio mexe, e a mudança fica no histórico com nome e hora, porque muda o PPC daquela semana.'],
+]
+
+// [chave, pergunta, resposta de 15/11]
+const ANTIGAS = [
+  ['valores', 'Quem vê valor?', 'Os sócios veem tudo. O auxiliar só vê a quantidade da etapa, para lançar o avanço, e nunca vê preço. O cliente só vê a evolução financeira: quanto já pagou, quanto falta e o próximo pagamento com data.'],
+  ['orcamento_cliente', 'O cliente tem a tela Orçamento?', 'Não. O avanço físico (%) ele continua vendo na tela Avanço.'],
+  ['compras_precos', 'Em Compras, o cliente vê os preços dos fornecedores?', 'Sim: é ele quem escolhe e paga o material.'],
+  ['exportar', 'Quem exporta e disponibiliza o PDF da medição?', 'Só o sócio.'],
+  ['dado_pessoal', 'Quem vê dado pessoal (CPF, telefone, e-mail)?', 'O cliente vê só os dados dele próprio. O auxiliar nunca vê.'],
+  ['rascunho', 'O que é rascunho?', 'O diário só aparece para o cliente quando um sócio aprova.'],
+  ['apagar', 'Apagar é de vez ou desativar?', 'Apaga de vez só o que não tem nada ligado; o banco recusa e a tela diz o que está ligado. Nada em cascata.'],
+  ['ligados', 'O que outro módulo lê pode sumir?', 'Obra, contratado e serviço com lançamento não se apagam; contratado se desativa.'],
+  ['fotos', 'Fotos saem junto com o diário?', 'Saem junto, e só dá para apagar o diário antes de aprovado.'],
+  ['assinar', 'O que trava?', 'O diário aprovado trava equipe, lançamentos e fotos. Lançamento em medição fechada nunca se altera.'],
+  ['reabrir', 'Quem reabre?', 'Só o sócio, escrevendo o porquê; fica no histórico com nome e hora.'],
+  ['fora_do_plano', 'Serviço fora do planejado?', 'Entra pelo Cronograma (Aditivo), sem mexer em diário aprovado.'],
+  ['login', 'Quem cria login, muda perfil e bloqueia?', 'Só os sócios, de todos. O cadastro público fecha.'],
+  ['dono', '"Só os dele": quem criou fica guardado?', 'Fotos e comentários guardam quem criou. O diário é da obra.'],
+  ['todas_obras', 'Quem vê todas as obras?', 'Os sócios: comparam obras e preparam obra nova.'],
+  ['obra_concluida', 'Obra Concluída: quem ainda vê?', 'Quem já via continua vendo, só para ler.'],
+  ['obra_nova', 'Quem abre obra nova?', 'O sócio, sozinho, pelo app.'],
+  ['historico', 'Existe histórico?', 'Sim, começando pelo diário. Ninguém apaga. Risco aceito: o sócio pode editar ou apagar o comentário do cliente em Compras, e isso fica no histórico.'],
+]
+
+const CHAVE = 'quem-pode-o-que:gestao-de-obra:v2'
+const vazio = () => ({ celulas: {}, ok: {}, respostas: {}, antigas: {}, geral: '', so_novas: true })
+let estado = vazio()
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) estado = Object.assign(vazio(), s) } catch (e) {}
+const guardar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)) } catch (e) {} }
+
+const el = (tag, attrs = {}, ...filhos) => {
+  const n = document.createElement(tag)
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else n.setAttribute(k, v)
+  }
+  for (const f of filhos) if (f != null) n.append(f)
+  return n
+}
+// Linha antiga nasce confirmada (decidida em 15/11); linha nova espera a marca.
+const confirmada = (chave, nova) => estado.ok[chave] ?? !nova
+
+function desenhar() {
+  const q = document.getElementById('quadro')
+  q.innerHTML = ''
+  for (const [ak, nome, sensivel, acoes] of ASSUNTOS) {
+    const temNova = acoes.some((a) => a[6])
+    const caixa = el('section', { class: 'assunto' + (estado.so_novas && !temNova ? ' escondida' : '') })
+    caixa.append(el('header', {}, el('h3', {}, nome),
+      temNova ? el('span', { class: 'selo nova' }, 'nova') : null,
+      sensivel ? el('span', { class: 'selo' }, 'dinheiro, dado pessoal ou acesso: decisão sua') : null))
+    caixa.append(el('div', { class: 'linha cab' }, el('span', {}, 'Ação'), ...PERFIS.map(([, r]) => el('span', {}, r)), el('span', {}, 'Confirmado')))
+    for (const [k, acao, cond, s0, s1, s2, nova] of acoes) {
+      const chave = `${ak}.${k}`
+      const rec = [s0, s1, s2]
+      const ok = confirmada(chave, nova)
+      const linha = el('div', { class: 'linha' + (ok ? ' ok' : '') + (nova ? ' nova' : '') })
+      linha.append(el('div', { class: 'acao' }, el('b', {}, acao), cond ? el('small', {}, cond) : null, nova ? el('span', { class: 'selo nova' }, 'nova') : null))
+      PERFIS.forEach(([p, rotulo], i) => {
+        const atual = estado.celulas[`${chave}.${p}`] ?? rec[i]
+        const s = el('select', { 'aria-label': `${nome}, ${acao}, ${rotulo}`, class: atual !== rec[i] ? 'mudou' : '' })
+        for (const v of VALORES) { const o = el('option', { value: v }, v); if (v === atual) o.selected = true; s.append(o) }
+        s.addEventListener('change', () => {
+          if (s.value === rec[i]) delete estado.celulas[`${chave}.${p}`]; else estado.celulas[`${chave}.${p}`] = s.value
+          guardar(); desenhar()
+        })
+        linha.append(el('div', {}, el('span', { class: 'rotulo-perfil' }, rotulo), s, atual !== rec[i] ? el('div', { class: 'era' }, 'era: ' + rec[i]) : null))
+      })
+      const cb = el('input', { type: 'checkbox', 'aria-label': `Confirmar: ${nome}, ${acao}` })
+      cb.checked = ok
+      cb.addEventListener('change', () => { estado.ok[chave] = cb.checked; guardar(); desenhar() })
+      linha.append(el('label', { class: 'conf' }, cb, 'confirmado'))
+      caixa.append(linha)
+    }
+    q.append(caixa)
+  }
+  const todas = ASSUNTOS.flatMap(([ak, , , acoes]) => acoes.map((a) => [`${ak}.${a[0]}`, a[6]]))
+  const novas = todas.filter(([, n]) => n)
+  const okNovas = novas.filter(([c, n]) => confirmada(c, n)).length
+  const okTodas = todas.filter(([c, n]) => confirmada(c, n)).length
+  const mudadas = Object.keys(estado.celulas).length
+  document.getElementById('progresso').textContent =
+    `Novas: ${okNovas} de ${novas.length} confirmadas · Quadro inteiro: ${okTodas} de ${todas.length} · ${mudadas} célula(s) mudada(s)`
+  document.getElementById('f-novas').setAttribute('aria-pressed', String(estado.so_novas))
+  document.getElementById('f-todas').setAttribute('aria-pressed', String(!estado.so_novas))
+}
+
+function desenharPerguntas() {
+  const box = document.getElementById('perguntas')
+  box.innerHTML = ''
+  NOVAS.forEach(([k, perg, rec], i) => {
+    const t = el('textarea', { 'aria-label': perg, placeholder: 'Deixe vazio para seguir a recomendação.' })
+    t.value = estado.respostas[k] ?? ''
+    t.addEventListener('input', () => { estado.respostas[k] = t.value; guardar() })
+    box.append(el('div', { class: 'pergunta nova' }, el('p', {}, el('b', {}, `${i + 1}. ${perg}`)), el('p', { class: 'rec' }, 'Recomendação: ' + rec), t))
+  })
+  const ant = document.getElementById('antigas')
+  ant.innerHTML = ''
+  ANTIGAS.forEach(([k, perg, dada]) => {
+    const t = el('textarea', { 'aria-label': perg })
+    t.value = estado.antigas[k] ?? dada
+    t.addEventListener('input', () => { estado.antigas[k] = t.value; guardar() })
+    ant.append(el('div', { class: 'pergunta' }, el('p', {}, el('b', {}, perg)), t))
+  })
+  const g = document.getElementById('geral')
+  g.value = estado.geral || ''
+  g.oninput = () => { estado.geral = g.value; guardar() }
+}
+
+function resultado() {
+  const L = ['QUEM PODE O QUÊ · Gestão de Obra · revisão de 23/11/2026', 'Perfis: socio, auxiliar, cliente (situações: pendente, ativo, bloqueado)', '']
+  L.push('QUADRO (assunto.acao: sócio | auxiliar | cliente)')
+  const mudancas = []
+  const pendentes = []
+  for (const [ak, nome, , acoes] of ASSUNTOS) {
+    L.push('', '## ' + nome)
+    for (const [k, acao, cond, s0, s1, s2, nova] of acoes) {
+      const chave = `${ak}.${k}`
+      const rec = [s0, s1, s2]
+      const vals = PERFIS.map(([p], i) => {
+        const v = estado.celulas[`${chave}.${p}`] ?? rec[i]
+        if (v !== rec[i]) mudancas.push(`${chave} · ${p}: ${rec[i]} → ${v}`)
+        return v
+      })
+      const ok = confirmada(chave, nova)
+      if (!ok) pendentes.push(chave)
+      L.push(`${chave}${nova ? ' [NOVA]' : ''} | ${acao}${cond ? ' (' + cond + ')' : ''}: ${vals.join(' | ')}${ok ? ' [confirmado]' : ' [NÃO confirmado]'}`)
+    }
+  }
+  L.push('', 'O QUE EU MUDEI', ...(mudancas.length ? mudancas : ['nada']))
+  L.push('', 'LINHAS NÃO CONFIRMADAS', ...(pendentes.length ? pendentes : ['nenhuma']))
+  L.push('', 'PERGUNTAS NOVAS')
+  NOVAS.forEach(([k, perg, rec], i) => {
+    const r = (estado.respostas[k] ?? '').trim()
+    L.push(`${i + 1}. ${perg}`, '   ' + (r ? 'Resposta: ' + r : 'Segue a recomendação: ' + rec))
+  })
+  const antigasMudadas = ANTIGAS.filter(([k, , dada]) => (estado.antigas[k] ?? dada).trim() !== dada)
+  L.push('', 'RESPOSTAS DE 15/11 QUE EU MUDEI', ...(antigasMudadas.length
+    ? antigasMudadas.map(([k, perg, dada]) => `${perg}\n   era: ${dada}\n   agora: ${estado.antigas[k].trim()}`)
+    : ['nenhuma']))
+  if ((estado.geral || '').trim()) L.push('', 'OBSERVAÇÕES', estado.geral.trim())
+  return L.join('\n')
+}
+
+document.getElementById('f-novas').addEventListener('click', () => { estado.so_novas = true; guardar(); desenhar() })
+document.getElementById('f-todas').addEventListener('click', () => { estado.so_novas = false; guardar(); desenhar() })
+document.getElementById('copiar').addEventListener('click', async () => {
+  const texto = resultado()
+  const aviso = document.getElementById('aviso')
+  try { await navigator.clipboard.writeText(texto); aviso.textContent = 'Copiado. Agora cole no chat.'; return } catch (e) {}
+  const s = document.getElementById('saida')
+  s.style.display = 'block'; s.value = texto; s.focus(); s.select()
+  let ok = false
+  try { ok = document.execCommand('copy') } catch (e) {}
+  aviso.textContent = ok ? 'Copiado. Agora cole no chat.' : 'Selecione o texto que apareceu embaixo e copie.'
+})
+document.getElementById('limpar').addEventListener('click', () => {
+  if (!confirm('Voltar tudo à proposta? Suas mudanças, marcas e respostas nesta página serão apagadas.')) return
+  estado = vazio(); guardar(); desenhar(); desenharPerguntas()
+})
+
+desenhar(); desenharPerguntas()
+</script>
+</body>
+</html>

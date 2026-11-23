@@ -15,6 +15,14 @@ React + Vite + Supabase + Vercel; única biblioteca do app: `@supabase/supabase-
 
 Situação da obra: `Em andamento`, `Parada`, `Concluída` — texto idêntico na tela e no CHECK (`SITUACOES` em `src/lib/obras.js` é o dono). Decidido em 10/11/2026, ainda não construído: entra `Em preparação`, que é a situação de toda obra nova. Só sócio vê obra nessa situação, e ela só vira `Em andamento` com cronograma.
 
+## Quem pode o quê
+
+1. **O quadro manda nas permissões do app:** `docs/permissoes/QUEM-PODE-O-QUE.md`, com a cópia que o código lê em `docs/permissoes/quadro.json` (chave `assunto.acao`). Em permissões ele vale mais que o PLANO, os PRDs e a seção de dinheiro logo abaixo (decidido em 15/11/2026).
+2. **Quando um pedido trouxer papéis ou permissões diferentes do quadro**, siga o quadro e avise a Manuela da diferença antes de construir.
+3. **Mudar uma permissão é mudar junto** o quadro, o JSON, o `src/lib/permissoes.js`, a regra do banco (RLS) e o teste de permissões, e anotar no quadro a data e o porquê. Decisão que só existe no chat não existe.
+
+Linha marcada [PENDENTE] no quadro não se constrói antes da resposta dela.
+
 ## Dinheiro: quem não pode ver o quê
 
 - **Auxiliar nunca vê preço nem valor** de nada.
