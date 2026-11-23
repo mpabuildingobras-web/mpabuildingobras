@@ -184,7 +184,7 @@ Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
 - **Andamento da semana mora em `compromissos`** (serviço + segunda-feira), não no serviço. "Concluído" no kanban não conclui o serviço no Cronograma.
 - **Regras em `src/lib/planejamento.js`**, com testes em `tests/planejamento.mjs`.
 - **Subatividades, restrições e compromissos ainda vivem só no `dadosMock.js`**: ao apertar F5, o que ela mudou volta ao início. Levar ao banco é um passo à parte, como foi com o Diário.
-- **Decidido ficar como está:** dias úteis de segunda a sexta, sem configurar sábados e feriados, porque isso muda as datas do app inteiro e precisa da decisão dela.
+- **Dias úteis (decidido por ela em 15/11/2026):** segunda a sexta; sábado só quando combinado antes, e entra pelo diário, sem mudar o cálculo. Feriados nacionais também param a obra (9 fixos + Sexta-feira Santa, em `lib/cronograma.js`); Carnaval e Corpus Christi contam como dia útil; estadual e municipal ainda não entram.
 - **O Supabase do plano grátis pausa sozinho.** Em 15/11 ele estava pausado e foi religado com o ok dela. Se o app mostrar "Não deu para carregar as obras", confira o status do projeto antes de qualquer outra coisa.
 
 **Back-end do Diário: PRONTO e no GitHub (6b6cc96, 10/11/2026)**

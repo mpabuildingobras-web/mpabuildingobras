@@ -57,7 +57,7 @@ O auxiliar lança no celular, todo dia, o diário de cada obra: quem estava lá,
   - *Previsão de entrega* = o sistema calcula de frente para trás: usa as datas reais de término dos serviços já concluídos (vindas do diário) e soma as durações do que falta, seguindo a cadeia. Atrasou um serviço → todos os que dependem dele andam junto, e a previsão de entrega muda no mesmo dia.
   - *Dias de atraso* = hoje − término previsto, se o serviço não estiver concluído.
   - *Folga* = data-limite − início previsto pela cadeia. Folga zero ou negativa = esse serviço está segurando a entrega.
-  - *Dias úteis:* segunda a sexta. Feriados e sábados: [DESCOBRIR NO USO].
+  - *Dias úteis:* segunda a sexta. Sábado e domingo não contam; sábado só se trabalha quando combinado antes, e esse dia entra pelo diário, sem mudar o cálculo (decidido em 15/11/2026). Feriados nacionais também param a obra (decidido em 15/11/2026): os 9 fixos e a Sexta-feira Santa; Carnaval e Corpus Christi são ponto facultativo e contam como dia útil. Feriado estadual e municipal: [DESCOBRIR NO USO].
 
 ### 2. Diário de obra
 - **Abre em:** lista por data, da mais recente para a mais antiga, da obra escolhida.
@@ -369,7 +369,7 @@ Login  ·  Cadastro  ·  Conta aguardando liberação
 - `[DESCOBRIR NO USO: aditivo de contrato]` — por enquanto: item novo cadastrado à mão na etapa, marcado "Aditivo"; reimportar a planilha inteira fica para a v2.
 - `[DESCOBRIR NO USO: cliente vê as observações da planilha?]` — por enquanto: vê (elas descrevem o escopo, ex.: "Valor já incluso o material").
 - `[DESCOBRIR NO USO: puxar a quantidade da aba QUANTITATIVO]` — por enquanto: a sócia digita a quantidade dos itens em m²/ml depois de importar.
-- `[DESCOBRIR NO USO: sábados e feriados no cálculo de dias úteis]` — por enquanto: segunda a sexta, sem feriados.
+- `[DESCOBRIR NO USO: feriados estaduais e municipais]` — sábado e feriados nacionais decididos em 15/11/2026: não contam.
 - `[DESCOBRIR NO USO: parcelar uma medição em mais de um pagamento]` — por enquanto: cada medição tem um vencimento.
 - `[DESCOBRIR NO USO: meta do dia automática serve ou os sócios preferem programar à mão]` — por enquanto: automática, com ajuste manual.
 - `[DESCOBRIR NO USO: espaço das fotos]` — por enquanto: plano grátis, fotos reduzidas ao enviar.

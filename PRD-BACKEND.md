@@ -572,4 +572,4 @@ Escrito em português. Vira RLS na hora de construir.
 
 - `[DESCOBRIR NO USO: espaço das fotos no plano grátis]` — por enquanto: fotos comprimidas, plano grátis.
 - `[DESCOBRIR NO USO: parcelar medição]` — por enquanto: um vencimento por medição.
-- `[DESCOBRIR NO USO: feriados]` — por enquanto: não há tabela de feriados; só segunda a sexta.
+- Feriados nacionais (9 fixos + Sexta-feira Santa) são calculados no app (`src/lib/cronograma.js`), sem tabela no banco (decidido em 15/11/2026). `[DESCOBRIR NO USO: feriados estaduais e municipais]` — quando entrar, vira tabela `feriados` por obra.

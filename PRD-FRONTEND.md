@@ -46,7 +46,7 @@ Login · Criar conta · Conta aguardando liberação
 
 Tudo é calculado na hora, a partir dos dados; nada disto é digitado.
 
-- **Dias úteis:** segunda a sexta. Sábados e feriados não contam [DESCOBRIR NO USO].
+- **Dias úteis:** segunda a sexta. Sábado e domingo não contam; sábado combinado antes entra pelo diário, sem mudar o cálculo (decidido em 15/11/2026). Feriados nacionais também param a obra (decidido em 15/11/2026): os 9 fixos e a Sexta-feira Santa; Carnaval e Corpus Christi são ponto facultativo e contam como dia útil. Feriado estadual e municipal: [DESCOBRIR NO USO].
 - **Executado de um serviço:** soma das quantidades lançadas nos diários. Para sócios e auxiliar contam diários **Enviado** e **Aprovado**; para o cliente, só **Aprovado**.
 - **% executado:** executado ÷ quantidade prevista, no máximo 100%.
 - **Lançar mais do que falta** (decidido em 10/11/2026): não pode.
@@ -660,7 +660,7 @@ Hoje nos dados de exemplo: **terça, 03/11/2026**. Nomes fictícios.
 ## Critérios de aceite
 
 - [ ] O Sócio entra e cai no Painel do dia da última obra que usou, com a lista ordenada pela menor folga.
-- [ ] Com os dados de exemplo (hoje = 03/11/2026, feriado de 02/11 ignorado), a Obra 1 mostra "Entrega com 5 dias de atraso", "Previsão 04/12, contratada 27/11", e a Hidráulica embutida aparece no topo (folga −5, 3 dias de atraso).
+- [ ] Com os dados de exemplo (hoje = 03/11/2026, Finados em 02/11 e Consciência Negra em 20/11 fora da conta), a Obra 1 mostra "Entrega com 6 dias de atraso", "Previsão 07/12, contratada 27/11", e a Hidráulica embutida aparece no topo (folga −6, 4 dias de atraso).
 - [ ] Lançar quantidade num diário Enviado muda o % e a previsão no Painel do dia sem recarregar a página.
 - [ ] Atrasar a Hidráulica empurra Reboco, Contrapiso, Revestimentos e Pintura, e a previsão de entrega muda junto.
 - [ ] Salvar um serviço que cria ciclo de dependência é recusado com a mensagem que nomeia o ciclo.
@@ -685,6 +685,6 @@ Hoje nos dados de exemplo: **terça, 03/11/2026**. Nomes fictícios.
 
 ## Decidir depois de usar
 
-- `[DESCOBRIR NO USO: sábados e feriados]` — por enquanto: segunda a sexta.
+- `[DESCOBRIR NO USO: feriados estaduais e municipais]` — sábado e feriados nacionais decididos em 15/11/2026: não contam.
 - `[DESCOBRIR NO USO: meta do dia automática serve?]` — por enquanto: automática, com meta manual opcional.
 - `[DESCOBRIR NO USO: parcelar medição]` — por enquanto: um vencimento por medição.

@@ -86,12 +86,12 @@ conferir('auxiliar não recebe o planejamento', (await listarSubatividades()).da
 conferir('auxiliar não grava no planejamento', (await salvarSubatividade(base)).erro, 'Só sócio mexe no planejamento.')
 
 // ---------- Longo prazo ----------
-// Serviço de segunda 02/11 a sexta 06/11 (5 dias úteis).
-conferir('antes do início, previsto 0', progressoPrevisto('2026-11-02', '2026-11-06', '2026-10-30'), 0)
-conferir('no 1º dia, previsto 1/5', progressoPrevisto('2026-11-02', '2026-11-06', '2026-11-02'), 0.2)
-conferir('na quarta, previsto 3/5', progressoPrevisto('2026-11-02', '2026-11-06', '2026-11-04'), 0.6)
-conferir('no último dia, previsto 100%', progressoPrevisto('2026-11-02', '2026-11-06', '2026-11-06'), 1)
-conferir('fim de semana não conta: no sábado vale a sexta', progressoPrevisto('2026-11-02', '2026-11-13', '2026-11-07'), 0.5)
+// Serviço de segunda 09/11 a sexta 13/11 (5 dias úteis, semana sem feriado).
+conferir('antes do início, previsto 0', progressoPrevisto('2026-11-09', '2026-11-13', '2026-11-06'), 0)
+conferir('no 1º dia, previsto 1/5', progressoPrevisto('2026-11-09', '2026-11-13', '2026-11-09'), 0.2)
+conferir('na quarta, previsto 3/5', progressoPrevisto('2026-11-09', '2026-11-13', '2026-11-11'), 0.6)
+conferir('no último dia, previsto 100%', progressoPrevisto('2026-11-09', '2026-11-13', '2026-11-13'), 1)
+conferir('fim de semana não conta: no sábado vale a sexta', progressoPrevisto('2026-11-23', '2026-12-04', '2026-11-28'), 0.5)
 conferir('real abaixo do previsto: atrasado', ritmo(0.3, 0.6, false), 'atrasado')
 conferir('5 pontos abaixo ainda é em dia', ritmo(0.56, 0.6, false), 'em_dia')
 conferir('concluído vence o resto', ritmo(1, 0.2, true), 'concluido')

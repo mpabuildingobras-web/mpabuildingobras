@@ -2,11 +2,49 @@
 // Regras em PRD-FRONTEND.md, "Regras de cálculo". Datas sempre 'AAAA-MM-DD'.
 import { STATUS_DIARIO } from './diario.js'
 
-// ---------- Dias úteis (segunda a sexta; feriados ainda não contam) ----------
+// ---------- Dias úteis ----------
+// Segunda a sexta, menos os feriados nacionais: a obra para (decidido com a sócia em 15/11/2026).
+// Sábado só se trabalha quando combinado antes; esse dia entra pelo diário, sem mudar este cálculo.
+// Carnaval e Corpus Christi são ponto facultativo, não feriado nacional: contam como dia útil.
+// Feriado estadual e municipal ainda não entra.
 const DIA = 864e5
 const paraNum = (iso) => { const [a, m, d] = iso.split('-').map(Number); return Date.UTC(a, m - 1, d) }
 const paraIso = (n) => new Date(n).toISOString().slice(0, 10)
-const util = (n) => { const s = new Date(n).getUTCDay(); return s !== 0 && s !== 6 }
+
+const FERIADOS_FIXOS = ['01-01', '04-21', '05-01', '09-07', '10-12', '11-02', '11-15', '11-20', '12-25']
+
+// Domingo de Páscoa (algoritmo de Meeus, calendário gregoriano). A Sexta-feira Santa é dois dias antes.
+function pascoa(ano) {
+  const a = ano % 19
+  const b = Math.floor(ano / 100)
+  const c = ano % 100
+  const d = Math.floor(b / 4)
+  const e = b % 4
+  const f = Math.floor((b + 8) / 25)
+  const g = Math.floor((b - f + 1) / 3)
+  const h = (19 * a + b - d - g + 15) % 30
+  const i = Math.floor(c / 4)
+  const k = c % 4
+  const l = (32 + 2 * e + 2 * i - h - k) % 7
+  const m = Math.floor((a + 11 * h + 22 * l) / 451)
+  const mes = Math.floor((h + l - 7 * m + 114) / 31)
+  const dia = ((h + l - 7 * m + 114) % 31) + 1
+  return Date.UTC(ano, mes - 1, dia)
+}
+
+const feriadosDoAno = new Map()
+export function feriadosNacionais(ano) {
+  if (!feriadosDoAno.has(ano)) {
+    feriadosDoAno.set(ano, new Set([...FERIADOS_FIXOS.map((md) => `${ano}-${md}`), paraIso(pascoa(ano) - 2 * DIA)]))
+  }
+  return feriadosDoAno.get(ano)
+}
+export const ehFeriado = (iso) => feriadosNacionais(Number(iso.slice(0, 4))).has(iso)
+
+const util = (n) => {
+  const s = new Date(n).getUTCDay()
+  return s !== 0 && s !== 6 && !ehFeriado(paraIso(n))
+}
 
 export const ehDiaUtil = (iso) => util(paraNum(iso))
 
