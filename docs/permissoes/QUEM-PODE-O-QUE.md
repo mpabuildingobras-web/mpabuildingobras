@@ -104,6 +104,8 @@ Regras que valem para todo o app:
 | Medições | Ver o PDF disponibilizado | pode | · | só ver |
 | Pagamentos (evolução financeira da obra) | Ver quanto já pagou, quanto falta e o próximo pagamento com data | pode | · | só ver |
 | Pagamentos | Agendar a data de um pagamento | pode | · | · |
+| Evolução da obra (físico-financeiro) | Ver o previsto × executado mês a mês, em valor e em % · Cliente: só diários aprovados | pode | · | só ver |
+| Evolução da obra | Ver o gasto lançado contra o estudo de viabilidade, com estouro ou economia projetados | pode | · | · |
 | Compras (cotações) | Ver · Cliente só depois de enviada a ele, com os preços dos fornecedores | pode | · | só ver |
 | Compras | Criar, editar e apagar · Apagar só Em cotação | pode | · | · |
 | Compras | Enviar ao cliente e marcar comprado | pode | · | · |
@@ -119,9 +121,9 @@ Regras que valem para todo o app:
 
 ## 5. O menu de cada perfil
 
-- **socio:** Início (Painel do dia) · Diário · Cronograma · Tarefas · Planejamento · Gestão de Obras · Serviços · Contratados · Compras · Medições · Orçamento · Financeiro · Faturamento · Fotos · Obras · Usuários · Meu perfil.
+- **socio:** Início (Painel do dia) · Diário · Cronograma · Tarefas · Evolução da obra · Planejamento · Gestão de Obras · Serviços · Contratados · Compras · Medições · Orçamento · Financeiro · Faturamento · Fotos · Obras · Usuários · Meu perfil.
 - **auxiliar:** Hoje · Meus diários · Meu perfil.
-- **cliente:** Avanço · Pagamentos · Diário · Fotos · Compras · Meu perfil. **Sai o Orçamento** (decidido em 15/11/2026). O PDF da medição ele abre por Pagamentos.
+- **cliente:** Avanço · Pagamentos · Diário · Fotos · Evolução da obra · Compras · Meu perfil. **Sai o Orçamento** (decidido em 15/11/2026). O PDF da medição ele abre por Pagamentos.
 
 ## 6. As perguntas que pegam (respondidas em 15/11/2026 e 23/11/2026)
 
@@ -185,6 +187,8 @@ Mudar uma permissão é mudar, de uma vez: este quadro, o JSON, o `src/lib/permi
 - 23/11/2026 · Manuela · O banco passou a seguir o quadro (RLS de obras, contratante, diário, equipe, lançamentos e fotos; nada para quem não fez login). Confirmado: diário enviado não se edita (o sócio aprova ou devolve) e o aprovado trava até para o sócio, que reabre; o botão "Corrigir" do aprovado saiu. Fotos passam a guardar quem enviou (as 7 antigas ficam sem dono, e o auxiliar não as apaga).
 
 - 23/11/2026 · Manuela · Revisão depois do módulo Planejamento: entram as Restrições (5 ações), a Semana com kanban e PPC (4 ações) e o Painel do dia (1 ação), todas só do sócio. O sócio pode apagar restrição de vez e mexer em semana que já terminou, com registro no histórico. Nenhuma das 63 linhas de 15/11 mudou.
+
+- 24/11/2026 · Manuela · Entra a Evolução da obra (cronograma físico-financeiro): o sócio vê previsto × executado × gasto, com estouro ou economia projetados; o cliente vê só o previsto × executado da obra dele, em valor e em %, pelos diários aprovados, sem custo. A Curva ABC ficou de fora, por decisão dela.
 
 ## Em aberto
 

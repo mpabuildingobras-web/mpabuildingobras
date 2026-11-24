@@ -13,6 +13,7 @@ import { Cotacoes } from '../screens/cotacoes'
 import { Cronograma } from '../screens/cronograma'
 import { DiarioDia, DiarioLista } from '../screens/diario'
 import { EditarServico } from '../screens/editarServico'
+import { Evolucao } from '../screens/evolucao'
 import { Faturamento } from '../screens/faturamento'
 import { Financeiro } from '../screens/financeiro'
 import { Fotos } from '../screens/fotos'
@@ -69,6 +70,7 @@ export default function Shell({ usuario, onSair }) {
     case 'avanco': body = <Avanco {...p} />; break
     case 'cotacoes': body = <Cotacoes {...p} />; break
     case 'financeiro': body = <Financeiro {...p} />; break
+    case 'evolucao': body = <Evolucao {...p} />; break
     case 'fotos': body = <Fotos {...p} />; break
     case 'obras': body = <Obras {...p} />; break
     case 'fichaObra': body = <FichaObra {...p} />; break

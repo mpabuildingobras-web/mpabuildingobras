@@ -1,6 +1,6 @@
 {
   "app": "Gestão de Obra",
-  "atualizado": "2026-11-23",
+  "atualizado": "2026-11-24",
   "decidido_por": "Manuela",
   "fonte": "docs/permissoes/QUEM-PODE-O-QUE.md",
   "perfis": [
@@ -564,6 +564,24 @@
     "pagamentos.agendar": {
       "assunto": "Pagamentos (evolução financeira da obra)",
       "acao": "Agendar a data de um pagamento",
+      "condicao": null,
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "·",
+      "sensivel": true
+    },
+    "evolucao.ver": {
+      "assunto": "Evolução da obra (físico-financeiro)",
+      "acao": "Ver o previsto × executado mês a mês, em valor e em %",
+      "condicao": "Cliente: só diários aprovados",
+      "socio": "pode",
+      "auxiliar": "·",
+      "cliente": "só ver",
+      "sensivel": true
+    },
+    "evolucao.ver_gasto": {
+      "assunto": "Evolução da obra",
+      "acao": "Ver o gasto lançado contra o estudo de viabilidade, com estouro ou economia projetados",
       "condicao": null,
       "socio": "pode",
       "auxiliar": "·",

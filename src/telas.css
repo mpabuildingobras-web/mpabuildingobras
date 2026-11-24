@@ -690,3 +690,162 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -.01em; }
 @media (min-width: 900px) {
   .kb-quadro { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 }
+
+/* ---------- Visual de 24/11/2026: cartões arredondados, barra flutuante escura, Plus Jakarta Sans.
+   Referência enviada pela sócia; cores da MPA: preto na ação, vermelho só na marca e no que está atrasado.
+   Vem por último para valer sobre as regras acima. ---------- */
+:root {
+  --raio: 20px;        /* cartões */
+  --raio-btn: 12px;    /* botões e campos */
+  --borda-cartao: rgba(22, 22, 22, .07);
+  --sombra-cartao: 0 1px 2px rgba(22, 22, 22, .04), 0 6px 20px rgba(22, 22, 22, .05);
+  --tabbar-h: 64px;
+}
+body { background: var(--paper); -webkit-font-smoothing: antialiased; }
+
+/* Títulos grossos e justos */
+h1, h2, h3 { font-weight: 800; letter-spacing: -.025em; }
+.pagina h1 { font-size: 28px; line-height: 1.15; }
+.label { color: #6B6B6B; }
+.section-head .label, .grupo .label, .acesso-cartao-topo { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7A7A7A; }
+.section-head { border-bottom: 0; padding-bottom: 10px; }
+.item-title, .etapa-nome, .g-nome { font-weight: 600; }
+
+/* Cartões */
+.panel, .stats, .acesso-cartao, .gantt { background: var(--white); border: 1px solid var(--borda-cartao); border-radius: var(--raio); box-shadow: var(--sombra-cartao); }
+.stats { overflow: hidden; }
+.stat + .stat { border-left-color: var(--line-soft); }
+.stat .n { font-weight: 800; letter-spacing: -.03em; }
+.diario-box { border-radius: var(--raio); background: var(--amber-tint); }
+
+/* Topo: transparente sobre o fundo, sem linha */
+.topo { background: rgba(243, 243, 241, .88); border-bottom: 0; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.seletor-info strong { font-weight: 700; }
+.seletor-botao:hover, .btn-texto:hover { background: rgba(22, 22, 22, .05); }
+
+/* Tela inicial: a entrega vira um cartão de destaque, e os números do dia, outro cartão */
+.entrega-destaque { margin: 8px 16px 0; padding: 22px 20px; border-radius: var(--raio); }
+.entrega-destaque h1 { font-weight: 800; letter-spacing: -.03em; }
+.numeros-dia { margin: 12px 16px 0; padding: 16px 18px; border: 1px solid var(--borda-cartao); border-radius: var(--raio); box-shadow: var(--sombra-cartao); }
+.numeros-dia b { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+@media (min-width: 900px) {
+  .entrega-destaque, .numeros-dia { margin-left: 32px; margin-right: 32px; padding-left: 24px; padding-right: 24px; }
+}
+
+/* Selos em pílula */
+.tag { border-radius: 999px; padding: 6px 10px; font-weight: 600; }
+
+/* Barras de progresso: mais grossas, arredondadas, preenchidas de preto */
+.bar { height: 8px; border-radius: 999px; background: #E8E8E6; }
+.bar.big { height: 12px; }
+.bar > i, .g-exec, .lg-exec { background: var(--ink); border-radius: 999px; }
+.bar.done > i { background: var(--green); }
+
+/* Botões e campos */
+.btn, .btn-mono, .seg button { border-radius: var(--raio-btn); font-weight: 700; }
+.btn-primary:hover { background: #2E2E2E; border-color: #2E2E2E; }
+.field input, .field textarea, .field select, .acesso-campo input { border-radius: var(--raio-btn); border-color: #CFCFCB; background: var(--white); }
+.btn-voltar, .btn-texto { border-radius: var(--raio-btn); font-weight: 600; }
+
+/* Barra de baixo (celular): pílula escura flutuante, item ativo em branco */
+.shell main { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 36px); }
+.tabbar {
+  left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom));
+  padding: 6px; gap: 2px; border: 0; border-radius: 28px;
+  background: var(--ink); box-shadow: 0 10px 30px rgba(22, 22, 22, .25);
+}
+.tab { height: calc(var(--tabbar-h) - 12px); border-radius: 22px; color: rgba(255, 255, 255, .62); font-weight: 600; font-size: 11px; transition: background-color .15s, color .15s; }
+.tab[aria-current="page"] { background: var(--white); color: var(--ink); }
+.tab[aria-current="page"]::before { content: none; }
+
+/* "Mais" no celular: atalhos em grade de duas colunas, ícone num quadradinho */
+.lista-mais { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 14px; }
+.lista-mais button {
+  min-height: 72px; padding: 12px; gap: 12px; border: 1px solid var(--borda-cartao); border-radius: 18px;
+  background: var(--white); box-shadow: var(--sombra-cartao); font-size: 15px; font-weight: 700; line-height: 1.2;
+}
+.lista-mais button::after { content: none; }
+.lista-mais svg { flex: none; width: 40px; height: 40px; padding: 9px; border-radius: 12px; background: #F0F0EE; color: var(--ink); }
+
+/* Menu lateral (computador): item ativo em pílula preta */
+@media (min-width: 900px) {
+  .sidebar { background: var(--white); border-right: 1px solid var(--borda-cartao); }
+  .marca { border-bottom: 0; }
+  .side-link { border-left: 0; border-radius: var(--raio-btn); font-weight: 600; }
+  .side-link:hover { background: #F0F0EE; }
+  .side-link[aria-current="page"] { background: var(--ink); color: var(--white); }
+  .side-link[aria-current="page"] svg { color: var(--white); }
+  .side-usuario { border-top: 1px solid var(--line-soft); }
+  .tabbar { display: none; }
+}
+
+/* Entrada */
+.acesso { background: linear-gradient(180deg, #E9E9E6 0, var(--paper) 360px); }
+.acesso-escolha p { font-weight: 700; }
+.acesso-btn { min-height: 56px; border-radius: 14px; font-weight: 700; font-size: 16px; }
+.acesso-btn.principal { background: var(--ink); color: var(--white); }
+.acesso-btn.secundario { background: var(--white); border: 1px solid #CFCFCB; }
+.acesso-cartao-topo { background: transparent; padding-top: 18px; }
+
+/* ---------- Evolução da obra (físico-financeiro) ---------- */
+.ev-sub { margin-top: 4px !important; }
+.ev-cartoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 16px 16px 0; }
+.ev-cartao.inteiro { grid-column: 1 / -1; }
+.ev-cartao {
+  display: grid; gap: 4px; align-content: start; padding: 14px 16px 16px; background: var(--white);
+  border: 1px solid var(--borda-cartao); border-left: 4px solid #CFCFCB; border-radius: 16px; box-shadow: var(--sombra-cartao);
+}
+.ev-cartao b { font-size: clamp(20px, 5.8vw, 26px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
+.ev-cartao small { font-size: 13px; color: var(--slate); font-weight: 500; }
+.ev-cartao.executado { border-left-color: var(--ink); }
+.ev-cartao.gasto { border-left-color: var(--amber); }
+.ev-cartao small.c-red { color: var(--red-ink); font-weight: 700; }
+.ev-cartao small.c-green { color: var(--green-ink); font-weight: 700; }
+.ev-projecao { display: grid; gap: 4px; margin: 12px 16px 0; padding: 16px 18px; border-radius: var(--raio); }
+.ev-projecao b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.ev-projecao span { font-size: 14px; color: var(--ink); }
+.ev-projecao.economia { background: var(--green-tint); }
+.ev-projecao.economia b { color: var(--green-ink); }
+.ev-projecao.estouro { background: var(--red-tint); }
+.ev-projecao.estouro b { color: var(--red-ink); }
+.ev-projecao.neutra { background: var(--destaque); }
+.ev-grafico { padding: 12px 12px 14px; }
+.ev-svg { display: block; width: 100%; height: auto; }
+.ev-grade { stroke: #ECECEA; stroke-width: 1; }
+.ev-eixo { font: 500 11px var(--sans); fill: #8A8A86; }
+.ev-l-previsto { fill: none; stroke: #A9A9A4; stroke-width: 2.5; stroke-dasharray: 6 5; stroke-linejoin: round; }
+.ev-l-executado { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+.ev-l-gasto { fill: none; stroke: var(--amber); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ev-linha-hoje { stroke: var(--marca); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.ev-ponto { fill: var(--white); stroke: var(--ink); stroke-width: 3; }
+.ev-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 4px 0; font-size: 13px; color: var(--slate); }
+.ev-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.ev-legenda i { display: inline-block; width: 18px; height: 0; border-top: 3px solid; }
+.ev-legenda .lg-previsto { border-top-style: dashed; border-color: #A9A9A4; }
+.ev-legenda .lg-executado { border-color: var(--ink); }
+.ev-legenda .lg-gasto { border-color: var(--amber); }
+.ev-legenda .lg-hoje { width: 0; height: 14px; border-top: 0; border-left: 2px dashed var(--marca); }
+.ev-tabela-caixa { overflow-x: auto; }
+.ev-tabela { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ev-tabela th:first-child, .ev-tabela td:first-child { padding-left: 14px; }
+.ev-tabela th { text-align: left; font-size: 12px; font-weight: 700; color: #7A7A7A; padding: 12px 8px 8px; border-bottom: 1px solid var(--line-soft); }
+.ev-tabela td { padding: 12px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: top; font-weight: 600; white-space: nowrap; }
+.ev-tabela td small { display: block; font-size: 12px; font-weight: 500; color: var(--slate); margin-top: 2px; }
+.ev-tabela tr:last-child td { border-bottom: 0; }
+.ev-tabela tr.futuro td { color: #9A9A96; }
+.ev-tabela tr.atual td:first-child { font-weight: 800; }
+.ev-hoje { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--ink); color: var(--white); font-size: 10.5px; font-weight: 700; vertical-align: 1px; }
+.ev-nota { margin: 10px 2px 0; font-size: 13px; color: var(--slate); }
+@media (min-width: 900px) {
+  .ev-cartoes { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 32px 0; }
+  .ev-cartao.inteiro { grid-column: auto; }
+  .ev-cartoes:has(> .inteiro) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ev-tabela { font-size: 15px; }
+  .ev-projecao { margin-left: 32px; margin-right: 32px; }
+}
+@media (max-width: 480px) {
+  .ev-tabela { font-size: 13px; }
+  .ev-tabela th, .ev-tabela td { padding-left: 6px; padding-right: 6px; }
+  .ev-tabela th:first-child, .ev-tabela td:first-child { padding-left: 12px; }
+  .ev-hoje { display: block; width: fit-content; margin: 4px 0 0; }
+}

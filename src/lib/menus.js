@@ -26,6 +26,7 @@ export const TELAS = {
   faturamento: { titulo: 'Faturamento', curto: 'Faturam.', icone: 'pagamento' },
   cotacoes: { titulo: 'Compras', curto: 'Compras', icone: 'compras' },
   financeiro: { titulo: 'Financeiro da obra', curto: 'Financeiro', icone: 'fin' },
+  evolucao: { titulo: 'Evolução da obra', curto: 'Evolução', icone: 'fin' },
   fotos: { titulo: 'Fotos', curto: 'Fotos', icone: 'foto' },
   obras: { titulo: 'Obras', curto: 'Obras', icone: 'obra' },
   usuarios: { titulo: 'Usuários', curto: 'Usuários', icone: 'user' },
@@ -38,21 +39,22 @@ export const TELAS = {
 export const MENUS = {
   socio: {
     barra: ['painel', 'diario', 'cronograma', 'tarefas'],
-    mais: ['planejamento', 'gestao', 'servicos', 'contratados', 'cotacoes', 'medicoes', 'orcamento', 'financeiro', 'faturamento', 'fotos', 'obras', 'usuarios', 'perfil'],
+    mais: ['evolucao', 'planejamento', 'gestao', 'servicos', 'contratados', 'cotacoes', 'medicoes', 'orcamento', 'financeiro', 'faturamento', 'fotos', 'obras', 'usuarios', 'perfil'],
   },
   auxiliar: {
     barra: ['hoje', 'meusDiarios', 'perfil'],
     mais: [],
   },
   cliente: {
-    // Sem Orçamento: o cliente vê só a evolução financeira, em Pagamentos (quadro, 15/11/2026).
+    // Sem Orçamento: o cliente vê a evolução financeira em Pagamentos (quadro, 15/11/2026)
+    // e o previsto × executado em Evolução, sem custo (quadro, 24/11/2026).
     barra: ['avanco', 'pagamentos', 'diario', 'fotos'],
-    mais: ['cotacoes', 'perfil'],
+    mais: ['evolucao', 'cotacoes', 'perfil'],
   },
 }
 
 // Telas que mostram preço, valor ou custo. O auxiliar não abre nenhuma.
-export const TELAS_COM_DINHEIRO = ['medicoes', 'orcamento', 'pagamentos', 'faturamento', 'cotacoes', 'financeiro']
+export const TELAS_COM_DINHEIRO = ['medicoes', 'orcamento', 'pagamentos', 'faturamento', 'cotacoes', 'financeiro', 'evolucao']
 
 // Telas que mostram custo interno, dados da equipe ou juntam obras. Só sócio.
 export const TELAS_SO_SOCIO = ['faturamento', 'gestao', 'tarefas', 'servicos', 'contratados', 'financeiro', 'cronograma', 'planejamento', 'medicoes', 'obras', 'usuarios']

@@ -1,11 +1,11 @@
-/* Design system: layout do preview.html aprovado, com as cores do logo e a fonte Inter. */
+/* Design system: cores do logo (preto, branco e vermelho) e a fonte Plus Jakarta Sans (visual de 24/11/2026). */
 :root {
   /* Cores do logo: preto, branco e vermelho, em tons leves.
      Vermelho só em dois papéis: a marca (logo, item ativo) e "atrasado". O botão principal é preto,
      para um botão nunca ser confundido com alerta. */
-  --ink: #1E1E1E;
+  --ink: #161616;
   --slate: #5F5F5F;
-  --paper: #F7F7F7;
+  --paper: #F3F3F1; /* fundo cinza-quente: os cartões brancos se destacam sobre ele */
   --white: #FFFFFF;
   --marca: #DC0000; /* vermelho exato do logo */
   --red: #DC0000;
@@ -17,7 +17,7 @@
   --linha-campo: #8C8C8C; /* borda de campo e botão: 3:1 sobre branco */
   --line-soft: #EDEDED;
   --grafite: #4A4A4A;
-  --acao: #1E1E1E;
+  --acao: #161616;
   --destaque: #F1F1F1;
 
   /* Status: atenção e ok, suaves para combinar */
@@ -37,8 +37,8 @@
   --rt-seguranca: #B3261E;
   --rt-logistica: #4F6B12;
 
-  /* Inter em tudo, em caixa normal e peso leve, como o modelo enviado pela sócia. --mono só existe porque as regras antigas o citam. */
-  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  /* Plus Jakarta Sans em tudo (referência enviada pela sócia em 24/11/2026). --mono só existe porque as regras antigas o citam. */
+  --sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --mono: var(--sans);
   --tap: 48px;
 }
