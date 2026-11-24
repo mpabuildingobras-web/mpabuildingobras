@@ -55,6 +55,10 @@ function traduzirErro(error) {
 }
 const falha = (error) => recusa(traduzirErro(error))
 
+// Orçamento importado da planilha: gravar no banco entra junto com as tabelas de orçamento.
+export const importarOrcamento = escolher(mockApi.importarOrcamento, async () =>
+  recusa('A conferência da planilha já funciona, mas gravar o orçamento no banco entra no próximo passo. Nada foi salvo.'))
+
 // ---------- Entrada (Supabase Auth + tabela profiles) ----------
 // A conta do app = o login (auth) + a linha dela em profiles (perfil e situação).
 // `role` repete o perfil porque as telas antigas ainda leem esse nome.

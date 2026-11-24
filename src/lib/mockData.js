@@ -105,6 +105,9 @@ export const servicosCustos = servicosValores.map((v) => ({
   custo_mo: v.servico_id === 's11' ? 0 : Math.round((v.valor_cliente / 1.5) * 100) / 100,
 }))
 
+// Lista do QUANTITATIVO do estudo importado (cômodo, descrição e quantidade), por obra.
+export const quantitativos = []
+
 export const orcamentos = [
   { obra_id: OBRA_AP302, titulo: 'ORÇAMENTO - APTO 302 - ED. AURORA', importado_em: '2026-09-29', qtd_etapas: 9, qtd_itens: 11 },
 ]

@@ -5,6 +5,7 @@ import { calcularCascata, statusQueContam } from '../lib/cronograma'
 import { dataBR } from '../lib/formato'
 import { porcento, reais, resumirOrcamento } from '../lib/orcamento'
 import { pode } from '../lib/permissoes'
+import { ImportarOrcamento } from './importarOrcamento'
 
 // Busca o orçamento e o executado de cada item na visão de quem está olhando.
 export async function carregarResumoOrcamento(perfil) {
@@ -21,7 +22,12 @@ export function Orcamento({ perfil, usuario }) {
   const estado = useCarregar(() => carregarResumoOrcamento(perfil))
   const [aviso, avisar] = useAviso()
   const socio = pode('orcamento.editar', usuario)
-  const importar = () => avisar('A importação da planilha .xlsx entra na Fase 1, junto com o banco.')
+  const [importando, setImportando] = useState(false)
+  const importar = () => setImportando(true)
+  if (importando) {
+    return <ImportarOrcamento onFechar={() => setImportando(false)}
+      onImportado={() => { setImportando(false); estado.recarregar(); avisar('Orçamento criado. Os serviços já estão no Cronograma: ajuste a duração e a ordem por lá.') }} />
+  }
   return (
     <Carregando estado={estado}>
       {estado.data && !estado.data.orcamento && (
@@ -29,7 +35,7 @@ export function Orcamento({ perfil, usuario }) {
           <Titulo rotulo="Orçamento do cliente" titulo={`Orçamento de ${estado.data.obra.codigo}`} />
           <Vazio icone="orcamento"
             titulo={socio ? 'Esta obra ainda não tem orçamento' : 'O orçamento da sua obra ainda não foi publicado'}
-            texto={socio ? 'Suba a planilha no seu modelo (aba ORÇAMENTO) e o sistema monta as etapas e os serviços.' : 'Assim que a engenheira publicar, você acompanha aqui cada etapa.'}
+            texto={socio ? 'Suba o Estudo de Viabilidade no seu modelo (abas ORÇAMENTO e QUANTITATIVO) e o app monta as etapas, os serviços e a lista de materiais.' : 'Assim que a engenheira publicar, você acompanha aqui cada etapa.'}
             botao={socio ? 'Importar planilha' : null} onBotao={importar} />
         </>
       )}
@@ -50,7 +56,7 @@ function Conteudo({ dados, socio, importar }) {
           : 'O valor do orçamento e o que já foi executado, conferido nos diários aprovados.'}</p>
       </Titulo>
       <div className="section">
-        {socio && <button className="btn btn-outline-acao" onClick={importar}>Baixar planilha original</button>}
+        {socio && <button className="btn btn-outline-acao" onClick={importar}>Importar nova versão da planilha</button>}
         <div className="stats">
           <div className="stat"><div className="n num money">{reais(resumo.total)}</div><span className="label">Valor do contrato</span></div>
           <div className="stat"><div className="n num money c-acao">{reais(resumo.executado)}</div><span className="label">Executado</span></div>

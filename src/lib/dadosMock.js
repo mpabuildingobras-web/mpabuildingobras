@@ -405,6 +405,48 @@ export function listarFotos() {
 }
 
 // ---------- Dinheiro ----------
+// Estudo de viabilidade importado (lib/importarEstudo.js) vira o orçamento da obra atual:
+// cada serviço da planilha vira um serviço do Cronograma (medido em %, 5 dias úteis, um depois do outro,
+// até a sócia ajustar), com o TOTAL ENG. (valor ao cliente) e o TOTAL MO (custo) separados, como no banco.
+export function importarOrcamento(estudo) {
+  if (!ehSocio()) return recusa('Só sócio importa o orçamento.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de importar.')
+  if (!estudo?.ok) return recusa('A planilha tem problemas que impedem a importação. Corrija e tente de novo.')
+  const antigos = new Set(daObra(mock.servicos).map((x) => x.id))
+  if (mock.execucoes.some((e) => antigos.has(e.servico_id))) {
+    return recusa('Esta obra já tem serviços lançados nos diários: importar de novo apagaria esse histórico. Por enquanto, a importação é só para obra nova.')
+  }
+  const fora = (lista) => lista.filter((x) => x.obra_id !== obraAtual)
+  mock.servicos.splice(0, Infinity, ...fora(mock.servicos))
+  mock.servicosValores.splice(0, Infinity, ...fora(mock.servicosValores))
+  mock.servicosCustos.splice(0, Infinity, ...fora(mock.servicosCustos))
+  mock.orcamentos.splice(0, Infinity, ...fora(mock.orcamentos))
+  mock.quantitativos.splice(0, Infinity, ...fora(mock.quantitativos))
+
+  const prefixo = `imp-${Date.now().toString(36)}`
+  let anterior = null
+  let n = 0
+  for (const etapa of estudo.etapas) {
+    for (const i of etapa.itens) {
+      const id = `${prefixo}-${++n}`
+      const normal = i.tipo === 'Normal'
+      mock.servicos.push({
+        id, obra_id: obraAtual, numero_item: i.numero_item, frente: etapa.nome, nome: i.nome, unidade: i.unidade,
+        tipo: i.tipo, ...(normal
+          ? { forma: 'Percentual', prevista: 100, duracao: 5, deps: anterior ? [anterior] : [], responsavel_id: null }
+          : { percentual: i.percentual }),
+        obs: i.obs ?? undefined,
+      })
+      if (normal) anterior = id
+      mock.servicosValores.push({ obra_id: obraAtual, servico_id: id, valor_cliente: i.total_eng })
+      mock.servicosCustos.push({ obra_id: obraAtual, servico_id: id, custo_mo: i.total_mo })
+    }
+  }
+  mock.orcamentos.push({ obra_id: obraAtual, titulo: estudo.titulo, importado_em: mock.HOJE, qtd_etapas: estudo.etapas.length, qtd_itens: n })
+  estudo.quantitativo.forEach((q, k) => mock.quantitativos.push({ id: `${prefixo}-q${k + 1}`, obra_id: obraAtual, ...q }))
+  return resposta({ qtd_itens: n, qtd_quantitativo: estudo.quantitativo.length })
+}
+
 export function buscarOrcamento() {
   if (perfilAtual === 'auxiliar') return resposta(null)
   const cab = daObra(mock.orcamentos)[0]
