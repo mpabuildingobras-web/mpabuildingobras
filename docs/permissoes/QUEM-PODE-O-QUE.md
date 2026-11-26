@@ -89,7 +89,7 @@ Regras que valem para todo o app:
 | Fotos do diário | Enviar · Só antes de aprovado | pode | pode | · |
 | Fotos do diário | Apagar · Auxiliar só antes de enviar | pode | só os dele | · |
 | Painel do dia | Ver · Junta o cronograma e os diários da obra | pode | · | · |
-| Orçamento (valor ao cliente por etapa e item) | Ver os valores · O cliente não vê o orçamento | pode | · | · |
+| Orçamento (valor ao cliente por etapa e item) | Ver os valores · O cliente vê só o valor ENG. por etapa e o total, nunca o MO | pode | · | só ver |
 | Orçamento | Editar valor e importar | pode | · | · |
 | Orçamento | Publicar para o cliente · Hoje sem efeito: o cliente não vê o orçamento | pode | · | · |
 | Custo de mão de obra e margem | Ver | pode | · | · |
@@ -123,7 +123,7 @@ Regras que valem para todo o app:
 
 - **socio:** Início (Painel do dia) · Diário · Cronograma · Tarefas · Evolução da obra · Planejamento · Gestão de Obras · Serviços · Contratados · Compras · Medições · Orçamento · Financeiro · Faturamento · Fotos · Obras · Usuários · Meu perfil.
 - **auxiliar:** Hoje · Meus diários · Meu perfil.
-- **cliente:** Avanço · Pagamentos · Diário · Fotos · Evolução da obra · Compras · Meu perfil. **Sai o Orçamento** (decidido em 15/11/2026). O PDF da medição ele abre por Pagamentos.
+- **cliente:** Avanço · Pagamentos · Diário · Fotos · Evolução da obra · Orçamento (só ENG. por etapa) · Compras · Meu perfil. **Sai o Orçamento** (decidido em 15/11/2026). O PDF da medição ele abre por Pagamentos.
 
 ## 6. As perguntas que pegam (respondidas em 15/11/2026 e 23/11/2026)
 
@@ -189,6 +189,8 @@ Mudar uma permissão é mudar, de uma vez: este quadro, o JSON, o `src/lib/permi
 - 23/11/2026 · Manuela · Revisão depois do módulo Planejamento: entram as Restrições (5 ações), a Semana com kanban e PPC (4 ações) e o Painel do dia (1 ação), todas só do sócio. O sócio pode apagar restrição de vez e mexer em semana que já terminou, com registro no histórico. Nenhuma das 63 linhas de 15/11 mudou.
 
 - 24/11/2026 · Manuela · Entra a Evolução da obra (cronograma físico-financeiro): o sócio vê previsto × executado × gasto, com estouro ou economia projetados; o cliente vê só o previsto × executado da obra dele, em valor e em %, pelos diários aprovados, sem custo. A Curva ABC ficou de fora, por decisão dela.
+
+- 24/11/2026 · Manuela · O cliente volta a ver o Orçamento, mas só o valor ENG. de cada etapa e o total; o custo MO continua só dos sócios (no banco, servicos_custos só sócio). Serviços, orçamento e quantitativo passam a morar no banco; o orçamento nasce da importação do Estudo de Viabilidade (modelo Vita Belle).
 
 ## Em aberto
 

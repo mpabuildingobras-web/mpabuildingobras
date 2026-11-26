@@ -99,8 +99,9 @@ function Conteudo({ dados, socio, importar }) {
                   <div key={i.id} className="it">
                     <span className="it-nome"><span className="label">{i.numero_item}</span> {i.nome}</span>
                     <b className="num">{porcento(i.fracao)}</b>
-                    <span className="label">{reais(i.valor)} ({i.unidade}){socio && `, custo MO ${reais(i.custo_mo)}`}</span>
-                    <span className="label">{reais(i.executado)}</span>
+                    {/* O cliente vê o valor só por etapa (quadro, 24/11/2026); item a item, só o avanço. */}
+                    <span className="label">{socio ? `${reais(i.valor)} (${i.unidade}), custo MO ${reais(i.custo_mo)}` : i.unidade}</span>
+                    {socio && <span className="label">{reais(i.executado)}</span>}
                     {i.obs && <span className="it-obs">{i.obs}</span>}
                   </div>
                 ))}

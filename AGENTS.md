@@ -161,9 +161,17 @@ Depois de cada rodada, uma resposta curta:
 
 Em português simples, sem jargão. Se precisar de uma decisão minha, pergunte uma coisa de cada vez, com a sua recomendação.
 
-## Onde paramos (atualizado em 23/11/2026)
+## Onde paramos (atualizado em 24/11/2026)
 
 Nota de passagem entre conversas: atualize ou apague esta seção ao retomar.
+
+**24/11/2026: visual novo, Evolução da obra, importação do estudo, serviços e orçamento no banco**
+
+- Visual: Plus Jakarta Sans, cartões arredondados, barra de baixo preta flutuante (camada no fim de `telas.css`). App instalável (PWA) desde 23/11.
+- Evolução da obra (`lib/evolucao.js`, tela `evolucao`): previsto × executado × gasto; cliente vê sem gasto.
+- Importar Estudo de Viabilidade, modelo Vita Belle (abas ORÇAMENTO e QUANTITATIVO): `lib/xlsx.js` (lê .xlsx sem biblioteca), `lib/importarEstudo.js`, tela `importarOrcamento.jsx`. Teste com planilha anonimizada em `tests/fixtures/` (o repositório é público: nunca subir planilha real).
+- Serviços, frentes, dependências, orçamento, valores ENG., custos MO e quantitativo moram no banco (migration de 24/11). Importar = função `importar_orcamento` (tudo ou nada; reimporta só obra sem diário). Cliente vê Orçamento só com ENG. por etapa.
+- Ainda no mock: contratados (responsavel_id é texto), tarefas, medições, custos lançados, cotações, planejamento.
 
 **Login e banco pelo quadro: PRONTOS (23/11/2026)**
 

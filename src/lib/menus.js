@@ -46,10 +46,10 @@ export const MENUS = {
     mais: [],
   },
   cliente: {
-    // Sem Orçamento: o cliente vê a evolução financeira em Pagamentos (quadro, 15/11/2026)
-    // e o previsto × executado em Evolução, sem custo (quadro, 24/11/2026).
+    // Orçamento só com o valor ENG. por etapa e o total, nunca o MO (quadro, 24/11/2026);
+    // previsto × executado em Evolução, sem custo (quadro, 24/11/2026).
     barra: ['avanco', 'pagamentos', 'diario', 'fotos'],
-    mais: ['evolucao', 'cotacoes', 'perfil'],
+    mais: ['evolucao', 'orcamento', 'cotacoes', 'perfil'],
   },
 }
 

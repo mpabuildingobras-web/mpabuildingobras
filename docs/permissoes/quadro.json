@@ -437,11 +437,11 @@
     },
     "orcamento.ver": {
       "assunto": "Orçamento (valor ao cliente por etapa e item)",
-      "acao": "Ver os valores",
-      "condicao": "O cliente não vê o orçamento: só a evolução financeira (ver Pagamentos)",
+      "acao": "Ver os valores · O cliente vê só o valor ENG. por etapa e o total, nunca o MO",
+      "condicao": "Cliente: só o valor ENG. por etapa e o total (o custo MO é só dos sócios)",
       "socio": "pode",
       "auxiliar": "·",
-      "cliente": "·",
+      "cliente": "só ver",
       "sensivel": true
     },
     "orcamento.editar": {

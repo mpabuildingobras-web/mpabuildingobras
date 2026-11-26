@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { importarEstudo, lerQuantidade } from '../src/lib/importarEstudo.js'
+import { importarEstudo, lerQuantidade, unidadeAceita } from '../src/lib/importarEstudo.js'
 import { lerPlanilha } from '../src/lib/xlsx.js'
 
 let ok = 0
@@ -55,6 +55,10 @@ conferir('soma que não bate com o VALOR TOTAL trava', importarEstudo(comTotal(9
 conferir('soma que bate passa', importarEstudo(comTotal(150, base)).ok, true)
 conferir('item antes da primeira etapa trava', importarEstudo(comTotal(150, [[null, '1.1', 'Serviço A', 'vb', 100, 150]])).ok, false)
 conferir('item repetido trava', importarEstudo(comTotal(300, [...base, [null, '1.1', 'Serviço B', 'vb', 100, 150]])).ok, false)
+conferir('unidade "M2" vira m²', unidadeAceita('M2'), 'm²')
+conferir('unidade "Unid." vira un', unidadeAceita('Unid.'), 'un')
+conferir('unidade "conj." não é aceita', unidadeAceita('conj.'), null)
+conferir('unidade desconhecida trava', importarEstudo(comTotal(150, [[null, 1, 'ETAPA UM'], [null, '1.1', 'Serviço A', 'mês', 100, 150]])).ok, false)
 conferir('sem aba QUANTITATIVO só avisa', importarEstudo(comTotal(150, base)).problemas.map((p) => p.grave), [false])
 
 // Gravar (dados de exemplo): obra nova recebe orçamento, cronograma e quantitativo.

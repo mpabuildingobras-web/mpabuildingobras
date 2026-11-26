@@ -85,5 +85,74 @@
     "obra_id",
     "profile_id",
     "created_at"
+  ],
+  "frentes": [
+    "id",
+    "obra_id",
+    "nome",
+    "ordem",
+    "created_at"
+  ],
+  "servicos": [
+    "id",
+    "obra_id",
+    "frente_id",
+    "numero_item",
+    "nome",
+    "unidade",
+    "tipo",
+    "percentual",
+    "forma_medicao",
+    "quantidade_prevista",
+    "observacao",
+    "aditivo",
+    "duracao_dias",
+    "responsavel_id",
+    "meta_diaria_manual",
+    "concluido_em",
+    "created_at"
+  ],
+  "servicos_dependencias": [
+    "id",
+    "obra_id",
+    "servico_id",
+    "depende_de_id",
+    "created_at"
+  ],
+  "orcamentos": [
+    "id",
+    "obra_id",
+    "titulo",
+    "arquivo",
+    "total_cliente",
+    "qtd_etapas",
+    "qtd_itens",
+    "importado_por",
+    "created_at"
+  ],
+  "servicos_valores": [
+    "id",
+    "obra_id",
+    "servico_id",
+    "valor_cliente",
+    "created_at"
+  ],
+  "servicos_custos": [
+    "id",
+    "obra_id",
+    "servico_id",
+    "custo_mo",
+    "created_at"
+  ],
+  "quantitativos": [
+    "id",
+    "obra_id",
+    "ordem",
+    "comodo",
+    "descricao",
+    "quantidade",
+    "unidade",
+    "texto",
+    "created_at"
   ]
 }

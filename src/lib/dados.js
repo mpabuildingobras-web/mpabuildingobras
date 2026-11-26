@@ -1,11 +1,11 @@
 // CAMADA DE DADOS: única porta de entrada dos dados. As telas importam só daqui, e só este
 // arquivo chama supabase.from(...).
 //
-// Hoje o banco (Supabase) cuida do LOGIN (auth + profiles + membros), de OBRAS e do DIÁRIO
-// (diários, equipe do dia, lançamentos e fotos).
-// O resto (serviços, contratados, tarefas, dinheiro e a tela de Usuários) ainda vem dos dados de
-// exemplo em dadosMock.js, até a vez de cada módulo. As duas obras de exemplo têm o mesmo id
-// no mock e no banco (OBRA_AP302, OBRA_CJF), por isso as duas metades conversam.
+// Hoje o banco (Supabase) cuida do LOGIN (auth + profiles + membros), de OBRAS, do DIÁRIO
+// (diários, equipe do dia, lançamentos e fotos) e, desde 24/11/2026, dos SERVIÇOS e do ORÇAMENTO
+// (frentes, serviços, dependências, valores ENG., custos MO e quantitativo do estudo importado).
+// O resto (contratados, tarefas, medições, custos lançados e a tela de Usuários) ainda vem dos
+// dados de exemplo em dadosMock.js, até a vez de cada módulo.
 //
 // MULTI-OBRA: as telas não passam obra_id; toda consulta daqui filtra pela obra atual.
 // Sem obra escolhida, as listas voltam vazias, nunca com tudo.
@@ -16,7 +16,7 @@ import { servicosDaCadeia } from './cronograma.js'
 import * as mockApi from './dadosMock.js'
 import { STATUS_DIARIO, pessoaNoDiario, pessoasDoDia, podeEditarDiario, problemaParaEnviar } from './diario.js'
 import { horaBR } from './formato.js'
-import { conferirDiario, medeEmPercentual } from './lancamentos.js'
+import { conferirDiario, conferirServico, impedimentoParaExcluir, lerNumero, proximoNumeroItem } from './lancamentos.js'
 import * as mock from './mockData.js'
 import { conferirObra } from './obras.js'
 import { supabase } from './supabase.js'
@@ -54,10 +54,6 @@ function traduzirErro(error) {
   return `O banco não aceitou: ${msg}`
 }
 const falha = (error) => recusa(traduzirErro(error))
-
-// Orçamento importado da planilha: gravar no banco entra junto com as tabelas de orçamento.
-export const importarOrcamento = escolher(mockApi.importarOrcamento, async () =>
-  recusa('A conferência da planilha já funciona, mas gravar o orçamento no banco entra no próximo passo. Nada foi salvo.'))
 
 // ---------- Entrada (Supabase Auth + tabela profiles) ----------
 // A conta do app = o login (auth) + a linha dela em profiles (perfil e situação).
@@ -193,14 +189,14 @@ export const listarExecucoes = escolher(mockApi.listarExecucoes, async () => {
 })
 
 export const carregarCronograma = escolher(mockApi.carregarCronograma, async () => {
-  const [o, s, e] = await Promise.all([buscarObraAtual(), mockApi.listarServicos(), listarExecucoes()])
+  const [o, s, e] = await Promise.all([buscarObraAtual(), listarServicos(), listarExecucoes()])
   const erro = o.erro ?? s.erro ?? e.erro
   if (erro) return recusa(erro)
   return resposta({ obra: o.data, servicos: servicosDaCadeia(s.data), execucoes: e.data })
 })
 
-// Junta o que veio do banco com os nomes de serviço e de prestador, que ainda moram no mock.
-function montarDiario({ diarios_equipe: equipe = [], diarios_execucoes: execucoes = [], fotos = [], ...d }) {
+// Junta o diário do banco com os nomes dos serviços (banco) e dos prestadores (ainda no mock).
+function montarDiario({ diarios_equipe: equipe = [], diarios_execucoes: execucoes = [], fotos = [], ...d }, servicos) {
   const pessoa = (cid) => mock.contratados.find((c) => c.id === cid)
   return {
     ...d,
@@ -208,7 +204,7 @@ function montarDiario({ diarios_equipe: equipe = [], diarios_execucoes: execucoe
     equipe: [...equipe].sort((a, b) => a.ordem - b.ordem)
       .map((p) => pessoaNoDiario(p.contratado_id, pessoa(p.contratado_id), p.atividade, perfilAtual)),
     execucoes: execucoes.map((e) => {
-      const s = mock.servicos.find((x) => x.id === e.servico_id)
+      const s = servicos.find((x) => x.id === e.servico_id)
       return {
         ...e, diario_id: d.id, quantidade: Number(e.quantidade), descricao: e.descricao ?? '',
         servico: s?.nome ?? e.servico_id, frente: s?.frente ?? '', unidade: s?.unidade ?? '', forma: s?.forma,
@@ -221,11 +217,13 @@ function montarDiario({ diarios_equipe: equipe = [], diarios_execucoes: execucoe
 
 export const buscarDiario = escolher(mockApi.buscarDiario, async (id) => {
   if (!obraAtual) return resposta(null)
+  const servicos = await lerServicos(obraAtual)
+  if (servicos.erro) return servicos
   const { data, error } = await supabase.from('diarios')
     .select('id, obra_id, data, status, qtd_pessoas, clima_manha, clima_tarde, ocorrencias, comentario_devolucao, enviado_por, enviado_em, diarios_equipe(contratado_id, atividade, ordem), diarios_execucoes(servico_id, quantidade, qtd_pessoas, descricao), fotos(id, servico_id, url, legenda)')
     .eq('id', id).eq('obra_id', obraAtual).maybeSingle()
   if (error) return falha(error)
-  return resposta(data && visivel(data) ? montarDiario(data) : null)
+  return resposta(data && visivel(data) ? montarDiario(data, servicos.data) : null)
 })
 
 export const buscarDiarioDoDia = escolher(mockApi.buscarDiarioDoDia, async (data) => {
@@ -286,7 +284,7 @@ export const salvarDiario = escolher(mockApi.salvarDiario, async ({ id, data, cl
   if (id && !antes) return recusa('Este diário não é desta obra.')
   if (antes && !podeEditarDiario(perfilAtual, antes.status)) return recusa('Sem permissão para alterar este diário.')
 
-  const [s, e] = await Promise.all([mockApi.listarServicos(), lerExecucoes(obraAtual)])
+  const [s, e] = await Promise.all([lerServicos(obraAtual), lerExecucoes(obraAtual)])
   if (s.erro || e.erro) return recusa(s.erro ?? e.erro)
   const r = conferirDiario({ data, lancamentos, diarioId: antes?.id ?? null }, servicosDaCadeia(s.data), e.data)
   if (!r.ok) return { data: null, erro: 'Confira os campos.', erros: r.erros }
@@ -306,54 +304,249 @@ export const salvarDiario = escolher(mockApi.salvarDiario, async ({ id, data, cl
 // ---------- Fotos ----------
 export const listarFotos = escolher(mockApi.listarFotos, async () => {
   if (!obraAtual) return resposta([])
+  const servicos = await lerServicos(obraAtual)
+  if (servicos.erro) return servicos
   const { data, error } = await supabase.from('fotos').select('id, diario_id, servico_id, url, legenda, diarios(data, status)').eq('obra_id', obraAtual)
   if (error) return falha(error)
   return resposta(data
     .filter((f) => visivel(f.diarios))
-    .map(({ diarios: d, ...f }) => ({ ...f, data: d.data, servico: mock.servicos.find((s) => s.id === f.servico_id)?.nome ?? '' }))
+    .map(({ diarios: d, ...f }) => ({ ...f, data: d.data, servico: servicos.data.find((s) => s.id === f.servico_id)?.nome ?? '' }))
     .sort((a, b) => b.data.localeCompare(a.data)))
 })
 
-// ---------- Serviços: as travas que dependem de lançamento leem o banco ----------
+// ---------- Serviços e orçamento (banco desde 24/11/2026) ----------
+// No banco: frentes, servicos, servicos_dependencias, orcamentos, servicos_valores (ENG., sócio e
+// cliente), servicos_custos (MO, só sócio) e quantitativos (só sócio). A RLS já recorta quem vê o quê;
+// aqui o código só não pede o que a pessoa não pode ver.
+const numero = (v) => (v === null || v === undefined ? null : Number(v))
+const ordemDoItem = (n) => (n ?? '').split('.').map((p) => Number(p) || 0)
+function porOrdem(a, b) {
+  if (a.frente_ordem !== b.frente_ordem) return a.frente_ordem - b.frente_ordem
+  const [x, y] = [ordemDoItem(a.numero_item), ordemDoItem(b.numero_item)]
+  return x[0] - y[0] || (x[1] ?? 0) - (y[1] ?? 0) || a.nome.localeCompare(b.nome)
+}
+
+// obraId null = todas as obras que a pessoa vê (só nas bases de sócio).
+async function lerServicos(obraId) {
+  let qs = supabase.from('servicos').select('id, obra_id, numero_item, nome, unidade, tipo, percentual, forma_medicao, quantidade_prevista, observacao, aditivo, duracao_dias, responsavel_id, concluido_em, frentes(nome, ordem)')
+  let qd = supabase.from('servicos_dependencias').select('servico_id, depende_de_id')
+  if (obraId) { qs = qs.eq('obra_id', obraId); qd = qd.eq('obra_id', obraId) }
+  const [s, d] = await Promise.all([qs, qd])
+  if (s.error) return falha(s.error)
+  if (d.error) return falha(d.error)
+  return resposta(s.data.map(({ frentes: f, forma_medicao, quantidade_prevista, observacao, duracao_dias, percentual, ...x }) => ({
+    ...x,
+    frente: f?.nome ?? '',
+    frente_ordem: f?.ordem ?? 0,
+    forma: forma_medicao,
+    prevista: numero(quantidade_prevista),
+    duracao: duracao_dias,
+    percentual: numero(percentual),
+    obs: observacao ?? undefined,
+    deps: d.data.filter((k) => k.servico_id === x.id).map((k) => k.depende_de_id),
+  })).sort(porOrdem))
+}
+
+// Valores (ENG.) e, só para sócio, custos (MO). obraId null = todas as obras.
+async function lerValores(obraId, comCusto) {
+  let qv = supabase.from('servicos_valores').select('servico_id, valor_cliente')
+  let qc = comCusto ? supabase.from('servicos_custos').select('servico_id, custo_mo') : null
+  if (obraId) { qv = qv.eq('obra_id', obraId); if (qc) qc = qc.eq('obra_id', obraId) }
+  const [v, c] = await Promise.all([qv, qc ?? Promise.resolve({ data: [], error: null })])
+  if (v.error) return falha(v.error)
+  if (c.error) return falha(c.error)
+  return resposta({
+    valor: new Map(v.data.map((x) => [x.servico_id, Number(x.valor_cliente)])),
+    custo: new Map(c.data.map((x) => [x.servico_id, Number(x.custo_mo)])),
+  })
+}
+
+// Os itens do orçamento = os serviços que têm valor ao cliente (o mesmo que itensDoOrcamento do mock).
+function itensComValor(servicos, valores) {
+  return servicos
+    .filter((s) => valores.valor.has(s.id))
+    .map((s) => ({ ...s, valor: valores.valor.get(s.id), custo_mo: valores.custo.has(s.id) ? valores.custo.get(s.id) : undefined }))
+}
+
+export const listarServicos = escolher(mockApi.listarServicos, async () => {
+  if (!obraAtual) return resposta([])
+  return lerServicos(obraAtual)
+})
+
+export const listarValoresDosServicos = escolher(mockApi.listarValoresDosServicos, async () => {
+  if (!ehSocio() || !obraAtual) return resposta([])
+  const [s, v] = await Promise.all([lerServicos(obraAtual), lerValores(obraAtual, true)])
+  if (s.erro || v.erro) return recusa(s.erro ?? v.erro)
+  return resposta(s.data.map((x) => ({ servico_id: x.id, valor: v.data.valor.get(x.id), custo_mo: v.data.custo.get(x.id) })))
+})
+
+// O orçamento existe quando a planilha foi importada ou quando algum serviço já tem valor ao cliente.
+export const buscarOrcamento = escolher(mockApi.buscarOrcamento, async () => {
+  if (perfilAtual === 'auxiliar' || !obraAtual) return resposta(null)
+  const [o, s, v] = await Promise.all([
+    supabase.from('orcamentos').select('titulo, created_at, qtd_etapas, qtd_itens').eq('obra_id', obraAtual).maybeSingle(),
+    lerServicos(obraAtual),
+    lerValores(obraAtual, ehSocio()),
+  ])
+  if (o.error) return falha(o.error)
+  if (s.erro || v.erro) return recusa(s.erro ?? v.erro)
+  const itens = itensComValor(s.data, v.data)
+  if (!o.data && !itens.length) return resposta(null)
+  return resposta({
+    titulo: o.data?.titulo ?? 'Orçamento da obra',
+    importado_em: o.data ? o.data.created_at.slice(0, 10) : null,
+    qtd_etapas: o.data?.qtd_etapas ?? new Set(itens.map((i) => i.frente)).size,
+    qtd_itens: o.data?.qtd_itens ?? itens.length,
+    itens,
+  })
+})
+
+// Estudo de viabilidade conferido na tela → banco, tudo ou nada (função importar_orcamento).
+export const importarOrcamento = escolher(mockApi.importarOrcamento, async (estudo) => {
+  if (!ehSocio()) return recusa('Só sócio importa o orçamento.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de importar.')
+  if (!estudo?.ok) return recusa('A planilha tem problemas que impedem a importação. Corrija e tente de novo.')
+  const { data, error } = await supabase.rpc('importar_orcamento', {
+    p_obra: obraAtual,
+    p_titulo: estudo.titulo,
+    p_total: estudo.total_eng,
+    p_etapas: estudo.etapas.map((e) => ({
+      numero: e.numero, nome: e.nome,
+      itens: e.itens.map((i) => ({
+        numero_item: i.numero_item, nome: i.nome, unidade: i.unidade, tipo: i.tipo, percentual: i.percentual ?? null,
+        total_mo: i.total_mo, total_eng: i.total_eng, obs: i.obs,
+      })),
+    })),
+    p_quantitativo: estudo.quantitativo,
+  })
+  if (error) return falha(error)
+  return resposta(data)
+})
+
 async function servicoTemLancamento(servicoId) {
   const r = await lerExecucoes(obraAtual)
   return r.erro ? r : resposta(r.data.some((e) => e.servico_id === servicoId))
 }
 
+// Frente pelo nome; se ainda não existe nesta obra, nasce no fim da lista.
+async function idDaFrente(nome) {
+  const { data: achada, error } = await supabase.from('frentes').select('id').eq('obra_id', obraAtual).eq('nome', nome).maybeSingle()
+  if (error) return falha(error)
+  if (achada) return resposta(achada.id)
+  const { data: todas, error: erroTodas } = await supabase.from('frentes').select('ordem').eq('obra_id', obraAtual)
+  if (erroTodas) return falha(erroTodas)
+  const ordem = Math.max(0, ...todas.map((f) => f.ordem)) + 1
+  const { data: nova, error: erroNova } = await supabase.from('frentes').insert({ obra_id: obraAtual, nome, ordem }).select('id').single()
+  if (erroNova) return falha(erroNova)
+  return resposta(nova.id)
+}
+
+// Valor (ENG.) e custo (MO) de um serviço: campo vazio tira, campo que nem veio deixa como está.
+async function gravarValorCliente(servicoId, texto) {
+  const valor = lerNumero(texto)
+  const { error } = valor === null
+    ? await supabase.from('servicos_valores').delete().eq('servico_id', servicoId)
+    : await supabase.from('servicos_valores').upsert({ obra_id: obraAtual, servico_id: servicoId, valor_cliente: valor }, { onConflict: 'servico_id' })
+  return error ? falha(error) : resposta(true)
+}
+
+async function gravarCustoMo(servicoId, texto) {
+  const valor = lerNumero(texto)
+  const { error } = valor === null
+    ? await supabase.from('servicos_custos').delete().eq('servico_id', servicoId)
+    : await supabase.from('servicos_custos').upsert({ obra_id: obraAtual, servico_id: servicoId, custo_mo: valor }, { onConflict: 'servico_id' })
+  return error ? falha(error) : resposta(true)
+}
+
 export const salvarServico = escolher(mockApi.salvarServico, async (dados) => {
-  if (ehSocio() && obraAtual && dados.id) {
-    const s = await mockApi.listarServicos()
-    if (s.erro) return s
-    const existente = s.data.find((x) => x.id === dados.id)
-    const forma = medeEmPercentual(dados.unidade) ? 'Percentual' : 'Quantidade'
-    if (existente && existente.forma !== forma) {
-      const r = await servicoTemLancamento(dados.id)
-      if (r.erro) return r
-      if (r.data) return { data: null, erro: 'Confira os campos.', erros: { unidade: 'Este serviço já tem lançamentos: não dá para trocar entre verba (vb) e quantidade.' } }
-    }
+  if (!ehSocio()) return recusa('Só sócio cadastra serviços.')
+  if (!obraAtual) return recusa('Escolha uma obra antes de cadastrar serviços.')
+  const lidos = await lerServicos(obraAtual)
+  if (lidos.erro) return lidos
+  const daObraAtual = lidos.data
+  const existente = dados.id ? daObraAtual.find((x) => x.id === dados.id) : null
+  if (dados.id && !existente) return recusa('Este serviço não é desta obra.')
+  const r = conferirServico(dados, servicosDaCadeia(daObraAtual))
+  if (!r.ok) return { data: null, erro: 'Confira os campos.', erros: r.erros }
+  if (existente && existente.forma !== r.forma) {
+    const t = await servicoTemLancamento(existente.id)
+    if (t.erro) return t
+    if (t.data) return { data: null, erro: 'Confira os campos.', erros: { unidade: 'Este serviço já tem lançamentos: não dá para trocar entre verba (vb) e quantidade.' } }
   }
-  return mockApi.salvarServico(dados)
+  const frente = dados.frente.trim()
+  const f = await idDaFrente(frente)
+  if (f.erro) return f
+  const linha = {
+    frente_id: f.data, nome: dados.nome.trim(), unidade: dados.unidade, forma_medicao: r.forma,
+    quantidade_prevista: r.prevista, duracao_dias: r.duracao, responsavel_id: dados.responsavel_id || null,
+    observacao: (dados.obs ?? '').trim() || null,
+  }
+  // O número do item vem da planilha e é o que a medição guarda: trocar de frente não renumera.
+  const { data: salvo, error } = existente
+    ? await supabase.from('servicos').update(linha).eq('id', existente.id).eq('obra_id', obraAtual).select('id').single()
+    : await supabase.from('servicos').insert({ ...linha, obra_id: obraAtual, tipo: 'Normal', numero_item: proximoNumeroItem(daObraAtual, frente) }).select('id').single()
+  if (error) return falha(error)
+
+  // Dependências: tira as que saíram, põe as que entraram (o banco recusa ciclo).
+  const antes = existente?.deps ?? []
+  const depois = dados.deps ?? []
+  const sair = antes.filter((d) => !depois.includes(d))
+  const entrar = depois.filter((d) => !antes.includes(d))
+  if (sair.length) {
+    const { error: e1 } = await supabase.from('servicos_dependencias').delete().eq('servico_id', salvo.id).in('depende_de_id', sair)
+    if (e1) return recusa(`O serviço foi salvo, mas as dependências não (${traduzirErro(e1)}). Abra e salve de novo.`)
+  }
+  if (entrar.length) {
+    const { error: e2 } = await supabase.from('servicos_dependencias').insert(entrar.map((d) => ({ obra_id: obraAtual, servico_id: salvo.id, depende_de_id: d })))
+    if (e2) return recusa(`O serviço foi salvo, mas as dependências não (${traduzirErro(e2)}). Abra e salve de novo.`)
+  }
+  if ('valor' in dados) {
+    const g = await gravarValorCliente(salvo.id, dados.valor)
+    if (g.erro) return recusa(`O serviço foi salvo, mas o valor ao cliente não (${g.erro}). Abra e salve de novo.`)
+  }
+  if ('custo_mo' in dados) {
+    const g = await gravarCustoMo(salvo.id, dados.custo_mo)
+    if (g.erro) return recusa(`O serviço foi salvo, mas o custo de mão de obra não (${g.erro}). Abra e salve de novo.`)
+  }
+  const atualizados = await lerServicos(obraAtual)
+  if (atualizados.erro) return atualizados
+  return resposta(atualizados.data.find((x) => x.id === salvo.id))
 })
 
 export const excluirServico = escolher(mockApi.excluirServico, async (id) => {
-  if (ehSocio() && obraAtual) {
-    const r = await servicoTemLancamento(id)
-    if (r.erro) return r
-    if (r.data) return recusa('Este serviço já tem lançamentos no diário e não pode ser excluído.')
-  }
-  return mockApi.excluirServico(id)
+  if (!ehSocio()) return recusa('Só sócio exclui serviços.')
+  if (!obraAtual) return recusa('Escolha uma obra.')
+  const [s, e] = await Promise.all([lerServicos(obraAtual), lerExecucoes(obraAtual)])
+  if (s.erro || e.erro) return recusa(s.erro ?? e.erro)
+  const servico = s.data.find((x) => x.id === id)
+  if (!servico) return recusa('Serviço não encontrado nesta obra.')
+  const impedimento = impedimentoParaExcluir(servico, s.data, e.data)
+  if (impedimento) return recusa(impedimento)
+  // Valor, custo e dependências dele saem junto (on delete cascade no banco).
+  const { error } = await supabase.from('servicos').delete().eq('id', id).eq('obra_id', obraAtual)
+  return error ? falha(error) : resposta(true)
+})
+
+export const definirPrestadorDoServico = escolher(mockApi.definirPrestadorDoServico, async (servicoId, contratadoId) => {
+  if (!ehSocio()) return recusa('Só sócio escolhe o prestador.')
+  if (!contratadoId) return recusa('Todo serviço precisa de um prestador.')
+  const { data, error } = await supabase.from('servicos').update({ responsavel_id: contratadoId })
+    .eq('id', servicoId).eq('obra_id', obraAtual).select('id')
+  if (error) return falha(error)
+  if (!data.length) return recusa('Serviço não encontrado nesta obra.')
+  return resposta(true)
 })
 
 // ---------- Consultas que juntam obras: só sócio, uma consulta por tabela (nunca obra a obra) ----------
 export const buscarBaseFaturamento = escolher(mockApi.buscarBaseFaturamento, async () => {
   if (!ehSocio()) return resposta([])
-  const [o, e] = await Promise.all([listarObras('socio'), lerExecucoes(null)])
-  const erro = o.erro ?? e.erro
+  const [o, e, s, v] = await Promise.all([listarObras('socio'), lerExecucoes(null), lerServicos(null), lerValores(null, true)])
+  const erro = o.erro ?? e.erro ?? s.erro ?? v.erro
   if (erro) return recusa(erro)
   return resposta(o.data.map((obra) => ({
     obra,
-    itens: mock.itensDoOrcamento(obra.id),
-    servicos: servicosDaCadeia(mock.servicos.filter((s) => s.obra_id === obra.id)),
+    itens: itensComValor(s.data.filter((x) => x.obra_id === obra.id), v.data),
+    servicos: servicosDaCadeia(s.data.filter((x) => x.obra_id === obra.id)),
     execucoes: e.data.filter((x) => x.obra_id === obra.id),
     medicoes: mock.medicoes.filter((m) => m.obra_id === obra.id),
     custos: mock.custos.filter((k) => k.obra_id === obra.id),
@@ -362,15 +555,16 @@ export const buscarBaseFaturamento = escolher(mockApi.buscarBaseFaturamento, asy
 
 export const buscarBaseGestao = escolher(mockApi.buscarBaseGestao, async () => {
   if (!ehSocio()) return resposta([])
-  const [o, e, d] = await Promise.all([
+  const [o, e, d, s] = await Promise.all([
     listarObras('socio'), lerExecucoes(null),
     supabase.from('diarios').select('id, obra_id, data, status, qtd_pessoas'),
+    lerServicos(null),
   ])
   if (d.error) return falha(d.error)
-  if (o.erro || e.erro) return recusa(o.erro ?? e.erro)
+  if (o.erro || e.erro || s.erro) return recusa(o.erro ?? e.erro ?? s.erro)
   return resposta(o.data.map((obra) => ({
     obra,
-    servicos: servicosDaCadeia(mock.servicos.filter((s) => s.obra_id === obra.id)),
+    servicos: servicosDaCadeia(s.data.filter((x) => x.obra_id === obra.id)),
     execucoes: e.data.filter((x) => x.obra_id === obra.id),
     diarios: d.data.filter((x) => x.obra_id === obra.id),
     tarefas: mock.tarefas.filter((t) => t.obra_id === obra.id),

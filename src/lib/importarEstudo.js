@@ -6,7 +6,15 @@
 //   Linha com número inteiro e nome = etapa ("1 · SERVIÇOS PRELIMINARES").
 //   Linha com número "1.1" = serviço. Unidade "%" = item percentual (Gestão de obra).
 // QUANTITATIVO: CÔMODO · DESCRITIVO · QUANTITATIVO. O cômodo vale para as linhas de baixo até o próximo.
+import { UNIDADES } from './lancamentos.js'
 import { acharAba, normalizar } from './xlsx.js'
+
+// Unidade como a planilha escreve → a que o app (e o banco) aceita. Fora disso, a importação trava.
+const SINONIMOS = { m2: 'm²', 'm²': 'm²', m3: 'm³', 'm³': 'm³', m: 'm', ml: 'ml', un: 'un', und: 'un', unid: 'un', 'unid.': 'un', 'un.': 'un', pc: 'un', 'pç': 'un', vb: 'vb', verba: 'vb', kg: 'kg', '%': '%' }
+export function unidadeAceita(texto) {
+  const u = SINONIMOS[normalizar(texto).replace(/\s/g, '')] ?? SINONIMOS[String(texto ?? '').trim().toLowerCase()]
+  return u && (u === '%' || UNIDADES.includes(u)) ? u : null
+}
 
 const arred = (v) => Math.round(v * 100) / 100
 const vazio = (v) => v === null || v === undefined || (typeof v === 'string' && v.trim() === '')
@@ -95,10 +103,12 @@ export function importarEstudo(abas) {
     if (typeof eng !== 'number') { avisar(linha, `Linha ${linha}: "${nome}" está sem TOTAL ENG.; entrou como R$ 0,00.`, true) }
 
     const percentual = unidade === '%'
+    const aceita = unidade ? unidadeAceita(unidade) : 'vb'
+    if (!aceita) avisar(linha, `Linha ${linha}: a unidade "${unidade}" do item ${indice} não é aceita pelo app (use m², m, ml, m³, un, vb, kg ou %).`, true)
     const item = {
       numero_item: indice,
       nome,
-      unidade: unidade || 'vb',
+      unidade: aceita ?? unidade,
       tipo: percentual ? 'Percentual' : 'Normal',
       total_mo: typeof mo === 'number' ? arred(mo) : 0,
       total_eng: typeof eng === 'number' ? arred(eng) : 0,
